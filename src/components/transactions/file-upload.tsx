@@ -18,8 +18,8 @@ export default function FileUpload({ onUploadSuccess }: { onUploadSuccess: () =>
   const { token } = useAuth();
   const { toast } = useToast();
   const [file, setFile] = useState<File | null>(null);
-  const [startDate, setStartDate] = useState<Date>();
-  const [endDate, setEndDate] = useState<Date>();
+  const [startDate, setStartDate] = useState<Date | undefined>(undefined);
+  const [endDate, setEndDate] = useState<Date | undefined>(undefined);
   const [isLoading, setIsLoading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -37,14 +37,15 @@ export default function FileUpload({ onUploadSuccess }: { onUploadSuccess: () =>
   };
 
   const handleUpload = async () => {
-    if (!file) {
-      toast({ variant: 'destructive', title: 'Nenhum Arquivo Selecionado', description: 'Por favor, selecione um arquivo para fazer o upload.' });
+    if (!file || !startDate || !endDate) {
+      if (!file) {
+        toast({ variant: 'destructive', title: 'Nenhum Arquivo Selecionado', description: 'Por favor, selecione um arquivo para fazer o upload.' });
+      } else {
+        toast({ variant: 'destructive', title: 'Período não selecionado', description: 'Por favor, selecione as datas de início e fim.' });
+      }
       return;
     }
-    if (!startDate || !endDate) {
-      toast({ variant: 'destructive', title: 'Período não selecionado', description: 'Por favor, selecione as datas de início e fim.' });
-      return;
-    }
+    
     setIsLoading(true);
     const formData = new FormData();
     formData.append('file', file);
@@ -72,6 +73,8 @@ export default function FileUpload({ onUploadSuccess }: { onUploadSuccess: () =>
       setIsLoading(false);
     }
   };
+
+  const isButtonDisabled = isLoading || !file || !startDate || !endDate;
 
   return (
     <Card>
@@ -135,7 +138,7 @@ export default function FileUpload({ onUploadSuccess }: { onUploadSuccess: () =>
             <span>{file.name}</span>
           </div>
         )}
-        <Button onClick={handleUpload} disabled={isLoading || !file || !startDate || !endDate} className="w-full">
+        <Button onClick={handleUpload} disabled={isButtonDisabled} className="w-full">
           {isLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <UploadCloud className="mr-2 h-4 w-4" />}
           Enviar Arquivo
         </Button>
