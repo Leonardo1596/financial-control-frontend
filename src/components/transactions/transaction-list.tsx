@@ -51,6 +51,78 @@ export default function TransactionList({ transactions, onDelete, loading }: Tra
     ))
   )
 
+  const renderPagination = () => {
+    if (loading || totalPages <= 1) {
+        return null;
+    }
+
+    const delta = 1;
+    const left = currentPage - delta;
+    const right = currentPage + delta + 1;
+    const range: number[] = [];
+    const rangeWithDots: (number | string)[] = [];
+    let l: number | undefined;
+
+    for (let i = 1; i <= totalPages; i++) {
+        if (i === 1 || i === totalPages || (i >= left && i < right)) {
+            range.push(i);
+        }
+    }
+
+    for (const i of range) {
+        if (l) {
+            if (i - l === 2) {
+                rangeWithDots.push(l + 1);
+            } else if (i - l !== 1) {
+                rangeWithDots.push('...');
+            }
+        }
+        rangeWithDots.push(i);
+        l = i;
+    }
+
+    return (
+        <div className="flex items-center justify-between pt-4">
+             <div className="text-sm text-muted-foreground">
+                Página {currentPage} de {totalPages}
+            </div>
+            <div className="flex items-center space-x-2">
+                <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setCurrentPage(currentPage - 1)}
+                    disabled={currentPage === 1}
+                >
+                    Anterior
+                </Button>
+                {rangeWithDots.map((page, index) => {
+                    if (page === '...') {
+                        return <span key={index} className="px-2 py-1 text-sm">...</span>;
+                    }
+                    return (
+                        <Button
+                            key={index}
+                            variant={currentPage === page ? "default" : "outline"}
+                            size="sm"
+                            onClick={() => setCurrentPage(page as number)}
+                        >
+                            {page}
+                        </Button>
+                    );
+                })}
+                <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setCurrentPage(currentPage + 1)}
+                    disabled={currentPage === totalPages}
+                >
+                    Próxima
+                </Button>
+            </div>
+        </div>
+    );
+};
+
   return (
     <>
       <div className="rounded-lg border bg-card text-card-foreground shadow-sm">
@@ -105,29 +177,7 @@ export default function TransactionList({ transactions, onDelete, loading }: Tra
           </TableBody>
         </Table>
       </div>
-      {!loading && totalPages > 1 && (
-        <div className="flex items-center justify-end space-x-2 pt-4">
-          <div className="text-sm text-muted-foreground">
-              Página {currentPage} de {totalPages}
-          </div>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => setCurrentPage(currentPage - 1)}
-            disabled={currentPage === 1}
-          >
-            Anterior
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => setCurrentPage(currentPage + 1)}
-            disabled={currentPage === totalPages}
-          >
-            Próxima
-          </Button>
-        </div>
-      )}
+      {renderPagination()}
     </>
   );
 }
