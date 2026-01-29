@@ -37,20 +37,20 @@ export default function FileUpload({ onUploadSuccess }: { onUploadSuccess: () =>
   };
 
   const handleUpload = async () => {
-    if (!file || !startDate || !endDate) {
-      if (!file) {
-        toast({ variant: 'destructive', title: 'Nenhum Arquivo Selecionado', description: 'Por favor, selecione um arquivo para fazer o upload.' });
-      } else {
-        toast({ variant: 'destructive', title: 'Período não selecionado', description: 'Por favor, selecione as datas de início e fim.' });
-      }
+    if (!file) {
+      toast({ variant: 'destructive', title: 'Nenhum Arquivo Selecionado', description: 'Por favor, selecione um arquivo para fazer o upload.' });
       return;
     }
     
     setIsLoading(true);
     const formData = new FormData();
     formData.append('file', file);
-    formData.append('startDate', format(startDate, 'yyyy-MM-dd'));
-    formData.append('endDate', format(endDate, 'yyyy-MM-dd'));
+    if (startDate) {
+      formData.append('startDate', format(startDate, 'yyyy-MM-dd'));
+    }
+    if (endDate) {
+      formData.append('endDate', format(endDate, 'yyyy-MM-dd'));
+    }
 
     try {
       const response = await fetch('https://financial-control-9s01.onrender.com/import', {
@@ -74,7 +74,7 @@ export default function FileUpload({ onUploadSuccess }: { onUploadSuccess: () =>
     }
   };
 
-  const isButtonDisabled = isLoading || !file || !startDate || !endDate;
+  const isButtonDisabled = isLoading || !file;
 
   return (
     <Card>
