@@ -22,7 +22,7 @@ export function AppSidebar() {
   ];
 
   return (
-    <aside className="hidden w-64 flex-col border-r bg-card p-4 md:flex">
+    <aside className="hidden md:flex h-full w-64 flex-col fixed inset-y-0 z-30 border-r bg-card p-4">
       <div className="flex items-center gap-3 mb-8">
         <div className="bg-primary p-2 rounded-lg">
             <Landmark className="h-6 w-6 text-primary-foreground" />

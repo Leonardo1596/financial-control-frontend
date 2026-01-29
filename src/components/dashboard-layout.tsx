@@ -3,6 +3,7 @@
 import { AuthProvider, useRequireAuth } from "@/hooks/use-auth";
 import { Skeleton } from "@/components/ui/skeleton";
 import { AppSidebar } from "./sidebar";
+import { MobileHeader } from "./mobile-header";
 
 function AuthenticatedLayout({ children }: { children: React.ReactNode }) {
   const { user, loading } = useRequireAuth();
@@ -22,11 +23,14 @@ function AuthenticatedLayout({ children }: { children: React.ReactNode }) {
   }
 
   return (
-      <div className="flex min-h-screen w-full bg-background">
+      <div className="min-h-screen w-full bg-background">
         <AppSidebar />
-        <main className="flex-1 p-4 sm:p-6 lg:p-8 overflow-auto">
+        <div className="flex flex-col md:pl-64">
+          <MobileHeader />
+          <main className="flex-1 p-4 sm:p-6 lg:p-8">
             {children}
-        </main>
+          </main>
+        </div>
       </div>
   );
 }

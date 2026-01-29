@@ -49,9 +49,13 @@ export default function Summary() {
         headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
         body: JSON.stringify({ month: parseInt(month), year: parseInt(year) })
       });
-      if (!response.ok) throw new Error('Falha ao fechar o mês');
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ message: 'Falha ao fechar o mês' }));
+        throw new Error(errorData.message || 'Falha ao fechar o mês');
+      }
+      const data = await response.json();
+      setSummary(data);
       toast({ title: 'Sucesso', description: 'Mês fechado com sucesso.' });
-      fetchSummary();
     } catch (error) {
       toast({ variant: 'destructive', title: 'Erro', description: (error as Error).message });
     } finally {
