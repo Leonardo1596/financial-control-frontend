@@ -30,11 +30,11 @@ export default function Summary() {
       const response = await fetch(`https://financial-control-9s01.onrender.com/summary?month=${month}&year=${year}`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
-      if (!response.ok) throw new Error('Failed to fetch summary');
+      if (!response.ok) throw new Error('Falha ao buscar resumo');
       const data = await response.json();
       setSummary(data);
     } catch (error) {
-      toast({ variant: 'destructive', title: 'Error', description: (error as Error).message });
+      toast({ variant: 'destructive', title: 'Erro', description: (error as Error).message });
       setSummary(null);
     } finally {
       setLoading(false);
@@ -49,11 +49,11 @@ export default function Summary() {
         headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
         body: JSON.stringify({ month: parseInt(month), year: parseInt(year) })
       });
-      if (!response.ok) throw new Error('Failed to close month');
-      toast({ title: 'Success', description: 'Month closed successfully.' });
+      if (!response.ok) throw new Error('Falha ao fechar o mês');
+      toast({ title: 'Sucesso', description: 'Mês fechado com sucesso.' });
       fetchSummary();
     } catch (error) {
-      toast({ variant: 'destructive', title: 'Error', description: (error as Error).message });
+      toast({ variant: 'destructive', title: 'Erro', description: (error as Error).message });
     } finally {
       setClosing(false);
     }
@@ -62,7 +62,7 @@ export default function Summary() {
   const years = Array.from({ length: 10 }, (_, i) => (new Date().getFullYear() - i).toString());
   const months = Array.from({ length: 12 }, (_, i) => ({
     value: (i + 1).toString(),
-    label: new Date(2000, i, 1).toLocaleString('default', { month: 'long' }),
+    label: new Date(2000, i, 1).toLocaleString('pt-BR', { month: 'long' }).replace(/^\w/, c => c.toUpperCase()),
   }));
 
   return (
@@ -71,7 +71,7 @@ export default function Summary() {
         <div className="flex gap-2">
           <Select value={month} onValueChange={setMonth}>
             <SelectTrigger className="w-[140px]">
-              <SelectValue placeholder="Month" />
+              <SelectValue placeholder="Mês" />
             </SelectTrigger>
             <SelectContent>
               {months.map(m => <SelectItem key={m.value} value={m.value}>{m.label}</SelectItem>)}
@@ -79,7 +79,7 @@ export default function Summary() {
           </Select>
           <Select value={year} onValueChange={setYear}>
             <SelectTrigger className="w-[120px]">
-              <SelectValue placeholder="Year" />
+              <SelectValue placeholder="Ano" />
             </SelectTrigger>
             <SelectContent>
               {years.map(y => <SelectItem key={y} value={y}>{y}</SelectItem>)}
@@ -88,7 +88,7 @@ export default function Summary() {
         </div>
         <Button onClick={handleCloseMonth} disabled={closing}>
           {closing && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-          Close Month
+          Fechar Mês
         </Button>
       </div>
 
@@ -101,9 +101,9 @@ export default function Summary() {
           </>
         ) : (
           <>
-            <SummaryCard title="Income" value={summary?.income ?? 0} icon={TrendingUp} color="text-emerald-500" />
-            <SummaryCard title="Expense" value={summary?.expense ?? 0} icon={TrendingDown} color="text-red-500" />
-            <SummaryCard title="Balance" value={summary?.balance ?? 0} icon={Wallet} color="text-primary" />
+            <SummaryCard title="Renda" value={summary?.income ?? 0} icon={TrendingUp} color="text-emerald-500" />
+            <SummaryCard title="Despesa" value={summary?.expense ?? 0} icon={TrendingDown} color="text-red-500" />
+            <SummaryCard title="Saldo" value={summary?.balance ?? 0} icon={Wallet} color="text-primary" />
           </>
         )}
       </div>

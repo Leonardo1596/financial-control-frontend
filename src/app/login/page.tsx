@@ -20,15 +20,15 @@ async function loginUser(data: z.infer<typeof formSchema>) {
     body: JSON.stringify(data),
   });
   if (!response.ok) {
-    const errorData = await response.json().catch(() => ({ message: 'Login failed due to server error.' }));
-    throw new Error(errorData.message || 'Login failed');
+    const errorData = await response.json().catch(() => ({ message: 'Falha no login devido a erro no servidor.' }));
+    throw new Error(errorData.message || 'Falha no login');
   }
   return response.json();
 }
 
 const formSchema = z.object({
-  email: z.string().email({ message: "Invalid email address." }),
-  password: z.string().min(1, { message: "Password is required." }),
+  email: z.string().email({ message: "Endereço de e-mail inválido." }),
+  password: z.string().min(1, { message: "A senha é obrigatória." }),
 });
 
 function LoginPageContent() {
@@ -55,14 +55,14 @@ function LoginPageContent() {
       const data = await loginUser(values);
       login(data);
       toast({
-        title: "Login Successful",
-        description: `Welcome back, ${data.user.name}!`,
+        title: "Login bem-sucedido",
+        description: `Bem-vindo de volta, ${data.user.name}!`,
       });
     } catch (error) {
       toast({
         variant: "destructive",
-        title: "Login Failed",
-        description: error instanceof Error ? error.message : "An unknown error occurred.",
+        title: "Falha no Login",
+        description: error instanceof Error ? error.message : "Ocorreu um erro desconhecido.",
       });
     } finally {
       setIsLoading(false);
@@ -85,8 +85,8 @@ function LoginPageContent() {
             <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-primary/10">
               <Landmark className="h-8 w-8 text-primary" />
             </div>
-            <CardTitle className="text-3xl font-headline">Welcome to FinTrack</CardTitle>
-            <CardDescription>Enter your credentials to access your account</CardDescription>
+            <CardTitle className="text-3xl font-headline">Bem-vindo ao FinTrack</CardTitle>
+            <CardDescription>Insira suas credenciais para acessar sua conta</CardDescription>
           </CardHeader>
           <CardContent>
             <Form {...form}>
@@ -98,7 +98,7 @@ function LoginPageContent() {
                     <FormItem>
                       <FormLabel>Email</FormLabel>
                       <FormControl>
-                        <Input placeholder="name@example.com" {...field} />
+                        <Input placeholder="nome@exemplo.com" {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -109,7 +109,7 @@ function LoginPageContent() {
                   name="password"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Password</FormLabel>
+                      <FormLabel>Senha</FormLabel>
                       <FormControl>
                         <Input type="password" placeholder="••••••••" {...field} />
                       </FormControl>
@@ -119,7 +119,7 @@ function LoginPageContent() {
                 />
                 <Button type="submit" className="w-full" disabled={isLoading}>
                   {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                  Sign In
+                  Entrar
                 </Button>
               </form>
             </Form>

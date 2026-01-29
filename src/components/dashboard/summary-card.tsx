@@ -21,7 +21,7 @@ export function SummaryCard({ title, value, icon: Icon, color }: SummaryCardProp
       </CardHeader>
       <CardContent>
         <div className="text-2xl font-bold">
-          {new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(value)}
+          {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value)}
         </div>
       </CardContent>
     </Card>

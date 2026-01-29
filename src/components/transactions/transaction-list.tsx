@@ -6,6 +6,7 @@ import { Trash2 } from 'lucide-react';
 import type { Transaction } from '@/lib/types';
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
+import { ptBR } from 'date-fns/locale';
 import { Skeleton } from '@/components/ui/skeleton';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { Badge } from '@/components/ui/badge';
@@ -18,7 +19,7 @@ interface TransactionListProps {
 
 export default function TransactionList({ transactions, onDelete, loading }: TransactionListProps) {
     
-  const formatCurrency = (value: number) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(value);
+  const formatCurrency = (value: number) => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value);
 
   const renderSkeletons = () => (
     Array.from({ length: 5 }).map((_, index) => (
@@ -35,25 +36,25 @@ export default function TransactionList({ transactions, onDelete, loading }: Tra
   return (
     <div className="rounded-lg border bg-card text-card-foreground shadow-sm">
       <Table>
-        <TableCaption>{transactions.length === 0 && !loading ? 'No transactions found.' : 'A list of your recent transactions.'}</TableCaption>
+        <TableCaption>{transactions.length === 0 && !loading ? 'Nenhuma transação encontrada.' : 'Uma lista de suas transações recentes.'}</TableCaption>
         <TableHeader>
           <TableRow>
-            <TableHead>Description</TableHead>
-            <TableHead>Date</TableHead>
-            <TableHead>Type</TableHead>
-            <TableHead className="text-right">Amount</TableHead>
-            <TableHead className="text-right w-[100px]">Actions</TableHead>
+            <TableHead>Descrição</TableHead>
+            <TableHead>Data</TableHead>
+            <TableHead>Tipo</TableHead>
+            <TableHead className="text-right">Valor</TableHead>
+            <TableHead className="text-right w-[100px]">Ações</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
           {loading ? renderSkeletons() : transactions.map((transaction) => (
             <TableRow key={transaction._id}>
               <TableCell className="font-medium">{transaction.description}</TableCell>
-              <TableCell>{format(new Date(transaction.date), 'PPP')}</TableCell>
+              <TableCell>{format(new Date(transaction.date), 'PPP', { locale: ptBR })}</TableCell>
               <TableCell>
                 <Badge variant={transaction.type === 'income' ? 'default' : 'destructive'} 
                        className={cn(transaction.type === 'income' ? 'bg-emerald-500/20 text-emerald-700 border-transparent hover:bg-emerald-500/30' : 'bg-red-500/20 text-red-700 border-transparent hover:bg-red-500/30')}>
-                  {transaction.type}
+                  {transaction.type === 'income' ? 'Renda' : 'Despesa'}
                 </Badge>
               </TableCell>
               <TableCell className={cn('text-right font-mono', transaction.type === 'income' ? 'text-emerald-600' : 'text-red-600')}>
@@ -68,14 +69,14 @@ export default function TransactionList({ transactions, onDelete, loading }: Tra
                   </AlertDialogTrigger>
                   <AlertDialogContent>
                     <AlertDialogHeader>
-                      <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                      <AlertDialogTitle>Você tem certeza absoluta?</AlertDialogTitle>
                       <AlertDialogDescription>
-                        This action cannot be undone. This will permanently delete this transaction.
+                        Esta ação não pode ser desfeita. Isso excluirá permanentemente esta transação.
                       </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter>
-                      <AlertDialogCancel>Cancel</AlertDialogCancel>
-                      <AlertDialogAction className={cn(buttonVariants({variant: "destructive"}))} onClick={() => onDelete(transaction._id)}>Delete</AlertDialogAction>
+                      <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                      <AlertDialogAction className={cn(buttonVariants({variant: "destructive"}))} onClick={() => onDelete(transaction._id)}>Excluir</AlertDialogAction>
                     </AlertDialogFooter>
                   </AlertDialogContent>
                 </AlertDialog>

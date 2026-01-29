@@ -6,7 +6,7 @@ export default function DashboardPage() {
     <DashboardLayout>
       <div className="space-y-8">
         <div className="flex items-center justify-between">
-            <h1 className="text-3xl font-bold tracking-tight font-headline">Dashboard</h1>
+            <h1 className="text-3xl font-bold tracking-tight font-headline">Painel</h1>
         </div>
         <Summary />
       </div>

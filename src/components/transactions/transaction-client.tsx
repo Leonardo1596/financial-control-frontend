@@ -22,11 +22,11 @@ export default function TransactionClient() {
       const response = await fetch('https://financial-control-9s01.onrender.com/list-transaction', {
         headers: { 'Authorization': `Bearer ${token}` }
       });
-      if (!response.ok) throw new Error('Failed to fetch transactions');
+      if (!response.ok) throw new Error('Falha ao buscar transações');
       const data = await response.json();
       setTransactions(Array.isArray(data) ? data : []);
     } catch (error) {
-      toast({ variant: 'destructive', title: 'Error', description: (error as Error).message });
+      toast({ variant: 'destructive', title: 'Erro', description: (error as Error).message });
       setTransactions([]);
     } finally {
       setLoading(false);
@@ -39,15 +39,15 @@ export default function TransactionClient() {
 
   const handleDelete = async (transactionId: string) => {
     try {
-      const response = await fetch(`https://financial-control-9s01.onrender.com/delte-transaction/${transactionId}`, {
+      const response = await fetch(`https://financial-control-9s01.onrender.com/delete-transaction/${transactionId}`, {
         method: 'DELETE',
         headers: { 'Authorization': `Bearer ${token}` }
       });
-      if (!response.ok) throw new Error('Failed to delete transaction');
-      toast({ title: 'Success', description: 'Transaction deleted.' });
+      if (!response.ok) throw new Error('Falha ao deletar transação');
+      toast({ title: 'Sucesso', description: 'Transação deletada.' });
       fetchTransactions();
     } catch (error) {
-      toast({ variant: 'destructive', title: 'Error', description: (error as Error).message });
+      toast({ variant: 'destructive', title: 'Erro', description: (error as Error).message });
     }
   };
 
@@ -55,7 +55,7 @@ export default function TransactionClient() {
     <div className="space-y-6">
       <Accordion type="single" collapsible className="w-full" defaultValue="item-1">
         <AccordionItem value="item-1">
-          <AccordionTrigger className='text-lg font-semibold'>Add New Transaction</AccordionTrigger>
+          <AccordionTrigger className='text-lg font-semibold'>Adicionar Nova Transação</AccordionTrigger>
           <AccordionContent>
             <div className="pt-4 grid gap-6 md:grid-cols-2">
               <TransactionForm onTransactionAdded={fetchTransactions} />

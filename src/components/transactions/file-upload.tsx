@@ -22,7 +22,7 @@ export default function FileUpload({ onUploadSuccess }: { onUploadSuccess: () =>
       if (files[0].type === 'text/csv') {
         setFile(files[0]);
       } else {
-        toast({ variant: 'destructive', title: 'Invalid File Type', description: 'Please upload a CSV file.' });
+        toast({ variant: 'destructive', title: 'Tipo de Arquivo Inválido', description: 'Por favor, faça o upload de um arquivo CSV.' });
         setFile(null);
         if (fileInputRef.current) fileInputRef.current.value = '';
       }
@@ -31,7 +31,7 @@ export default function FileUpload({ onUploadSuccess }: { onUploadSuccess: () =>
 
   const handleUpload = async () => {
     if (!file) {
-      toast({ variant: 'destructive', title: 'No File Selected', description: 'Please select a file to upload.' });
+      toast({ variant: 'destructive', title: 'Nenhum Arquivo Selecionado', description: 'Por favor, selecione um arquivo para fazer o upload.' });
       return;
     }
     setIsLoading(true);
@@ -44,15 +44,15 @@ export default function FileUpload({ onUploadSuccess }: { onUploadSuccess: () =>
         headers: { 'Authorization': `Bearer ${token}` },
         body: formData,
       });
-      if (!response.ok) throw new Error('File upload failed');
-      toast({ title: 'Success', description: 'Transactions imported successfully.' });
+      if (!response.ok) throw new Error('Falha no upload do arquivo');
+      toast({ title: 'Sucesso', description: 'Transações importadas com sucesso.' });
       onUploadSuccess();
       setFile(null);
       if (fileInputRef.current) {
         fileInputRef.current.value = '';
       }
     } catch (error) {
-      toast({ variant: 'destructive', title: 'Error', description: (error as Error).message });
+      toast({ variant: 'destructive', title: 'Erro', description: (error as Error).message });
     } finally {
       setIsLoading(false);
     }
@@ -61,12 +61,12 @@ export default function FileUpload({ onUploadSuccess }: { onUploadSuccess: () =>
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Import from CSV</CardTitle>
-        <CardDescription>Upload a CSV file to add multiple transactions at once.</CardDescription>
+        <CardTitle>Importar de CSV</CardTitle>
+        <CardDescription>Faça o upload de um arquivo CSV para adicionar várias transações de uma vez.</CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
         <div className="grid w-full items-center gap-1.5">
-          <Label htmlFor="csv-file">CSV File</Label>
+          <Label htmlFor="csv-file">Arquivo CSV</Label>
           <Input id="csv-file" type="file" accept=".csv" onChange={handleFileChange} ref={fileInputRef} />
         </div>
         {file && (
@@ -77,7 +77,7 @@ export default function FileUpload({ onUploadSuccess }: { onUploadSuccess: () =>
         )}
         <Button onClick={handleUpload} disabled={isLoading || !file} className="w-full">
           {isLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <UploadCloud className="mr-2 h-4 w-4" />}
-          Upload File
+          Enviar Arquivo
         </Button>
       </CardContent>
     </Card>

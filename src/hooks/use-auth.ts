@@ -31,7 +31,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setToken(userToken);
       }
     } catch (error) {
-      console.error("Failed to parse user data from localStorage", error);
+      console.error("Falha ao analisar dados do usuário do localStorage", error);
       localStorage.removeItem(USER_STORAGE_KEY);
     } finally {
       setLoading(false);
