@@ -44,7 +44,7 @@ export default function Summary() {
   const handleCloseMonth = async () => {
     setClosing(true);
     try {
-      const response = await fetch(`https://financial-control-9s01.onrender.com/close-month`, {
+      const response = await fetch(`https://financial-control-9s01.onrender.com/records/close-month`, {
         method: 'POST',
         headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
         body: JSON.stringify({ month: parseInt(month), year: parseInt(year) })
