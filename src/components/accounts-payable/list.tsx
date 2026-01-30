@@ -89,17 +89,17 @@ export default function AccountsPayableList({ accounts, onPay, onEdit, onDelete,
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
                       {account.status !== 'paga' && (
-                        <DropdownMenuItem onSelect={() => handlePayClick(account._id)} disabled={payingId === account._id}>
+                        <DropdownMenuItem onSelect={() => handlePayClick(account._id)} disabled={payingId === account._id} className="cursor-pointer">
                           {payingId === account._id ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Check className="mr-2 h-4 w-4" />}
                           Marcar como paga
                         </DropdownMenuItem>
                       )}
-                      <DropdownMenuItem onSelect={() => onEdit(account)}>
+                      <DropdownMenuItem onSelect={() => onEdit(account)} className="cursor-pointer">
                         <Edit className="mr-2 h-4 w-4" />
                         Editar
                       </DropdownMenuItem>
                       <AlertDialogTrigger asChild>
-                         <DropdownMenuItem className="text-red-600 focus:text-red-600 focus:bg-red-50">
+                         <DropdownMenuItem className="text-red-600 focus:text-red-600 focus:bg-red-50 cursor-pointer">
                             <Trash2 className="mr-2 h-4 w-4" />
                             Excluir
                         </DropdownMenuItem>
