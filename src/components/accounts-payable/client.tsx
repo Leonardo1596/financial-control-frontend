@@ -35,7 +35,7 @@ export default function AccountsPayableClient() {
       if (!response.ok) throw new Error('Falha ao buscar contas a pagar');
       const data = await response.json();
       setAccounts(Array.isArray(data) ? data : []);
-    } catch (error) => {
+    } catch (error) {
       toast({ variant: 'destructive', title: 'Erro', description: (error as Error).message });
     } finally {
       setLoading(false);
