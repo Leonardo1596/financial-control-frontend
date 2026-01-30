@@ -29,7 +29,7 @@ export default function AccountsPayableClient() {
     if (!token) return;
     setLoading(true);
     try {
-      const response = await fetch(`https://financial-control-9s01.onrender.com/list?month=${month}&year=${year}`, {
+      const response = await fetch(`https://financial-control-9s01.onrender.com/accounts-payable/list?month=${month}&year=${year}`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       if (!response.ok) throw new Error('Falha ao buscar contas a pagar');
@@ -63,7 +63,7 @@ export default function AccountsPayableClient() {
 
   const handlePay = async (id: string) => {
     try {
-      const response = await fetch(`https://financial-control-9s01.onrender.com/pay/${id}`, {
+      const response = await fetch(`https://financial-control-9s01.onrender.com/accounts-payable/pay/${id}`, {
         method: 'PATCH',
         headers: { 'Authorization': `Bearer ${token}` }
       });
@@ -77,7 +77,7 @@ export default function AccountsPayableClient() {
 
   const handleDelete = async (id: string) => {
     try {
-      const response = await fetch(`https://financial-control-9s01.onrender.com/delete/${id}`, {
+      const response = await fetch(`https://financial-control-9s01.onrender.com/accounts-payable/delete/${id}`, {
         method: 'DELETE',
         headers: { 'Authorization': `Bearer ${token}` }
       });
