@@ -79,8 +79,8 @@ export default function AccountsPayableForm({ isOpen, onClose, onSuccess, accoun
     setIsLoading(true);
     try {
       const url = accountToEdit
-        ? `https://financial-control-9s01.onrender.com/update-account/${accountToEdit._id}`
-        : 'https://financial-control-9s01.onrender.com/create-account';
+        ? `https://financial-control-9s01.onrender.com/update/${accountToEdit._id}`
+        : 'https://financial-control-9s01.onrender.com/create';
       
       const method = accountToEdit ? 'PUT' : 'POST';
 

@@ -29,13 +29,13 @@ export default function AccountsPayableClient() {
     if (!token) return;
     setLoading(true);
     try {
-      const response = await fetch('https://financial-control-9s01.onrender.com/list-accounts-payable', {
+      const response = await fetch('https://financial-control-9s01.onrender.com/list', {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       if (!response.ok) throw new Error('Falha ao buscar contas a pagar');
       const data = await response.json();
       setAccounts(Array.isArray(data) ? data : []);
-    } catch (error) {
+    } catch (error) => {
       toast({ variant: 'destructive', title: 'Erro', description: (error as Error).message });
     } finally {
       setLoading(false);
@@ -44,7 +44,7 @@ export default function AccountsPayableClient() {
 
   useEffect(() => {
     fetchAccounts();
-  }, [fetchAccounts, month, year]);
+  }, [fetchAccounts]);
 
   const handleOpenModal = (account: AccountPayable | null = null) => {
     setEditingAccount(account);
@@ -63,7 +63,7 @@ export default function AccountsPayableClient() {
 
   const handlePay = async (id: string) => {
     try {
-      const response = await fetch(`https://financial-control-9s01.onrender.com/pay-account/${id}`, {
+      const response = await fetch(`https://financial-control-9s01.onrender.com/pay/${id}`, {
         method: 'PATCH',
         headers: { 'Authorization': `Bearer ${token}` }
       });
@@ -77,7 +77,7 @@ export default function AccountsPayableClient() {
 
   const handleDelete = async (id: string) => {
     try {
-      const response = await fetch(`https://financial-control-9s01.onrender.com/delete-account/${id}`, {
+      const response = await fetch(`https://financial-control-9s01.onrender.com/delete/${id}`, {
         method: 'DELETE',
         headers: { 'Authorization': `Bearer ${token}` }
       });
@@ -91,13 +91,23 @@ export default function AccountsPayableClient() {
 
   const displayedAccounts = useMemo(() => {
     return accounts
-      .filter(account => statusFilter === 'todas' || account.status === statusFilter)
+      .filter(account => {
+        const accountDate = new Date(account.dueDate);
+        const adjustedDate = new Date(accountDate.getTime() + accountDate.getTimezoneOffset() * 60000);
+        const accountMonth = (adjustedDate.getMonth() + 1).toString();
+        const accountYear = adjustedDate.getFullYear().toString();
+        
+        const dateMatch = accountYear === year && accountMonth === month;
+        const statusMatch = statusFilter === 'todas' || account.status === statusFilter;
+        
+        return dateMatch && statusMatch;
+      })
       .sort((a, b) => {
         const dateA = new Date(a.dueDate).getTime();
         const dateB = new Date(b.dueDate).getTime();
         return sortOrder === 'asc' ? dateA - dateB : dateB - dateA;
       });
-  }, [accounts, statusFilter, sortOrder]);
+  }, [accounts, statusFilter, sortOrder, month, year]);
 
   const years = Array.from({ length: 10 }, (_, i) => (new Date().getFullYear() - i).toString());
   const months = Array.from({ length: 12 }, (_, i) => ({
