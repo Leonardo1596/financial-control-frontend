@@ -11,6 +11,13 @@ interface IncomeExpenseChartProps {
 
 const formatCurrency = (value: number) => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value);
 
+const formatYAxisTick = (value: number) => {
+    if (value >= 1000) {
+      return `R$${(value / 1000).toFixed(0)}k`;
+    }
+    return formatCurrency(value);
+};
+
 const chartConfig = {
   amount: {
     label: "Valor",
@@ -39,7 +46,7 @@ export default function IncomeExpenseChart({ summary }: IncomeExpenseChartProps)
       </CardHeader>
       <CardContent>
         <ChartContainer config={chartConfig} className="min-h-[250px] w-full">
-          <BarChart accessibilityLayer data={chartData} margin={{ top: 5, right: 5, left: 5, bottom: 5 }}>
+          <BarChart accessibilityLayer data={chartData} margin={{ top: 5, right: 5, left: -20, bottom: 5 }}>
             <CartesianGrid vertical={false} />
             <XAxis
               dataKey="type"
@@ -49,7 +56,7 @@ export default function IncomeExpenseChart({ summary }: IncomeExpenseChartProps)
               stroke="hsl(var(--muted-foreground))"
             />
             <YAxis
-              tickFormatter={(value) => formatCurrency(value as number)}
+              tickFormatter={(value) => formatYAxisTick(value as number)}
               tickLine={false}
               axisLine={false}
               stroke="hsl(var(--muted-foreground))"
