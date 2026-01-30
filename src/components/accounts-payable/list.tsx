@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow, TableCaption } from '@/components/ui/table';
 import { Button, buttonVariants } from '@/components/ui/button';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
@@ -65,10 +65,13 @@ export default function AccountsPayableList({ accounts, onPay, onEdit, onDelete,
           </TableRow>
         </TableHeader>
         <TableBody>
-          {loading ? renderSkeletons() : accounts.map((account) => (
+          {loading ? renderSkeletons() : accounts.map((account) => {
+            const utcDate = new Date(account.dueDate);
+            const adjustedDate = new Date(utcDate.getTime() + utcDate.getTimezoneOffset() * 60000);
+            return (
             <TableRow key={account._id}>
               <TableCell className="font-medium">{account.description}</TableCell>
-              <TableCell>{format(new Date(account.dueDate), 'dd/MM/yyyy', { locale: ptBR })}</TableCell>
+              <TableCell>{format(adjustedDate, 'dd/MM/yyyy', { locale: ptBR })}</TableCell>
               <TableCell>{formatCurrency(account.amount)}</TableCell>
               <TableCell>
                 <Badge className={cn('font-semibold capitalize', statusStyles[account.status])}>
@@ -118,7 +121,8 @@ export default function AccountsPayableList({ accounts, onPay, onEdit, onDelete,
                 </AlertDialog>
               </TableCell>
             </TableRow>
-          ))}
+            );
+          })}
         </TableBody>
       </Table>
     </div>

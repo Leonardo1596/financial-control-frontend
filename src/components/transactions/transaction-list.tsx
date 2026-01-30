@@ -138,10 +138,13 @@ export default function TransactionList({ transactions, onDelete, loading }: Tra
             </TableRow>
           </TableHeader>
           <TableBody>
-            {loading ? renderSkeletons() : paginatedTransactions.map((transaction) => (
+            {loading ? renderSkeletons() : paginatedTransactions.map((transaction) => {
+              const utcDate = new Date(transaction.date);
+              const adjustedDate = new Date(utcDate.getTime() + utcDate.getTimezoneOffset() * 60000);
+              return (
               <TableRow key={transaction._id}>
                 <TableCell className="font-medium">{transaction.description}</TableCell>
-                <TableCell>{format(new Date(transaction.date), 'PPP', { locale: ptBR })}</TableCell>
+                <TableCell>{format(adjustedDate, 'PPP', { locale: ptBR })}</TableCell>
                 <TableCell>
                   <Badge variant={transaction.type === 'income' ? 'default' : 'destructive'} 
                         className={cn(transaction.type === 'income' ? 'bg-emerald-500/20 text-emerald-700 border-transparent hover:bg-emerald-500/30' : 'bg-red-500/20 text-red-700 border-transparent hover:bg-red-500/30')}>
@@ -173,7 +176,7 @@ export default function TransactionList({ transactions, onDelete, loading }: Tra
                   </AlertDialog>
                 </TableCell>
               </TableRow>
-            ))}
+            )})}
           </TableBody>
         </Table>
       </div>

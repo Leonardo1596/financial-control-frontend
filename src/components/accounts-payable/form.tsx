@@ -57,9 +57,11 @@ export default function AccountsPayableForm({ isOpen, onClose, onSuccess, accoun
 
   useEffect(() => {
     if (accountToEdit) {
+      const utcDate = parseISO(accountToEdit.dueDate);
+      const adjustedDate = new Date(utcDate.getTime() + utcDate.getTimezoneOffset() * 60000);
       form.reset({
         ...accountToEdit,
-        dueDate: parseISO(accountToEdit.dueDate),
+        dueDate: adjustedDate,
       });
     } else {
       form.reset({
@@ -77,8 +79,8 @@ export default function AccountsPayableForm({ isOpen, onClose, onSuccess, accoun
     setIsLoading(true);
     try {
       const url = accountToEdit
-        ? `https://financial-control-9s01.onrender.com/accounts-payable/update/${accountToEdit._id}`
-        : 'https://financial-control-9s01.onrender.com/accounts-payable/create';
+        ? `https://financial-control-9s01.onrender.com/update/${accountToEdit._id}`
+        : 'https://financial-control-9s01.onrender.com/create';
       
       const method = accountToEdit ? 'PUT' : 'POST';
 
