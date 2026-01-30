@@ -7,8 +7,6 @@ import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { TrendingUp, TrendingDown, Wallet, Loader2 } from 'lucide-react';
 import type { Summary } from '@/lib/types';
-import IncomeExpenseChart from './income-expense-chart';
-import IncomeExpenseChartSkeleton from './income-expense-chart-skeleton';
 
 export default function Summary() {
   const { token } = useAuth();
@@ -111,14 +109,6 @@ export default function Summary() {
             <SummaryCard title="Despesa" value={summary?.expense ?? 0} icon={TrendingDown} color="text-red-500" />
             <SummaryCard title="Saldo" value={summary?.balance ?? 0} icon={Wallet} color="text-primary" />
           </>
-        )}
-      </div>
-
-      <div className="grid gap-4">
-        {loading ? (
-          <IncomeExpenseChartSkeleton />
-        ) : (
-          summary && <IncomeExpenseChart summary={summary} />
         )}
       </div>
     </div>
