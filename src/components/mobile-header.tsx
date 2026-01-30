@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
-import { Menu, Landmark, LogOut, LayoutDashboard, ArrowLeftRight } from "lucide-react";
+import { Menu, Landmark, LogOut, LayoutDashboard, ArrowLeftRight, ReceiptText } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useAuth } from "@/hooks/use-auth";
@@ -22,6 +22,7 @@ export function MobileHeader() {
   const navItems = [
     { href: '/', icon: LayoutDashboard, label: 'Painel' },
     { href: '/transactions', icon: ArrowLeftRight, label: 'Transações' },
+    { href: '/accounts-payable', icon: ReceiptText, label: 'Contas a Pagar' },
   ];
 
   return (

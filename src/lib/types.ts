@@ -23,3 +23,15 @@ export interface Summary {
   expense: number;
   balance: number;
 }
+
+export interface AccountPayable {
+  _id: string;
+  userId: string;
+  description: string;
+  amount: number;
+  dueDate: string;
+  status: 'pendente' | 'paga' | 'atrasada';
+  category: string;
+  type: 'fixa' | 'variavel';
+  recurring: boolean;
+}
