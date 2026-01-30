@@ -56,7 +56,7 @@ export default function IncomeExpenseChart({ summary }: IncomeExpenseChartProps)
 
       <CardContent>
         <ChartContainer config={chartConfig} className="h-[250px] w-full">
-          <BarChart data={chartData}>
+          <BarChart data={chartData} margin={{ left: -20 }}>
             <CartesianGrid vertical={false} />
 
             <XAxis
