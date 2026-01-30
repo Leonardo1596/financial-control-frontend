@@ -22,12 +22,14 @@ export default function AccountsPayableClient() {
   
   const [statusFilter, setStatusFilter] = useState('todas');
   const [sortOrder, setSortOrder] = useState('asc');
+  const [year, setYear] = useState(new Date().getFullYear().toString());
+  const [month, setMonth] = useState((new Date().getMonth() + 1).toString());
 
   const fetchAccounts = useCallback(async () => {
     if (!token) return;
     setLoading(true);
     try {
-      const response = await fetch('https://financial-control-9s01.onrender.com/list', {
+      const response = await fetch(`https://financial-control-9s01.onrender.com/list?month=${month}&year=${year}`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       if (!response.ok) throw new Error('Falha ao buscar contas a pagar');
@@ -38,7 +40,7 @@ export default function AccountsPayableClient() {
     } finally {
       setLoading(false);
     }
-  }, [token, toast]);
+  }, [token, toast, month, year]);
 
   useEffect(() => {
     fetchAccounts();
@@ -97,6 +99,12 @@ export default function AccountsPayableClient() {
       });
   }, [accounts, statusFilter, sortOrder]);
 
+  const years = Array.from({ length: 10 }, (_, i) => (new Date().getFullYear() - i).toString());
+  const months = Array.from({ length: 12 }, (_, i) => ({
+    value: (i + 1).toString(),
+    label: new Date(2000, i, 1).toLocaleString('pt-BR', { month: 'long' }).replace(/^\w/, c => c.toUpperCase()),
+  }));
+
   return (
     <div className="space-y-6">
       {loading ? (
@@ -109,8 +117,24 @@ export default function AccountsPayableClient() {
         <AccountsPayableSummary accounts={displayedAccounts} />
       )}
       
-      <div className="p-4 border rounded-lg bg-card flex flex-col sm:flex-row justify-between items-center gap-4">
-        <div className="flex flex-col sm:flex-row gap-4 w-full sm:w-auto">
+      <div className="p-4 border rounded-lg bg-card flex flex-col sm:flex-row justify-between items-center gap-4 flex-wrap">
+        <div className="flex flex-col sm:flex-row gap-4 w-full sm:w-auto flex-wrap">
+          <Select value={month} onValueChange={setMonth}>
+            <SelectTrigger className="w-full sm:w-[140px]">
+              <SelectValue placeholder="Mês" />
+            </SelectTrigger>
+            <SelectContent>
+              {months.map(m => <SelectItem key={m.value} value={m.value}>{m.label}</SelectItem>)}
+            </SelectContent>
+          </Select>
+          <Select value={year} onValueChange={setYear}>
+            <SelectTrigger className="w-full sm:w-[120px]">
+              <SelectValue placeholder="Ano" />
+            </SelectTrigger>
+            <SelectContent>
+              {years.map(y => <SelectItem key={y} value={y}>{y}</SelectItem>)}
+            </SelectContent>
+          </Select>
           <Select value={statusFilter} onValueChange={setStatusFilter}>
             <SelectTrigger className="w-full sm:w-[180px]">
               <SelectValue placeholder="Filtrar por status" />

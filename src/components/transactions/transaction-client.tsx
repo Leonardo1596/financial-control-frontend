@@ -12,6 +12,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { Button, buttonVariants } from '@/components/ui/button';
 import { Loader2, Trash2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 export default function TransactionClient() {
   const { token } = useAuth();
@@ -19,12 +20,14 @@ export default function TransactionClient() {
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [loading, setLoading] = useState(true);
   const [isDeletingAll, setIsDeletingAll] = useState(false);
+  const [year, setYear] = useState(new Date().getFullYear().toString());
+  const [month, setMonth] = useState((new Date().getMonth() + 1).toString());
 
   const fetchTransactions = useCallback(async () => {
     if (!token) return;
     setLoading(true);
     try {
-      const response = await fetch('https://financial-control-9s01.onrender.com/list-transaction', {
+      const response = await fetch(`https://financial-control-9s01.onrender.com/list-transaction?month=${month}&year=${year}`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       if (!response.ok) throw new Error('Falha ao buscar transações');
@@ -36,7 +39,7 @@ export default function TransactionClient() {
     } finally {
       setLoading(false);
     }
-  }, [token, toast]);
+  }, [token, toast, month, year]);
 
   useEffect(() => {
     fetchTransactions();
@@ -76,6 +79,12 @@ export default function TransactionClient() {
     }
   };
 
+  const years = Array.from({ length: 10 }, (_, i) => (new Date().getFullYear() - i).toString());
+  const months = Array.from({ length: 12 }, (_, i) => ({
+    value: (i + 1).toString(),
+    label: new Date(2000, i, 1).toLocaleString('pt-BR', { month: 'long' }).replace(/^\w/, c => c.toUpperCase()),
+  }));
+
   return (
     <div className="space-y-6">
       <Accordion type="single" collapsible className="w-full" defaultValue="item-1">
@@ -90,38 +99,56 @@ export default function TransactionClient() {
         </AccordionItem>
       </Accordion>
 
-      <div className="p-4 border rounded-lg bg-card flex justify-between items-center">
-          <div>
+      <div className="p-4 border rounded-lg bg-card flex flex-col sm:flex-row justify-between items-center gap-4 flex-wrap">
+          <div className='flex-grow'>
               <h3 className="text-lg font-semibold">Gerenciar Transações</h3>
-              <p className="text-sm text-muted-foreground">Exclua todas as suas transações de uma só vez.</p>
+              <p className="text-sm text-muted-foreground">Filtre por data ou exclua todas as suas transações.</p>
           </div>
-        <AlertDialog>
-          <AlertDialogTrigger asChild>
-            <Button variant="destructive" disabled={transactions.length === 0 || loading}>
-              <Trash2 className="mr-2 h-4 w-4" />
-              Excluir Todas
-            </Button>
-          </AlertDialogTrigger>
-          <AlertDialogContent>
-            <AlertDialogHeader>
-              <AlertDialogTitle>Você tem certeza absoluta?</AlertDialogTitle>
-              <AlertDialogDescription>
-                Esta ação não pode ser desfeita. Isso excluirá permanentemente TODAS as suas transações.
-              </AlertDialogDescription>
-            </AlertDialogHeader>
-            <AlertDialogFooter>
-              <AlertDialogCancel>Cancelar</AlertDialogCancel>
-              <AlertDialogAction
-                  disabled={isDeletingAll}
-                  className={cn(buttonVariants({variant: "destructive"}))}
-                  onClick={handleDeleteAll}
-              >
-                  {isDeletingAll ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
-                  Sim, excluir tudo
-              </AlertDialogAction>
-            </AlertDialogFooter>
-          </AlertDialogContent>
-        </AlertDialog>
+        <div className='flex items-center gap-2'>
+            <Select value={month} onValueChange={setMonth}>
+                <SelectTrigger className="w-[140px]">
+                <SelectValue placeholder="Mês" />
+                </SelectTrigger>
+                <SelectContent>
+                {months.map(m => <SelectItem key={m.value} value={m.value}>{m.label}</SelectItem>)}
+                </SelectContent>
+            </Select>
+            <Select value={year} onValueChange={setYear}>
+                <SelectTrigger className="w-[120px]">
+                <SelectValue placeholder="Ano" />
+                </SelectTrigger>
+                <SelectContent>
+                {years.map(y => <SelectItem key={y} value={y}>{y}</SelectItem>)}
+                </SelectContent>
+            </Select>
+            <AlertDialog>
+            <AlertDialogTrigger asChild>
+                <Button variant="destructive" disabled={transactions.length === 0 || loading}>
+                <Trash2 className="mr-2 h-4 w-4" />
+                Excluir Todas
+                </Button>
+            </AlertDialogTrigger>
+            <AlertDialogContent>
+                <AlertDialogHeader>
+                <AlertDialogTitle>Você tem certeza absoluta?</AlertDialogTitle>
+                <AlertDialogDescription>
+                    Esta ação não pode ser desfeita. Isso excluirá permanentemente TODAS as suas transações.
+                </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                <AlertDialogAction
+                    disabled={isDeletingAll}
+                    className={cn(buttonVariants({variant: "destructive"}))}
+                    onClick={handleDeleteAll}
+                >
+                    {isDeletingAll ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+                    Sim, excluir tudo
+                </AlertDialogAction>
+                </AlertDialogFooter>
+            </AlertDialogContent>
+            </AlertDialog>
+        </div>
       </div>
 
       <TransactionList transactions={transactions} onDelete={handleDelete} loading={loading} />
