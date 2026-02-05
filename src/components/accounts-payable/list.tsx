@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState } from 'react';
@@ -83,7 +84,7 @@ export default function AccountsPayableList({ accounts, onPay, onEdit, onDelete,
                 <AlertDialog>
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" size="icon">
+                      <Button variant="ghost" size="icon" className="cursor-pointer">
                         <MoreHorizontal className="h-4 w-4" />
                       </Button>
                     </DropdownMenuTrigger>
@@ -114,8 +115,8 @@ export default function AccountsPayableList({ accounts, onPay, onEdit, onDelete,
                       </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter>
-                      <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                      <AlertDialogAction className={cn(buttonVariants({ variant: "destructive" }))} onClick={() => onDelete(account._id)}>Excluir</AlertDialogAction>
+                      <AlertDialogCancel className="cursor-pointer">Cancelar</AlertDialogCancel>
+                      <AlertDialogAction className={cn(buttonVariants({ variant: "destructive" }), "cursor-pointer")} onClick={() => onDelete(account._id)}>Excluir</AlertDialogAction>
                     </AlertDialogFooter>
                   </AlertDialogContent>
                 </AlertDialog>

@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect, useCallback, useMemo } from 'react';
@@ -97,10 +98,11 @@ export default function AccountsPayableClient() {
         const accountMonth = (adjustedDate.getMonth() + 1).toString();
         const accountYear = adjustedDate.getFullYear().toString();
         
-        const dateMatch = accountYear === year && accountMonth === month;
+        const yearMatch = year === 'todas' || accountYear === year;
+        const monthMatch = month === 'todas' || accountMonth === month;
         const statusMatch = statusFilter === 'todas' || account.status === statusFilter;
         
-        return dateMatch && statusMatch;
+        return yearMatch && monthMatch && statusMatch;
       })
       .sort((a, b) => {
         const dateA = new Date(a.dueDate).getTime();
@@ -130,18 +132,20 @@ export default function AccountsPayableClient() {
       <div className="p-4 border rounded-lg bg-card flex flex-col sm:flex-row justify-between items-center gap-4 flex-wrap">
         <div className="flex flex-col sm:flex-row gap-4 w-full sm:w-auto flex-wrap">
           <Select value={month} onValueChange={setMonth}>
-            <SelectTrigger className="w-full sm:w-[140px]">
+            <SelectTrigger className="w-full sm:w-[150px]">
               <SelectValue placeholder="Mês" />
             </SelectTrigger>
             <SelectContent>
+              <SelectItem value="todas">Todos os meses</SelectItem>
               {months.map(m => <SelectItem key={m.value} value={m.value}>{m.label}</SelectItem>)}
             </SelectContent>
           </Select>
           <Select value={year} onValueChange={setYear}>
-            <SelectTrigger className="w-full sm:w-[120px]">
+            <SelectTrigger className="w-full sm:w-[130px]">
               <SelectValue placeholder="Ano" />
             </SelectTrigger>
             <SelectContent>
+              <SelectItem value="todas">Todos os anos</SelectItem>
               {years.map(y => <SelectItem key={y} value={y}>{y}</SelectItem>)}
             </SelectContent>
           </Select>
