@@ -8,11 +8,12 @@ import TransactionList from './transaction-list';
 import TransactionForm from './transaction-form';
 import FileUpload from './file-upload';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/accordion'; // Fixed import issue found in previous check
 import { Button, buttonVariants } from '@/components/ui/button';
 import { Loader2, Trash2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { AlertDialog as AD, AlertDialogAction as ADA, AlertDialogCancel as ADC, AlertDialogContent as ADContent, AlertDialogDescription as ADDescription, AlertDialogFooter as ADFooter, AlertDialogHeader as ADHeader, AlertDialogTitle as ADTitle, AlertDialogTrigger as ADTrigger } from '@/components/ui/alert-dialog';
 
 export default function TransactionClient() {
   const { token } = useAuth();
@@ -87,7 +88,7 @@ export default function TransactionClient() {
 
   return (
     <div className="space-y-6">
-      <Accordion type="single" collapsible className="w-full" defaultValue="item-1">
+      <Accordion type="single" collapsible className="w-full">
         <AccordionItem value="item-1">
           <AccordionTrigger className='text-lg font-semibold'>Adicionar Nova Transação</AccordionTrigger>
           <AccordionContent>
@@ -121,33 +122,33 @@ export default function TransactionClient() {
                 {years.map(y => <SelectItem key={y} value={y}>{y}</SelectItem>)}
                 </SelectContent>
             </Select>
-            <AlertDialog>
-            <AlertDialogTrigger asChild>
+            <AD>
+            <ADTrigger asChild>
                 <Button variant="destructive" disabled={transactions.length === 0 || loading}>
                 <Trash2 className="mr-2 h-4 w-4" />
                 Excluir Todas
                 </Button>
-            </AlertDialogTrigger>
-            <AlertDialogContent>
-                <AlertDialogHeader>
-                <AlertDialogTitle>Você tem certeza absoluta?</AlertDialogTitle>
-                <AlertDialogDescription>
+            </ADTrigger>
+            <ADContent>
+                <ADHeader>
+                <ADTitle>Você tem certeza absoluta?</ADTitle>
+                <ADDescription>
                     Esta ação não pode ser desfeita. Isso excluirá permanentemente TODAS as suas transações.
-                </AlertDialogDescription>
-                </AlertDialogHeader>
-                <AlertDialogFooter>
-                <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                <AlertDialogAction
+                </ADDescription>
+                </ADHeader>
+                <ADFooter>
+                <ADC>Cancelar</ADC>
+                <ADA
                     disabled={isDeletingAll}
                     className={cn(buttonVariants({variant: "destructive"}))}
                     onClick={handleDeleteAll}
                 >
                     {isDeletingAll ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
                     Sim, excluir tudo
-                </AlertDialogAction>
-                </AlertDialogFooter>
-            </AlertDialogContent>
-            </AlertDialog>
+                </ADA>
+                </ADFooter>
+            </ADContent>
+            </AD>
         </div>
       </div>
 
