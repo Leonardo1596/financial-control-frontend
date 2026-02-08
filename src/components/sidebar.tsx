@@ -3,7 +3,7 @@
 import { useAuth } from "@/hooks/use-auth";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Landmark, LayoutDashboard, LogOut, ArrowLeftRight, ReceiptText } from "lucide-react";
+import { Landmark, LayoutDashboard, LogOut, ArrowLeftRight, ReceiptText, ChevronRight } from "lucide-react";
 import { Button } from "./ui/button";
 import { cn } from "@/lib/utils";
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
@@ -23,43 +23,49 @@ export function AppSidebar() {
   ];
 
   return (
-    <aside className="hidden md:flex h-full w-64 flex-col fixed inset-y-0 z-30 border-r bg-card p-4">
-      <div className="flex items-center gap-3 mb-8">
-        <div className="bg-primary p-2 rounded-lg">
+    <aside className="hidden md:flex h-full w-64 flex-col fixed inset-y-0 z-30 border-r bg-card/50 backdrop-blur-xl p-6">
+      <div className="flex items-center gap-3 mb-10">
+        <div className="bg-primary p-2.5 rounded-xl shadow-lg shadow-primary/30">
             <Landmark className="h-6 w-6 text-primary-foreground" />
         </div>
-        <h1 className="text-xl font-bold font-headline">FinTrack</h1>
+        <h1 className="text-xl font-bold tracking-tight">FinTrack</h1>
       </div>
 
       <nav className="flex-1 space-y-2">
-        {navItems.map((item) => (
-          <Link key={item.label} href={item.href} passHref legacyBehavior>
-            <a
-              className={cn(
-                "flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors",
-                pathname === item.href
-                  ? "bg-primary text-primary-foreground"
-                  : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
-              )}
-            >
-              <item.icon className="h-4 w-4" />
-              {item.label}
-            </a>
-          </Link>
-        ))}
+        {navItems.map((item) => {
+          const isActive = pathname === item.href;
+          return (
+            <Link key={item.label} href={item.href} passHref legacyBehavior>
+              <a
+                className={cn(
+                  "flex items-center justify-between group rounded-xl px-4 py-3 text-sm font-medium transition-all duration-200",
+                  isActive
+                    ? "bg-primary text-primary-foreground shadow-md shadow-primary/20"
+                    : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
+                )}
+              >
+                <div className="flex items-center gap-3">
+                  <item.icon className={cn("h-5 w-5", isActive ? "" : "text-muted-foreground group-hover:text-accent-foreground")} />
+                  {item.label}
+                </div>
+                {isActive && <ChevronRight className="h-4 w-4" />}
+              </a>
+            </Link>
+          );
+        })}
       </nav>
 
-      <div className="mt-auto">
-        <div className="flex items-center gap-3">
-          <Avatar>
+      <div className="mt-auto pt-6 border-t">
+        <div className="flex items-center gap-3 p-2 bg-accent/50 rounded-2xl">
+          <Avatar className="h-10 w-10 ring-2 ring-white">
             <AvatarImage src={`https://api.dicebear.com/8.x/adventurer/svg?seed=${user?.email}`} />
             <AvatarFallback>{getInitials(user?.name)}</AvatarFallback>
           </Avatar>
-          <div className="flex flex-col min-w-0">
-            <p className="font-semibold truncate">{user?.name}</p>
-            <p className="text-sm text-muted-foreground truncate">{user?.email}</p>
+          <div className="flex flex-col min-w-0 flex-1">
+            <p className="text-sm font-bold truncate">{user?.name}</p>
+            <p className="text-xs text-muted-foreground truncate">{user?.email}</p>
           </div>
-          <Button variant="ghost" size="icon" className="ml-auto" onClick={logout}>
+          <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-destructive transition-colors" onClick={logout}>
             <LogOut className="h-4 w-4" />
           </Button>
         </div>

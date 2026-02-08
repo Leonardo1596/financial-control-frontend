@@ -6,12 +6,11 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import { AuthProvider, useAuth } from "@/hooks/use-auth";
-import { Landmark, Loader2 } from "lucide-react";
+import { Landmark, Loader2, ArrowRight } from "lucide-react";
 
 async function loginUser(data: z.infer<typeof formSchema>) {
   const response = await fetch("https://financial-control-9s01.onrender.com/login", {
@@ -78,53 +77,67 @@ function LoginPageContent() {
   }
 
   return (
-    <main className="flex min-h-screen flex-col items-center justify-center bg-background p-4">
-      <div className="w-full max-w-md">
-        <Card className="shadow-lg">
-          <CardHeader className="text-center">
-            <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-primary/10">
-              <Landmark className="h-8 w-8 text-primary" />
-            </div>
-            <CardTitle className="text-3xl font-headline">Bem-vindo ao FinTrack</CardTitle>
-            <CardDescription>Insira suas credenciais para acessar sua conta</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Form {...form}>
-              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-                <FormField
-                  control={form.control}
-                  name="email"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Email</FormLabel>
-                      <FormControl>
-                        <Input placeholder="nome@exemplo.com" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="password"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Senha</FormLabel>
-                      <FormControl>
-                        <Input type="password" placeholder="••••••••" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <Button type="submit" className="w-full" disabled={isLoading}>
-                  {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                  Entrar
-                </Button>
-              </form>
-            </Form>
-          </CardContent>
-        </Card>
+    <main className="flex min-h-screen">
+      <div className="hidden lg:flex flex-col justify-between w-1/2 bg-primary p-12 text-primary-foreground">
+        <div className="flex items-center gap-3">
+          <div className="bg-white/20 p-2 rounded-xl backdrop-blur-sm">
+            <Landmark className="h-8 w-8 text-white" />
+          </div>
+          <span className="text-2xl font-bold tracking-tight">FinTrack</span>
+        </div>
+        <div>
+          <h1 className="text-5xl font-bold leading-tight mb-6">Controle suas finanças com inteligência.</h1>
+          <p className="text-xl text-primary-foreground/80 max-w-lg">
+            A ferramenta definitiva para gestão de contas, transações e planejamento financeiro pessoal.
+          </p>
+        </div>
+        <div className="text-sm text-primary-foreground/60">
+          © 2024 FinTrack. Todos os direitos reservados.
+        </div>
+      </div>
+      <div className="flex flex-col items-center justify-center w-full lg:w-1/2 p-8 bg-background">
+        <div className="w-full max-w-md space-y-8">
+          <div className="text-center lg:text-left">
+            <h2 className="text-3xl font-bold tracking-tight">Entrar na sua conta</h2>
+            <p className="text-muted-foreground mt-2">Gestão financeira ao seu alcance.</p>
+          </div>
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+              <FormField
+                control={form.control}
+                name="email"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Email</FormLabel>
+                    <FormControl>
+                      <Input placeholder="nome@exemplo.com" className="h-12" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="password"
+                render={({ field }) => (
+                  <FormItem>
+                    <div className="flex items-center justify-between">
+                        <FormLabel>Senha</FormLabel>
+                        <Button variant="link" className="px-0 font-normal text-sm" type="button">Esqueceu a senha?</Button>
+                    </div>
+                    <FormControl>
+                      <Input type="password" placeholder="••••••••" className="h-12" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <Button type="submit" className="w-full h-12 text-lg font-semibold shadow-lg shadow-primary/20" disabled={isLoading}>
+                {isLoading ? <Loader2 className="mr-2 h-5 w-5 animate-spin" /> : <>Entrar <ArrowRight className="ml-2 h-5 w-5" /></>}
+              </Button>
+            </form>
+          </Form>
+        </div>
       </div>
     </main>
   );

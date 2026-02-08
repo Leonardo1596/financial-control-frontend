@@ -5,7 +5,7 @@ import { useAuth } from '@/hooks/use-auth';
 import { SummaryCard, SummaryCardSkeleton } from './summary-card';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { TrendingUp, TrendingDown, Wallet, Loader2 } from 'lucide-react';
+import { TrendingUp, TrendingDown, Wallet, Loader2, Calendar } from 'lucide-react';
 import type { Summary } from '@/lib/types';
 
 export default function Summary() {
@@ -70,33 +70,44 @@ export default function Summary() {
   }));
 
   return (
-    <div className="space-y-4">
-      <div className="flex flex-col sm:flex-row gap-4 justify-between items-center rounded-lg border bg-card text-card-foreground shadow-sm p-4">
-        <div className="flex gap-2">
-          <Select value={month} onValueChange={setMonth}>
-            <SelectTrigger className="w-[140px]">
-              <SelectValue placeholder="Mês" />
-            </SelectTrigger>
-            <SelectContent>
-              {months.map(m => <SelectItem key={m.value} value={m.value}>{m.label}</SelectItem>)}
-            </SelectContent>
-          </Select>
-          <Select value={year} onValueChange={setYear}>
-            <SelectTrigger className="w-[120px]">
-              <SelectValue placeholder="Ano" />
-            </SelectTrigger>
-            <SelectContent>
-              {years.map(y => <SelectItem key={y} value={y}>{y}</SelectItem>)}
-            </SelectContent>
-          </Select>
+    <div className="space-y-8">
+      <div className="flex flex-col sm:flex-row gap-4 justify-between items-center bg-white p-6 rounded-2xl shadow-sm border-none">
+        <div className="flex items-center gap-4">
+          <div className="p-3 bg-primary/10 rounded-xl">
+            <Calendar className="h-6 w-6 text-primary" />
+          </div>
+          <div>
+            <h2 className="text-lg font-bold">Período de Análise</h2>
+            <p className="text-sm text-muted-foreground">Gerencie o fechamento mensal e filtros.</p>
+          </div>
         </div>
-        <Button onClick={handleCloseMonth} disabled={closing}>
-          {closing && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-          Fechar Mês
-        </Button>
+        <div className="flex gap-3 flex-wrap justify-center">
+          <div className="flex gap-2">
+            <Select value={month} onValueChange={setMonth}>
+              <SelectTrigger className="w-[140px] h-11 bg-slate-50 border-none rounded-xl font-medium">
+                <SelectValue placeholder="Mês" />
+              </SelectTrigger>
+              <SelectContent>
+                {months.map(m => <SelectItem key={m.value} value={m.value}>{m.label}</SelectItem>)}
+              </SelectContent>
+            </Select>
+            <Select value={year} onValueChange={setYear}>
+              <SelectTrigger className="w-[120px] h-11 bg-slate-50 border-none rounded-xl font-medium">
+                <SelectValue placeholder="Ano" />
+              </SelectTrigger>
+              <SelectContent>
+                {years.map(y => <SelectItem key={y} value={y}>{y}</SelectItem>)}
+              </SelectContent>
+            </Select>
+          </div>
+          <Button onClick={handleCloseMonth} disabled={closing} className="h-11 px-6 rounded-xl font-semibold shadow-md shadow-primary/20">
+            {closing && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+            Fechar Mês
+          </Button>
+        </div>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-3">
+      <div className="grid gap-6 md:grid-cols-3">
         {loading ? (
           <>
             <SummaryCardSkeleton />
@@ -106,8 +117,8 @@ export default function Summary() {
         ) : (
           <>
             <SummaryCard title="Renda" value={summary?.income ?? 0} icon={TrendingUp} color="text-emerald-500" />
-            <SummaryCard title="Despesa" value={summary?.expense ?? 0} icon={TrendingDown} color="text-red-500" />
-            <SummaryCard title="Saldo" value={summary?.balance ?? 0} icon={Wallet} color="text-primary" />
+            <SummaryCard title="Despesa" value={summary?.expense ?? 0} icon={TrendingDown} color="text-rose-500" />
+            <SummaryCard title="Saldo Total" value={summary?.balance ?? 0} icon={Wallet} color="text-primary" />
           </>
         )}
       </div>
