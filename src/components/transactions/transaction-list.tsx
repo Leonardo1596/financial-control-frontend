@@ -56,54 +56,40 @@ export default function TransactionList({ transactions, onDelete, loading }: Tra
         return null;
     }
 
-    const delta = 1;
-    const left = currentPage - delta;
-    const right = currentPage + delta + 1;
-    const range: number[] = [];
-    const rangeWithDots: (number | string)[] = [];
-    let l: number | undefined;
-
+    const range: (number | string)[] = [];
     for (let i = 1; i <= totalPages; i++) {
-        if (i === 1 || i === totalPages || (i >= left && i < right)) {
+        if (i === 1 || i === totalPages || (i >= currentPage - 1 && i <= currentPage + 1)) {
             range.push(i);
+        } else if (range[range.length - 1] !== '...') {
+            range.push('...');
         }
-    }
-
-    for (const i of range) {
-        if (l) {
-            if (i - l === 2) {
-                rangeWithDots.push(l + 1);
-            } else if (i - l !== 1) {
-                rangeWithDots.push('...');
-            }
-        }
-        rangeWithDots.push(i);
-        l = i;
     }
 
     return (
-        <div className="flex items-center justify-between pt-4">
-             <div className="text-sm text-muted-foreground">
+        <div className="flex items-center justify-between p-6 bg-slate-50/50 border-t border-slate-100">
+             <div className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
                 Página {currentPage} de {totalPages}
             </div>
             <div className="flex items-center space-x-2">
                 <Button
-                    variant="outline"
+                    variant="ghost"
                     size="sm"
+                    className="rounded-lg font-bold text-xs uppercase"
                     onClick={() => setCurrentPage(currentPage - 1)}
                     disabled={currentPage === 1}
                 >
                     Anterior
                 </Button>
-                {rangeWithDots.map((page, index) => {
+                {range.map((page, index) => {
                     if (page === '...') {
-                        return <span key={index} className="px-2 py-1 text-sm">...</span>;
+                        return <span key={index} className="px-2 text-slate-300">...</span>;
                     }
                     return (
                         <Button
                             key={index}
-                            variant={currentPage === page ? "default" : "outline"}
+                            variant={currentPage === page ? "default" : "ghost"}
                             size="sm"
+                            className={cn("h-8 w-8 rounded-lg p-0 font-bold", currentPage === page ? "shadow-md shadow-primary/20" : "")}
                             onClick={() => setCurrentPage(page as number)}
                         >
                             {page}
@@ -111,8 +97,9 @@ export default function TransactionList({ transactions, onDelete, loading }: Tra
                     );
                 })}
                 <Button
-                    variant="outline"
+                    variant="ghost"
                     size="sm"
+                    className="rounded-lg font-bold text-xs uppercase"
                     onClick={() => setCurrentPage(currentPage + 1)}
                     disabled={currentPage === totalPages}
                 >
@@ -125,61 +112,65 @@ export default function TransactionList({ transactions, onDelete, loading }: Tra
 
   return (
     <>
-      <div className="rounded-lg border bg-card text-card-foreground shadow-sm">
-        <Table>
-          <TableCaption>{!loading && transactions.length === 0 ? 'Nenhuma transação encontrada.' : 'Uma lista de suas transações recentes.'}</TableCaption>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Descrição</TableHead>
-              <TableHead>Data</TableHead>
-              <TableHead>Tipo</TableHead>
-              <TableHead className="text-right">Valor</TableHead>
-              <TableHead className="text-right w-[100px]">Ações</TableHead>
+      <Table>
+        <TableCaption className="pb-6">{!loading && transactions.length === 0 ? 'Sem transações neste período.' : `Exibindo ${paginatedTransactions.length} de ${transactions.length} transações.`}</TableCaption>
+        <TableHeader className="bg-slate-50/50">
+          <TableRow className="hover:bg-transparent">
+            <TableHead className="py-4 font-bold text-slate-600">Descrição</TableHead>
+            <TableHead className="py-4 font-bold text-slate-600">Data</TableHead>
+            <TableHead className="py-4 font-bold text-slate-600">Tipo</TableHead>
+            <TableHead className="text-right py-4 font-bold text-slate-600">Valor</TableHead>
+            <TableHead className="text-right py-4 font-bold text-slate-600">Ações</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {loading ? renderSkeletons() : paginatedTransactions.map((transaction) => {
+            const utcDate = new Date(transaction.date);
+            const adjustedDate = new Date(utcDate.getTime() + utcDate.getTimezoneOffset() * 60000);
+            return (
+            <TableRow key={transaction._id} className="group transition-colors">
+              <TableCell className="font-semibold text-slate-800 py-4">{transaction.description}</TableCell>
+              <TableCell className="text-muted-foreground">{format(adjustedDate, 'PPP', { locale: ptBR })}</TableCell>
+              <TableCell>
+                <Badge 
+                  className={cn(
+                    'font-bold rounded-lg px-2.5 py-0.5 shadow-sm border-none', 
+                    transaction.type === 'income' 
+                      ? 'bg-emerald-100 text-emerald-700' 
+                      : 'bg-rose-100 text-rose-700'
+                  )}
+                >
+                  {transaction.type === 'income' ? 'Renda' : 'Despesa'}
+                </Badge>
+              </TableCell>
+              <TableCell className={cn('text-right font-mono font-bold text-base', transaction.type === 'income' ? 'text-emerald-600' : 'text-rose-600')}>
+                {transaction.type === 'income' ? '+' : '-'}{formatCurrency(transaction.amount)}
+              </TableCell>
+              <TableCell className="text-right">
+                <AlertDialog>
+                  <AlertDialogTrigger asChild>
+                    <Button variant="ghost" size="icon" className="rounded-xl hover:bg-rose-50 hover:text-rose-600 text-slate-400 transition-all">
+                      <Trash2 className="h-5 w-5" />
+                    </Button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent className="rounded-2xl border-none shadow-2xl">
+                    <AlertDialogHeader>
+                      <AlertDialogTitle className="text-xl">Excluir transação?</AlertDialogTitle>
+                      <AlertDialogDescription>
+                        Esta ação removerá permanentemente este registro do seu histórico.
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter className="mt-4 gap-2">
+                      <AlertDialogCancel className="rounded-xl border-none bg-slate-100 hover:bg-slate-200">Cancelar</AlertDialogCancel>
+                      <AlertDialogAction className={cn(buttonVariants({variant: "destructive"}), "rounded-xl shadow-lg shadow-rose-500/20")} onClick={() => onDelete(transaction._id)}>Confirmar Exclusão</AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
+              </TableCell>
             </TableRow>
-          </TableHeader>
-          <TableBody>
-            {loading ? renderSkeletons() : paginatedTransactions.map((transaction) => {
-              const utcDate = new Date(transaction.date);
-              const adjustedDate = new Date(utcDate.getTime() + utcDate.getTimezoneOffset() * 60000);
-              return (
-              <TableRow key={transaction._id}>
-                <TableCell className="font-medium">{transaction.description}</TableCell>
-                <TableCell>{format(adjustedDate, 'PPP', { locale: ptBR })}</TableCell>
-                <TableCell>
-                  <Badge variant={transaction.type === 'income' ? 'default' : 'destructive'} 
-                        className={cn(transaction.type === 'income' ? 'bg-emerald-500/20 text-emerald-700 border-transparent hover:bg-emerald-500/30' : 'bg-red-500/20 text-red-700 border-transparent hover:bg-red-500/30')}>
-                    {transaction.type === 'income' ? 'Renda' : 'Despesa'}
-                  </Badge>
-                </TableCell>
-                <TableCell className={cn('text-right font-mono', transaction.type === 'income' ? 'text-emerald-600' : 'text-red-600')}>
-                  {transaction.type === 'income' ? '+' : '-'}{formatCurrency(transaction.amount)}
-                </TableCell>
-                <TableCell className="text-right">
-                  <AlertDialog>
-                    <AlertDialogTrigger asChild>
-                      <Button variant="ghost" size="icon">
-                        <Trash2 className="h-4 w-4 text-muted-foreground hover:text-destructive" />
-                      </Button>
-                    </AlertDialogTrigger>
-                    <AlertDialogContent>
-                      <AlertDialogHeader>
-                        <AlertDialogTitle>Você tem certeza absoluta?</AlertDialogTitle>
-                        <AlertDialogDescription>
-                          Esta ação não pode ser desfeita. Isso excluirá permanentemente esta transação.
-                        </AlertDialogDescription>
-                      </AlertDialogHeader>
-                      <AlertDialogFooter>
-                        <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                        <AlertDialogAction className={cn(buttonVariants({variant: "destructive"}))} onClick={() => onDelete(transaction._id)}>Excluir</AlertDialogAction>
-                      </AlertDialogFooter>
-                    </AlertDialogContent>
-                  </AlertDialog>
-                </TableCell>
-              </TableRow>
-            )})}
-          </TableBody>
-        </Table>
-      </div>
+          )})}
+        </TableBody>
+      </Table>
       {renderPagination()}
     </>
   );

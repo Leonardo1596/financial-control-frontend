@@ -6,7 +6,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Loader2, UploadCloud, File as FileIcon, CalendarIcon } from 'lucide-react';
+import { Loader2, UploadCloud, File as FileIcon, CalendarIcon, FileSpreadsheet } from 'lucide-react';
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from '@/components/ui/card';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar } from '@/components/ui/calendar';
@@ -26,10 +26,10 @@ export default function FileUpload({ onUploadSuccess }: { onUploadSuccess: () =>
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const files = event.target.files;
     if (files && files[0]) {
-      if (files[0].type === 'text/csv') {
+      if (files[0].type === 'text/csv' || files[0].name.endsWith('.csv')) {
         setFile(files[0]);
       } else {
-        toast({ variant: 'destructive', title: 'Tipo de Arquivo Inválido', description: 'Por favor, faça o upload de um arquivo CSV.' });
+        toast({ variant: 'destructive', title: 'Arquivo Inválido', description: 'Por favor, selecione apenas arquivos CSV.' });
         setFile(null);
         if (fileInputRef.current) fileInputRef.current.value = '';
       }
@@ -38,7 +38,7 @@ export default function FileUpload({ onUploadSuccess }: { onUploadSuccess: () =>
 
   const handleUpload = async () => {
     if (!file) {
-      toast({ variant: 'destructive', title: 'Nenhum Arquivo Selecionado', description: 'Por favor, selecione um arquivo para fazer o upload.' });
+      toast({ variant: 'destructive', title: 'Sem arquivo', description: 'Selecione um arquivo CSV para continuar.' });
       return;
     }
     
@@ -77,70 +77,69 @@ export default function FileUpload({ onUploadSuccess }: { onUploadSuccess: () =>
   const isButtonDisabled = isLoading || !file;
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Importar de CSV</CardTitle>
-        <CardDescription>Faça o upload de um arquivo CSV para adicionar várias transações de uma vez.</CardDescription>
+    <Card className="border-none bg-slate-50/50 shadow-none">
+      <CardHeader className="px-0 pt-0">
+        <CardTitle className="text-base flex items-center gap-2">
+          <FileSpreadsheet className="h-4 w-4 text-primary" />
+          Importar CSV
+        </CardTitle>
+        <CardDescription>Envie múltiplos registros de uma vez.</CardDescription>
       </CardHeader>
-      <CardContent className="space-y-4">
-        <div className="grid w-full items-center gap-1.5">
-          <Label htmlFor="csv-file">Arquivo CSV</Label>
-          <Input id="csv-file" type="file" accept=".csv" onChange={handleFileChange} ref={fileInputRef} />
+      <CardContent className="px-0 pb-0 space-y-6">
+        <div className="space-y-2">
+          <Label htmlFor="csv-file" className="text-xs font-bold uppercase tracking-wider text-slate-500">Arquivo CSV</Label>
+          <div 
+            onClick={() => fileInputRef.current?.click()}
+            className="border-2 border-dashed border-slate-200 rounded-2xl p-6 flex flex-col items-center justify-center gap-3 bg-white hover:bg-slate-50 transition-all cursor-pointer group"
+          >
+            <UploadCloud className="h-8 w-8 text-slate-400 group-hover:text-primary transition-colors" />
+            <span className="text-sm font-medium text-slate-600">Clique para selecionar</span>
+            <Input id="csv-file" type="file" accept=".csv" className="hidden" onChange={handleFileChange} ref={fileInputRef} />
+          </div>
         </div>
         
         <div className="grid grid-cols-2 gap-4">
-          <Popover>
-            <PopoverTrigger asChild>
-              <Button
-                variant={"outline"}
-                className={cn("w-full justify-start text-left font-normal", !startDate && "text-muted-foreground")}
-              >
-                <CalendarIcon className="mr-2 h-4 w-4" />
-                {startDate ? format(startDate, "PPP", { locale: ptBR }) : <span>Data de início</span>}
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent className="w-auto p-0">
-              <Calendar
-                mode="single"
-                selected={startDate}
-                onSelect={setStartDate}
-                initialFocus
-              />
-            </PopoverContent>
-          </Popover>
-          <Popover>
-            <PopoverTrigger asChild>
-              <Button
-                variant={"outline"}
-                className={cn("w-full justify-start text-left font-normal", !endDate && "text-muted-foreground")}
-              >
-                <CalendarIcon className="mr-2 h-4 w-4" />
-                {endDate ? format(endDate, "PPP", { locale: ptBR }) : <span>Data de fim</span>}
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent className="w-auto p-0">
-              <Calendar
-                mode="single"
-                selected={endDate}
-                onSelect={setEndDate}
-                disabled={(date) =>
-                  startDate ? date < startDate : false
-                }
-                initialFocus
-              />
-            </PopoverContent>
-          </Popover>
+          <div className="space-y-2">
+            <Label className="text-xs font-bold uppercase tracking-wider text-slate-500">Início</Label>
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button variant={"outline"} className={cn("w-full bg-white rounded-xl border-slate-100 h-11 text-left font-normal", !startDate && "text-muted-foreground")}>
+                  <CalendarIcon className="mr-2 h-4 w-4 text-slate-400" />
+                  {startDate ? format(startDate, "dd/MM", { locale: ptBR }) : <span>Selecione</span>}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0 rounded-2xl">
+                <Calendar mode="single" selected={startDate} onSelect={setStartDate} initialFocus className="rounded-2xl" />
+              </PopoverContent>
+            </Popover>
+          </div>
+          <div className="space-y-2">
+            <Label className="text-xs font-bold uppercase tracking-wider text-slate-500">Fim</Label>
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button variant={"outline"} className={cn("w-full bg-white rounded-xl border-slate-100 h-11 text-left font-normal", !endDate && "text-muted-foreground")}>
+                  <CalendarIcon className="mr-2 h-4 w-4 text-slate-400" />
+                  {endDate ? format(endDate, "dd/MM", { locale: ptBR }) : <span>Selecione</span>}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0 rounded-2xl">
+                <Calendar mode="single" selected={endDate} onSelect={setEndDate} disabled={(date) => startDate ? date < startDate : false} initialFocus className="rounded-2xl" />
+              </PopoverContent>
+            </Popover>
+          </div>
         </div>
 
         {file && (
-          <div className="flex items-center gap-2 text-sm text-muted-foreground p-2 border rounded-md bg-accent/20">
-            <FileIcon className="h-4 w-4" />
-            <span>{file.name}</span>
+          <div className="flex items-center gap-3 text-sm font-semibold text-slate-700 p-3 border border-slate-100 rounded-xl bg-white shadow-sm">
+            <div className="bg-emerald-100 p-2 rounded-lg text-emerald-600">
+              <FileIcon className="h-4 w-4" />
+            </div>
+            <span className="truncate flex-1">{file.name}</span>
           </div>
         )}
-        <Button onClick={handleUpload} disabled={isButtonDisabled} className="w-full">
+        <Button onClick={handleUpload} disabled={isButtonDisabled} className="w-full h-11 rounded-xl font-bold shadow-lg shadow-primary/20">
           {isLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <UploadCloud className="mr-2 h-4 w-4" />}
-          Enviar Arquivo
+          Importar Agora
         </Button>
       </CardContent>
     </Card>

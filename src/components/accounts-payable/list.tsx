@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState } from 'react';
@@ -23,9 +22,9 @@ interface AccountsPayableListProps {
 }
 
 const statusStyles = {
-  paga: 'bg-green-100 text-green-800 border-transparent hover:bg-green-200',
-  pendente: 'bg-yellow-100 text-yellow-800 border-transparent hover:bg-yellow-200',
-  atrasada: 'bg-red-100 text-red-800 border-transparent hover:bg-red-200',
+  paga: 'bg-emerald-100 text-emerald-800 border-transparent',
+  pendente: 'bg-amber-100 text-amber-800 border-transparent',
+  atrasada: 'bg-rose-100 text-rose-800 border-transparent',
 };
 
 const formatCurrency = (value: number) => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value);
@@ -52,80 +51,80 @@ export default function AccountsPayableList({ accounts, onPay, onEdit, onDelete,
   );
 
   return (
-    <div className="rounded-lg border bg-card text-card-foreground shadow-sm">
-      <Table>
-        <TableCaption>{!loading && accounts.length === 0 ? 'Nenhuma conta a pagar encontrada.' : 'Uma lista de suas contas a pagar.'}</TableCaption>
-        <TableHeader>
-          <TableRow>
-            <TableHead>Descrição</TableHead>
-            <TableHead>Vencimento</TableHead>
-            <TableHead>Valor</TableHead>
-            <TableHead>Status</TableHead>
-            <TableHead>Categoria</TableHead>
-            <TableHead className="text-right w-[100px]">Ações</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {loading ? renderSkeletons() : accounts.map((account) => {
-            const utcDate = new Date(account.dueDate);
-            const adjustedDate = new Date(utcDate.getTime() + utcDate.getTimezoneOffset() * 60000);
-            return (
-            <TableRow key={account._id}>
-              <TableCell className="font-medium">{account.description}</TableCell>
-              <TableCell>{format(adjustedDate, 'dd/MM/yyyy', { locale: ptBR })}</TableCell>
-              <TableCell>{formatCurrency(account.amount)}</TableCell>
-              <TableCell>
-                <Badge className={cn('font-semibold capitalize', statusStyles[account.status])}>
-                  {account.status}
-                </Badge>
-              </TableCell>
-              <TableCell>{account.category}</TableCell>
-              <TableCell className="text-right">
-                <AlertDialog>
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" size="icon" className="cursor-pointer">
-                        <MoreHorizontal className="h-4 w-4" />
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
-                      {account.status !== 'paga' && (
-                        <DropdownMenuItem onSelect={() => handlePayClick(account._id)} disabled={payingId === account._id} className="cursor-pointer">
-                          {payingId === account._id ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Check className="mr-2 h-4 w-4" />}
-                          Marcar como paga
-                        </DropdownMenuItem>
-                      )}
-                      <DropdownMenuItem onSelect={() => onEdit(account)} className="cursor-pointer">
-                        <Edit className="mr-2 h-4 w-4" />
-                        Editar
+    <Table>
+      <TableCaption className="pb-6">{!loading && accounts.length === 0 ? 'Nenhuma conta encontrada.' : `Total de ${accounts.length} contas listadas.`}</TableCaption>
+      <TableHeader className="bg-slate-50/50">
+        <TableRow className="hover:bg-transparent">
+          <TableHead className="py-4 font-bold text-slate-600">Descrição</TableHead>
+          <TableHead className="py-4 font-bold text-slate-600">Vencimento</TableHead>
+          <TableHead className="py-4 font-bold text-slate-600">Valor</TableHead>
+          <TableHead className="py-4 font-bold text-slate-600">Status</TableHead>
+          <TableHead className="py-4 font-bold text-slate-600">Categoria</TableHead>
+          <TableHead className="text-right py-4 font-bold text-slate-600">Ações</TableHead>
+        </TableRow>
+      </TableHeader>
+      <TableBody>
+        {loading ? renderSkeletons() : accounts.map((account) => {
+          const utcDate = new Date(account.dueDate);
+          const adjustedDate = new Date(utcDate.getTime() + utcDate.getTimezoneOffset() * 60000);
+          return (
+          <TableRow key={account._id} className="group transition-colors">
+            <TableCell className="font-semibold text-slate-800 py-4">{account.description}</TableCell>
+            <TableCell className="text-muted-foreground">{format(adjustedDate, 'dd/MM/yyyy', { locale: ptBR })}</TableCell>
+            <TableCell className="font-mono font-medium">{formatCurrency(account.amount)}</TableCell>
+            <TableCell>
+              <Badge className={cn('font-bold capitalize rounded-lg px-2.5 py-0.5 shadow-sm', statusStyles[account.status])}>
+                {account.status}
+              </Badge>
+            </TableCell>
+            <TableCell>
+              <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">{account.category}</span>
+            </TableCell>
+            <TableCell className="text-right">
+              <AlertDialog>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" size="icon" className="cursor-pointer hover:bg-slate-100 rounded-xl transition-all">
+                      <MoreHorizontal className="h-5 w-5 text-slate-400 group-hover:text-slate-600" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="rounded-xl p-2 shadow-xl border-slate-100">
+                    {account.status !== 'paga' && (
+                      <DropdownMenuItem onSelect={() => handlePayClick(account._id)} disabled={payingId === account._id} className="cursor-pointer rounded-lg py-2.5">
+                        {payingId === account._id ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Check className="mr-2 h-4 w-4 text-emerald-500" />}
+                        Marcar como paga
                       </DropdownMenuItem>
-                      <AlertDialogTrigger asChild>
-                         <DropdownMenuItem className="text-red-600 focus:text-red-600 focus:bg-red-50 cursor-pointer">
-                            <Trash2 className="mr-2 h-4 w-4" />
-                            Excluir
-                        </DropdownMenuItem>
-                      </AlertDialogTrigger>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                  <AlertDialogContent>
-                    <AlertDialogHeader>
-                      <AlertDialogTitle>Você tem certeza?</AlertDialogTitle>
-                      <AlertDialogDescription>
-                        Esta ação não pode ser desfeita. Isso excluirá permanentemente esta conta a pagar.
-                      </AlertDialogDescription>
-                    </AlertDialogHeader>
-                    <AlertDialogFooter>
-                      <AlertDialogCancel className="cursor-pointer">Cancelar</AlertDialogCancel>
-                      <AlertDialogAction className={cn(buttonVariants({ variant: "destructive" }), "cursor-pointer")} onClick={() => onDelete(account._id)}>Excluir</AlertDialogAction>
-                    </AlertDialogFooter>
-                  </AlertDialogContent>
-                </AlertDialog>
-              </TableCell>
-            </TableRow>
-            );
-          })}
-        </TableBody>
-      </Table>
-    </div>
+                    )}
+                    <DropdownMenuItem onSelect={() => onEdit(account)} className="cursor-pointer rounded-lg py-2.5">
+                      <Edit className="mr-2 h-4 w-4 text-primary" />
+                      Editar
+                    </DropdownMenuItem>
+                    <AlertDialogTrigger asChild>
+                       <DropdownMenuItem className="text-red-600 focus:text-red-600 focus:bg-red-50 cursor-pointer rounded-lg py-2.5">
+                          <Trash2 className="mr-2 h-4 w-4" />
+                          Excluir
+                      </DropdownMenuItem>
+                    </AlertDialogTrigger>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+                <AlertDialogContent className="rounded-2xl border-none shadow-2xl">
+                  <AlertDialogHeader>
+                    <AlertDialogTitle className="text-xl">Confirmar exclusão?</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      Esta ação não pode ser desfeita. Isso excluirá permanentemente esta conta do seu controle financeiro.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter className="mt-4 gap-2">
+                    <AlertDialogCancel className="cursor-pointer rounded-xl border-none bg-slate-100 hover:bg-slate-200">Cancelar</AlertDialogCancel>
+                    <AlertDialogAction className={cn(buttonVariants({ variant: "destructive" }), "cursor-pointer rounded-xl shadow-lg shadow-rose-500/20")} onClick={() => onDelete(account._id)}>Excluir Conta</AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
+            </TableCell>
+          </TableRow>
+          );
+        })}
+      </TableBody>
+    </Table>
   );
 }

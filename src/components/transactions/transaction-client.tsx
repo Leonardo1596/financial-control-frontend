@@ -8,9 +8,8 @@ import TransactionList from './transaction-list';
 import TransactionForm from './transaction-form';
 import FileUpload from './file-upload';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/accordion'; // Fixed import issue found in previous check
 import { Button, buttonVariants } from '@/components/ui/button';
-import { Loader2, Trash2 } from 'lucide-react';
+import { Loader2, Trash2, Calendar, LayoutGrid, Plus } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { AlertDialog as AD, AlertDialogAction as ADA, AlertDialogCancel as ADC, AlertDialogContent as ADContent, AlertDialogDescription as ADDescription, AlertDialogFooter as ADFooter, AlertDialogHeader as ADHeader, AlertDialogTitle as ADTitle, AlertDialogTrigger as ADTrigger } from '@/components/ui/alert-dialog';
@@ -87,27 +86,44 @@ export default function TransactionClient() {
   }));
 
   return (
-    <div className="space-y-6">
-      <Accordion type="single" collapsible className="w-full">
-        <AccordionItem value="item-1">
-          <AccordionTrigger className='text-lg font-semibold'>Adicionar Nova Transação</AccordionTrigger>
-          <AccordionContent>
-            <div className="pt-4 grid gap-6 md:grid-cols-2">
-              <TransactionForm onTransactionAdded={fetchTransactions} />
-              <FileUpload onUploadSuccess={fetchTransactions} />
-            </div>
-          </AccordionContent>
-        </AccordionItem>
-      </Accordion>
+    <div className="space-y-10">
+      <div className="bg-white rounded-3xl shadow-sm border border-slate-100 overflow-hidden">
+        <Accordion type="single" collapsible className="w-full">
+          <AccordionItem value="item-1" className="border-none">
+            <AccordionTrigger className='px-8 py-6 text-lg font-bold hover:no-underline hover:bg-slate-50 transition-all'>
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-primary/10 rounded-lg text-primary">
+                  <Plus className="h-5 w-5" />
+                </div>
+                Adicionar Nova Transação
+              </div>
+            </AccordionTrigger>
+            <AccordionContent className="px-8 pb-8 pt-2">
+              <div className="grid gap-8 md:grid-cols-2">
+                <TransactionForm onTransactionAdded={fetchTransactions} />
+                <FileUpload onUploadSuccess={fetchTransactions} />
+              </div>
+            </AccordionContent>
+          </AccordionItem>
+        </Accordion>
+      </div>
 
-      <div className="p-4 border rounded-lg bg-card flex flex-col sm:flex-row justify-between items-center gap-4 flex-wrap">
-          <div className='flex-grow'>
-              <h3 className="text-lg font-semibold">Gerenciar Transações</h3>
-              <p className="text-sm text-muted-foreground">Filtre por data ou exclua todas as suas transações.</p>
+      <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 flex flex-col lg:flex-row justify-between items-center gap-6">
+          <div className='flex items-center gap-4'>
+              <div className="p-3 bg-slate-100 rounded-xl">
+                <LayoutGrid className="h-6 w-6 text-slate-500" />
+              </div>
+              <div>
+                <h3 className="text-lg font-bold">Histórico</h3>
+                <p className="text-sm text-muted-foreground">Analise suas movimentações.</p>
+              </div>
           </div>
-        <div className='flex items-center gap-2'>
+        <div className='flex items-center gap-3 flex-wrap justify-center'>
+            <div className="flex items-center gap-2 mr-2">
+               <Calendar className="h-4 w-4 text-slate-400" />
+            </div>
             <Select value={month} onValueChange={setMonth}>
-                <SelectTrigger className="w-[140px]">
+                <SelectTrigger className="w-[140px] bg-slate-50 border-none rounded-xl h-11 font-medium">
                 <SelectValue placeholder="Mês" />
                 </SelectTrigger>
                 <SelectContent>
@@ -115,7 +131,7 @@ export default function TransactionClient() {
                 </SelectContent>
             </Select>
             <Select value={year} onValueChange={setYear}>
-                <SelectTrigger className="w-[120px]">
+                <SelectTrigger className="w-[110px] bg-slate-50 border-none rounded-xl h-11 font-medium">
                 <SelectValue placeholder="Ano" />
                 </SelectTrigger>
                 <SelectContent>
@@ -124,23 +140,23 @@ export default function TransactionClient() {
             </Select>
             <AD>
             <ADTrigger asChild>
-                <Button variant="destructive" disabled={transactions.length === 0 || loading}>
-                <Trash2 className="mr-2 h-4 w-4" />
-                Excluir Todas
+                <Button variant="ghost" disabled={transactions.length === 0 || loading} className="text-rose-500 hover:text-rose-600 hover:bg-rose-50 h-11 rounded-xl">
+                  <Trash2 className="mr-2 h-5 w-5" />
+                  Limpar Tudo
                 </Button>
             </ADTrigger>
-            <ADContent>
+            <ADContent className="rounded-2xl border-none shadow-2xl">
                 <ADHeader>
-                <ADTitle>Você tem certeza absoluta?</ADTitle>
+                <ADTitle className="text-xl">Você tem certeza absoluta?</ADTitle>
                 <ADDescription>
-                    Esta ação não pode ser desfeita. Isso excluirá permanentemente TODAS as suas transações.
+                    Esta ação não pode ser desfeita. Isso excluirá permanentemente TODAS as suas transações para o período selecionado.
                 </ADDescription>
                 </ADHeader>
-                <ADFooter>
-                <ADC>Cancelar</ADC>
+                <ADFooter className="mt-4 gap-2">
+                <ADC className="rounded-xl border-none bg-slate-100 hover:bg-slate-200">Cancelar</ADC>
                 <ADA
                     disabled={isDeletingAll}
-                    className={cn(buttonVariants({variant: "destructive"}))}
+                    className={cn(buttonVariants({variant: "destructive"}), "rounded-xl shadow-lg shadow-rose-500/20")}
                     onClick={handleDeleteAll}
                 >
                     {isDeletingAll ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
@@ -152,7 +168,9 @@ export default function TransactionClient() {
         </div>
       </div>
 
-      <TransactionList transactions={transactions} onDelete={handleDelete} loading={loading} />
+      <div className="bg-white rounded-3xl shadow-xl shadow-slate-200/50 border border-slate-100 overflow-hidden">
+        <TransactionList transactions={transactions} onDelete={handleDelete} loading={loading} />
+      </div>
     </div>
   );
 }
