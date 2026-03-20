@@ -3,8 +3,8 @@
 import { useState, useEffect } from 'react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow, TableCaption } from '@/components/ui/table';
 import { Button, buttonVariants } from '@/components/ui/button';
-import { Trash2 } from 'lucide-react';
-import type { Transaction } from '@/lib/types';
+import { Trash2, Landmark } from 'lucide-react';
+import type { Transaction, UserAccount } from '@/lib/types';
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -14,13 +14,14 @@ import { Badge } from '@/components/ui/badge';
 
 interface TransactionListProps {
   transactions: Transaction[];
+  accounts?: UserAccount[];
   onDelete: (id: string) => void;
   loading: boolean;
 }
 
 const TRANSACTIONS_PER_PAGE = 15;
 
-export default function TransactionList({ transactions, onDelete, loading }: TransactionListProps) {
+export default function TransactionList({ transactions, accounts = [], onDelete, loading }: TransactionListProps) {
   const [currentPage, setCurrentPage] = useState(1);
 
   const totalPages = Math.ceil(transactions.length / TRANSACTIONS_PER_PAGE);
@@ -39,10 +40,17 @@ export default function TransactionList({ transactions, onDelete, loading }: Tra
     
   const formatCurrency = (value: number) => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value);
 
+  const getAccountName = (accountId?: string) => {
+    if (!accountId) return 'N/A';
+    const account = accounts.find(a => a._id === accountId);
+    return account ? account.name : 'Conta não encontrada';
+  };
+
   const renderSkeletons = () => (
     Array.from({ length: 5 }).map((_, index) => (
       <TableRow key={index}>
         <TableCell><Skeleton className="h-4 w-full max-w-[200px]" /></TableCell>
+        <TableCell><Skeleton className="h-4 w-[100px]" /></TableCell>
         <TableCell><Skeleton className="h-4 w-[100px]" /></TableCell>
         <TableCell><Skeleton className="h-6 w-[70px] rounded-full" /></TableCell>
         <TableCell className="text-right"><Skeleton className="h-4 w-[80px] ml-auto" /></TableCell>
@@ -122,6 +130,7 @@ export default function TransactionList({ transactions, onDelete, loading }: Tra
           <TableRow className="hover:bg-transparent">
             <TableHead className="py-5 px-6 font-bold text-slate-600">Descrição</TableHead>
             <TableHead className="py-5 px-6 font-bold text-slate-600">Data</TableHead>
+            <TableHead className="py-5 px-6 font-bold text-slate-600">Conta</TableHead>
             <TableHead className="py-5 px-6 font-bold text-slate-600">Tipo</TableHead>
             <TableHead className="text-right py-5 px-6 font-bold text-slate-600">Valor</TableHead>
             <TableHead className="text-right py-5 px-6 font-bold text-slate-600">Ações</TableHead>
@@ -135,6 +144,12 @@ export default function TransactionList({ transactions, onDelete, loading }: Tra
             <TableRow key={transaction._id} className="group transition-colors hover:bg-slate-50/50">
               <TableCell className="font-semibold text-slate-800 py-5 px-6">{transaction.description}</TableCell>
               <TableCell className="text-muted-foreground px-6">{format(adjustedDate, 'dd/MM/yyyy', { locale: ptBR })}</TableCell>
+              <TableCell className="px-6">
+                <div className="flex items-center gap-2 text-slate-600">
+                  <Landmark className="h-3.5 w-3.5 text-slate-400" />
+                  <span className="text-xs font-medium">{getAccountName(transaction.accountId)}</span>
+                </div>
+              </TableCell>
               <TableCell className="px-6">
                 <Badge 
                   className={cn(

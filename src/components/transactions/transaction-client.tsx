@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/use-auth';
-import type { Transaction } from '@/lib/types';
+import type { Transaction, UserAccount } from '@/lib/types';
 import TransactionList from './transaction-list';
 import TransactionForm from './transaction-form';
 import FileUpload from './file-upload';
@@ -18,24 +18,34 @@ export default function TransactionClient() {
   const { token } = useAuth();
   const { toast } = useToast();
   const [transactions, setTransactions] = useState<Transaction[]>([]);
+  const [accounts, setAccounts] = useState<UserAccount[]>([]);
   const [loading, setLoading] = useState(true);
   const [isDeletingAll, setIsDeletingAll] = useState(false);
   
-  // Filtros padrão: Mês e Ano atuais
   const [year, setYear] = useState(new Date().getFullYear().toString());
   const [month, setMonth] = useState((new Date().getMonth() + 1).toString());
 
-  const fetchTransactions = useCallback(async () => {
+  const fetchData = useCallback(async () => {
     if (!token) return;
     setLoading(true);
     try {
-      // Buscamos todas as transações e filtramos localmente para garantir funcionamento
-      const response = await fetch(`https://financial-control-9s01.onrender.com/list-transaction`, {
+      // Busca transações
+      const transResponse = await fetch(`https://financial-control-9s01.onrender.com/list-transaction`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
-      if (!response.ok) throw new Error('Falha ao buscar transações');
-      const data = await response.json();
-      setTransactions(Array.isArray(data) ? data : []);
+      
+      // Busca contas para mapear nomes na tabela
+      const accountsResponse = await fetch('https://financial-control-9s01.onrender.com/list-accounts', {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+
+      if (!transResponse.ok || !accountsResponse.ok) throw new Error('Falha ao buscar dados');
+
+      const transData = await transResponse.json();
+      const accountsData = await accountsResponse.json();
+
+      setTransactions(Array.isArray(transData) ? transData : []);
+      setAccounts(Array.isArray(accountsData) ? accountsData : []);
     } catch (error) {
       toast({ variant: 'destructive', title: 'Erro', description: (error as Error).message });
       setTransactions([]);
@@ -45,8 +55,8 @@ export default function TransactionClient() {
   }, [token, toast]);
 
   useEffect(() => {
-    fetchTransactions();
-  }, [fetchTransactions]);
+    fetchData();
+  }, [fetchData]);
 
   const handleDelete = async (transactionId: string) => {
     try {
@@ -56,7 +66,7 @@ export default function TransactionClient() {
       });
       if (!response.ok) throw new Error('Falha ao deletar transação');
       toast({ title: 'Sucesso', description: 'Transação deletada.' });
-      fetchTransactions();
+      fetchData();
     } catch (error) {
       toast({ variant: 'destructive', title: 'Erro', description: (error as Error).message });
     }
@@ -74,7 +84,7 @@ export default function TransactionClient() {
         throw new Error(errorData.message || 'Falha ao deletar todas as transações.');
       }
       toast({ title: 'Sucesso', description: 'Todas as transações foram excluídas com sucesso.' });
-      fetchTransactions();
+      fetchData();
     } catch (error) {
       toast({ variant: 'destructive', title: 'Erro', description: (error as Error).message });
     } finally {
@@ -82,11 +92,9 @@ export default function TransactionClient() {
     }
   };
 
-  // Filtragem local das transações
   const filteredTransactions = useMemo(() => {
     return transactions.filter(transaction => {
       const transDate = new Date(transaction.date);
-      // Ajuste para fuso horário local ao comparar
       const adjustedDate = new Date(transDate.getTime() + transDate.getTimezoneOffset() * 60000);
       const transMonth = (adjustedDate.getMonth() + 1).toString();
       const transYear = adjustedDate.getFullYear().toString();
@@ -119,8 +127,8 @@ export default function TransactionClient() {
             </AccordionTrigger>
             <AccordionContent className="px-8 pb-8 pt-2">
               <div className="grid gap-8 md:grid-cols-2">
-                <TransactionForm onTransactionAdded={fetchTransactions} />
-                <FileUpload onUploadSuccess={fetchTransactions} />
+                <TransactionForm onTransactionAdded={fetchData} />
+                <FileUpload onUploadSuccess={fetchData} />
               </div>
             </AccordionContent>
           </AccordionItem>
@@ -192,7 +200,12 @@ export default function TransactionClient() {
       </div>
 
       <div className="bg-white rounded-3xl shadow-xl shadow-slate-200/50 border border-slate-100 overflow-hidden">
-        <TransactionList transactions={filteredTransactions} onDelete={handleDelete} loading={loading} />
+        <TransactionList 
+          transactions={filteredTransactions} 
+          accounts={accounts}
+          onDelete={handleDelete} 
+          loading={loading} 
+        />
       </div>
     </div>
   );
