@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -15,25 +15,45 @@ import { Calendar } from '@/components/ui/calendar';
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { CalendarIcon, Loader2, MousePointer2 } from 'lucide-react';
+import { CalendarIcon, Loader2, MousePointer2, Landmark } from 'lucide-react';
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from '@/components/ui/card';
+import type { UserAccount } from '@/lib/types';
 
 const formSchema = z.object({
   description: z.string().min(1, { message: 'A descrição é obrigatória' }),
   amount: z.coerce.number().positive({ message: 'O valor deve ser positivo' }),
   type: z.enum(['income', 'expense']),
   date: z.date({ required_error: 'A data é obrigatória.' }),
+  accountId: z.string().min(1, { message: 'Selecione uma conta' }),
 });
 
 export default function TransactionForm({ onTransactionAdded }: { onTransactionAdded: () => void }) {
   const { token, user } = useAuth();
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
+  const [accounts, setAccounts] = useState<UserAccount[]>([]);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
-    defaultValues: { description: '', amount: 0, type: 'expense', date: new Date() },
+    defaultValues: { description: '', amount: 0, type: 'expense', date: new Date(), accountId: '' },
   });
+
+  useEffect(() => {
+    async function fetchAccounts() {
+      try {
+        const response = await fetch('https://financial-control-9s01.onrender.com/list-accounts', {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        if (response.ok) {
+          const data = await response.json();
+          setAccounts(Array.isArray(data) ? data : []);
+        }
+      } catch (error) {
+        console.error('Falha ao carregar contas', error);
+      }
+    }
+    if (token) fetchAccounts();
+  }, [token]);
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
     if (!user) {
@@ -82,6 +102,31 @@ export default function TransactionForm({ onTransactionAdded }: { onTransactionA
                 <FormMessage />
               </FormItem>
             )}/>
+            
+            <FormField control={form.control} name="accountId" render={({ field }) => (
+              <FormItem>
+                <FormLabel className="text-xs font-bold uppercase tracking-wider text-slate-500">Conta Bancária</FormLabel>
+                <Select onValueChange={field.onChange} defaultValue={field.value} value={field.value}>
+                  <FormControl>
+                    <SelectTrigger className="bg-white rounded-xl border-slate-100 h-11">
+                      <div className="flex items-center gap-2">
+                        <Landmark className="h-4 w-4 text-slate-400" />
+                        <SelectValue placeholder="Selecione a conta" />
+                      </div>
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent className="rounded-xl">
+                    {accounts.length === 0 ? (
+                      <div className="p-2 text-sm text-center text-muted-foreground">Nenhuma conta cadastrada</div>
+                    ) : (
+                      accounts.map(acc => <SelectItem key={acc._id} value={acc._id}>{acc.name}</SelectItem>)
+                    )}
+                  </SelectContent>
+                </Select>
+                <FormMessage />
+              </FormItem>
+            )}/>
+
             <div className="grid grid-cols-2 gap-4">
               <FormField control={form.control} name="amount" render={({ field }) => (
                 <FormItem>

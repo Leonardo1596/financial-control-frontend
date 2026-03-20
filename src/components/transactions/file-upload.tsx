@@ -1,18 +1,20 @@
 "use client";
 
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { useAuth } from '@/hooks/use-auth';
 import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Loader2, UploadCloud, File as FileIcon, CalendarIcon, FileSpreadsheet } from 'lucide-react';
+import { Loader2, UploadCloud, File as FileIcon, CalendarIcon, FileSpreadsheet, Landmark } from 'lucide-react';
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from '@/components/ui/card';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar } from '@/components/ui/calendar';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import type { UserAccount } from '@/lib/types';
 
 export default function FileUpload({ onUploadSuccess }: { onUploadSuccess: () => void }) {
   const { token } = useAuth();
@@ -20,8 +22,27 @@ export default function FileUpload({ onUploadSuccess }: { onUploadSuccess: () =>
   const [file, setFile] = useState<File | null>(null);
   const [startDate, setStartDate] = useState<Date | undefined>(undefined);
   const [endDate, setEndDate] = useState<Date | undefined>(undefined);
+  const [accountId, setAccountId] = useState<string>('');
+  const [accounts, setAccounts] = useState<UserAccount[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    async function fetchAccounts() {
+      try {
+        const response = await fetch('https://financial-control-9s01.onrender.com/list-accounts', {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        if (response.ok) {
+          const data = await response.json();
+          setAccounts(Array.isArray(data) ? data : []);
+        }
+      } catch (error) {
+        console.error('Falha ao carregar contas', error);
+      }
+    }
+    if (token) fetchAccounts();
+  }, [token]);
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const files = event.target.files;
@@ -41,10 +62,15 @@ export default function FileUpload({ onUploadSuccess }: { onUploadSuccess: () =>
       toast({ variant: 'destructive', title: 'Sem arquivo', description: 'Selecione um arquivo CSV para continuar.' });
       return;
     }
+    if (!accountId) {
+      toast({ variant: 'destructive', title: 'Sem conta', description: 'Selecione uma conta bancária para importar as transações.' });
+      return;
+    }
     
     setIsLoading(true);
     const formData = new FormData();
     formData.append('file', file);
+    formData.append('accountId', accountId);
     if (startDate) {
       formData.append('startDate', format(startDate, 'yyyy-MM-dd'));
     }
@@ -64,6 +90,7 @@ export default function FileUpload({ onUploadSuccess }: { onUploadSuccess: () =>
       setFile(null);
       setStartDate(undefined);
       setEndDate(undefined);
+      setAccountId('');
       if (fileInputRef.current) {
         fileInputRef.current.value = '';
       }
@@ -74,7 +101,7 @@ export default function FileUpload({ onUploadSuccess }: { onUploadSuccess: () =>
     }
   };
 
-  const isButtonDisabled = isLoading || !file;
+  const isButtonDisabled = isLoading || !file || !accountId;
 
   return (
     <Card className="border-none bg-slate-50/50 shadow-none">
@@ -86,15 +113,36 @@ export default function FileUpload({ onUploadSuccess }: { onUploadSuccess: () =>
         <CardDescription>Envie múltiplos registros de uma vez.</CardDescription>
       </CardHeader>
       <CardContent className="px-0 pb-0 space-y-6">
-        <div className="space-y-2">
-          <Label htmlFor="csv-file" className="text-xs font-bold uppercase tracking-wider text-slate-500">Arquivo CSV</Label>
-          <div 
-            onClick={() => fileInputRef.current?.click()}
-            className="border-2 border-dashed border-slate-200 rounded-2xl p-6 flex flex-col items-center justify-center gap-3 bg-white hover:bg-slate-50 transition-all cursor-pointer group"
-          >
-            <UploadCloud className="h-8 w-8 text-slate-400 group-hover:text-primary transition-colors" />
-            <span className="text-sm font-medium text-slate-600">Clique para selecionar</span>
-            <Input id="csv-file" type="file" accept=".csv" className="hidden" onChange={handleFileChange} ref={fileInputRef} />
+        <div className="space-y-4">
+          <div className="space-y-2">
+            <Label className="text-xs font-bold uppercase tracking-wider text-slate-500">Conta Destino</Label>
+            <Select onValueChange={setAccountId} value={accountId}>
+              <SelectTrigger className="bg-white rounded-xl border-slate-100 h-11">
+                <div className="flex items-center gap-2">
+                  <Landmark className="h-4 w-4 text-slate-400" />
+                  <SelectValue placeholder="Selecione a conta" />
+                </div>
+              </SelectTrigger>
+              <SelectContent className="rounded-xl">
+                {accounts.length === 0 ? (
+                  <div className="p-2 text-sm text-center text-muted-foreground">Nenhuma conta cadastrada</div>
+                ) : (
+                  accounts.map(acc => <SelectItem key={acc._id} value={acc._id}>{acc.name}</SelectItem>)
+                )}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="csv-file" className="text-xs font-bold uppercase tracking-wider text-slate-500">Arquivo CSV</Label>
+            <div 
+              onClick={() => fileInputRef.current?.click()}
+              className="border-2 border-dashed border-slate-200 rounded-2xl p-6 flex flex-col items-center justify-center gap-3 bg-white hover:bg-slate-50 transition-all cursor-pointer group"
+            >
+              <UploadCloud className="h-8 w-8 text-slate-400 group-hover:text-primary transition-colors" />
+              <span className="text-sm font-medium text-slate-600">Clique para selecionar</span>
+              <Input id="csv-file" type="file" accept=".csv" className="hidden" onChange={handleFileChange} ref={fileInputRef} />
+            </div>
           </div>
         </div>
         

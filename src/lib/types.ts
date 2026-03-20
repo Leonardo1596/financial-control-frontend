@@ -12,6 +12,7 @@ export interface AuthResponse {
 export interface Transaction {
   _id: string;
   userId: string;
+  accountId?: string;
   type: 'income' | 'expense';
   description: string;
   amount: number;
@@ -34,4 +35,12 @@ export interface AccountPayable {
   category: string;
   type: 'fixa' | 'variavel';
   recurring: boolean;
+}
+
+export interface UserAccount {
+  _id: string;
+  userId: string;
+  name: string;
+  balance: number;
+  createdAt?: string;
 }

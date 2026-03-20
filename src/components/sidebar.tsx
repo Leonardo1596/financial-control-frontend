@@ -3,7 +3,7 @@
 import { useAuth } from "@/hooks/use-auth";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Landmark, LayoutDashboard, LogOut, ArrowLeftRight, ReceiptText, ChevronRight } from "lucide-react";
+import { Landmark, LayoutDashboard, LogOut, ArrowLeftRight, ReceiptText, ChevronRight, Wallet } from "lucide-react";
 import { Button } from "./ui/button";
 import { cn } from "@/lib/utils";
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
@@ -20,6 +20,7 @@ export function AppSidebar() {
     { href: '/', icon: LayoutDashboard, label: 'Painel' },
     { href: '/transactions', icon: ArrowLeftRight, label: 'Transações' },
     { href: '/accounts-payable', icon: ReceiptText, label: 'Contas a Pagar' },
+    { href: '/accounts', icon: Wallet, label: 'Contas Bancárias' },
   ];
 
   return (
