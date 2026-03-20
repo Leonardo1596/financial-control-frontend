@@ -9,7 +9,7 @@ import TransactionForm from './transaction-form';
 import FileUpload from './file-upload';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { Button, buttonVariants } from '@/components/ui/button';
-import { Loader2, Trash2, Calendar, LayoutGrid, Plus, Filter } from 'lucide-react';
+import { Loader2, Trash2, LayoutGrid, Plus, Filter, Landmark } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { AlertDialog as AD, AlertDialogAction as ADA, AlertDialogCancel as ADC, AlertDialogContent as ADContent, AlertDialogDescription as ADDescription, AlertDialogFooter as ADFooter, AlertDialogHeader as ADHeader, AlertDialogTitle as ADTitle, AlertDialogTrigger as ADTrigger } from '@/components/ui/alert-dialog';
@@ -24,6 +24,7 @@ export default function TransactionClient() {
   
   const [year, setYear] = useState(new Date().getFullYear().toString());
   const [month, setMonth] = useState((new Date().getMonth() + 1).toString());
+  const [selectedAccountId, setSelectedAccountId] = useState('todas');
 
   const fetchData = useCallback(async () => {
     if (!token) return;
@@ -34,7 +35,7 @@ export default function TransactionClient() {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       
-      // Busca contas para mapear nomes na tabela
+      // Busca contas para mapear nomes na tabela e filtros
       const accountsResponse = await fetch('https://financial-control-9s01.onrender.com/list-accounts', {
         headers: { 'Authorization': `Bearer ${token}` }
       });
@@ -101,10 +102,11 @@ export default function TransactionClient() {
 
       const monthMatch = month === 'todas' || transMonth === month;
       const yearMatch = year === 'todas' || transYear === year;
+      const accountMatch = selectedAccountId === 'todas' || transaction.accountId === selectedAccountId;
 
-      return monthMatch && yearMatch;
+      return monthMatch && yearMatch && accountMatch;
     });
-  }, [transactions, month, year]);
+  }, [transactions, month, year, selectedAccountId]);
 
   const years = Array.from({ length: 10 }, (_, i) => (new Date().getFullYear() - i).toString());
   const months = Array.from({ length: 12 }, (_, i) => ({
@@ -151,11 +153,25 @@ export default function TransactionClient() {
             <Filter className="h-4 w-4" />
             <span className="text-xs font-bold uppercase tracking-widest">Filtros</span>
           </div>
+          <Select value={selectedAccountId} onValueChange={setSelectedAccountId}>
+            <SelectTrigger className="w-full sm:w-[180px] bg-slate-50 border-none rounded-xl h-11 font-medium hover:bg-slate-100 transition-colors">
+              <div className="flex items-center gap-2">
+                <Landmark className="h-4 w-4 text-slate-400" />
+                <SelectValue placeholder="Todas as contas" />
+              </div>
+            </SelectTrigger>
+            <SelectContent className="rounded-xl">
+              <SelectItem value="todas">Todas as contas</SelectItem>
+              {accounts.map(acc => (
+                <SelectItem key={acc._id} value={acc._id}>{acc.name}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
           <Select value={month} onValueChange={setMonth}>
             <SelectTrigger className="w-full sm:w-[150px] bg-slate-50 border-none rounded-xl h-11 font-medium hover:bg-slate-100 transition-colors">
               <SelectValue placeholder="Mês" />
             </SelectTrigger>
-            <SelectContent>
+            <SelectContent className="rounded-xl">
               <SelectItem value="todas">Todos os meses</SelectItem>
               {months.map(m => <SelectItem key={m.value} value={m.value}>{m.label}</SelectItem>)}
             </SelectContent>
@@ -164,7 +180,7 @@ export default function TransactionClient() {
             <SelectTrigger className="w-full sm:w-[120px] bg-slate-50 border-none rounded-xl h-11 font-medium hover:bg-slate-100 transition-colors">
               <SelectValue placeholder="Ano" />
             </SelectTrigger>
-            <SelectContent>
+            <SelectContent className="rounded-xl">
               <SelectItem value="todas">Todos os anos</SelectItem>
               {years.map(y => <SelectItem key={y} value={y}>{y}</SelectItem>)}
             </SelectContent>
