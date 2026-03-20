@@ -66,40 +66,42 @@ export default function TransactionList({ transactions, onDelete, loading }: Tra
     }
 
     return (
-        <div className="flex items-center justify-between p-6 bg-slate-50/50 border-t border-slate-100">
-             <div className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
+        <div className="flex flex-col sm:flex-row items-center justify-between p-6 bg-slate-50/50 border-t border-slate-100 gap-4">
+             <div className="text-xs font-bold uppercase tracking-widest text-muted-foreground order-2 sm:order-1">
                 Página {currentPage} de {totalPages}
             </div>
-            <div className="flex items-center space-x-2">
+            <div className="flex items-center space-x-2 order-1 sm:order-2">
                 <Button
                     variant="ghost"
                     size="sm"
-                    className="rounded-lg font-bold text-xs uppercase"
+                    className="rounded-lg font-bold text-xs uppercase hover:bg-white"
                     onClick={() => setCurrentPage(currentPage - 1)}
                     disabled={currentPage === 1}
                 >
                     Anterior
                 </Button>
-                {range.map((page, index) => {
-                    if (page === '...') {
-                        return <span key={index} className="px-2 text-slate-300">...</span>;
-                    }
-                    return (
-                        <Button
-                            key={index}
-                            variant={currentPage === page ? "default" : "ghost"}
-                            size="sm"
-                            className={cn("h-8 w-8 rounded-lg p-0 font-bold", currentPage === page ? "shadow-md shadow-primary/20" : "")}
-                            onClick={() => setCurrentPage(page as number)}
-                        >
-                            {page}
-                        </Button>
-                    );
-                })}
+                <div className="flex items-center gap-1">
+                    {range.map((page, index) => {
+                        if (page === '...') {
+                            return <span key={index} className="px-1 text-slate-300">...</span>;
+                        }
+                        return (
+                            <Button
+                                key={index}
+                                variant={currentPage === page ? "default" : "ghost"}
+                                size="sm"
+                                className={cn("h-8 w-8 rounded-lg p-0 font-bold text-xs", currentPage === page ? "shadow-md shadow-primary/20" : "hover:bg-white")}
+                                onClick={() => setCurrentPage(page as number)}
+                            >
+                                {page}
+                            </Button>
+                        );
+                    })}
+                </div>
                 <Button
                     variant="ghost"
                     size="sm"
-                    className="rounded-lg font-bold text-xs uppercase"
+                    className="rounded-lg font-bold text-xs uppercase hover:bg-white"
                     onClick={() => setCurrentPage(currentPage + 1)}
                     disabled={currentPage === totalPages}
                 >
@@ -113,14 +115,16 @@ export default function TransactionList({ transactions, onDelete, loading }: Tra
   return (
     <>
       <Table>
-        <TableCaption className="pb-6">{!loading && transactions.length === 0 ? 'Sem transações neste período.' : `Exibindo ${paginatedTransactions.length} de ${transactions.length} transações.`}</TableCaption>
-        <TableHeader className="bg-slate-50/50">
+        <TableCaption className="pb-6 pt-4 text-xs font-medium uppercase tracking-widest text-slate-400">
+          {!loading && transactions.length === 0 ? 'Sem transações neste período.' : `Exibindo ${paginatedTransactions.length} de ${transactions.length} registros`}
+        </TableCaption>
+        <TableHeader className="bg-slate-50/50 border-b border-slate-100">
           <TableRow className="hover:bg-transparent">
-            <TableHead className="py-4 font-bold text-slate-600">Descrição</TableHead>
-            <TableHead className="py-4 font-bold text-slate-600">Data</TableHead>
-            <TableHead className="py-4 font-bold text-slate-600">Tipo</TableHead>
-            <TableHead className="text-right py-4 font-bold text-slate-600">Valor</TableHead>
-            <TableHead className="text-right py-4 font-bold text-slate-600">Ações</TableHead>
+            <TableHead className="py-5 px-6 font-bold text-slate-600">Descrição</TableHead>
+            <TableHead className="py-5 px-6 font-bold text-slate-600">Data</TableHead>
+            <TableHead className="py-5 px-6 font-bold text-slate-600">Tipo</TableHead>
+            <TableHead className="text-right py-5 px-6 font-bold text-slate-600">Valor</TableHead>
+            <TableHead className="text-right py-5 px-6 font-bold text-slate-600">Ações</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -128,13 +132,13 @@ export default function TransactionList({ transactions, onDelete, loading }: Tra
             const utcDate = new Date(transaction.date);
             const adjustedDate = new Date(utcDate.getTime() + utcDate.getTimezoneOffset() * 60000);
             return (
-            <TableRow key={transaction._id} className="group transition-colors">
-              <TableCell className="font-semibold text-slate-800 py-4">{transaction.description}</TableCell>
-              <TableCell className="text-muted-foreground">{format(adjustedDate, 'PPP', { locale: ptBR })}</TableCell>
-              <TableCell>
+            <TableRow key={transaction._id} className="group transition-colors hover:bg-slate-50/50">
+              <TableCell className="font-semibold text-slate-800 py-5 px-6">{transaction.description}</TableCell>
+              <TableCell className="text-muted-foreground px-6">{format(adjustedDate, 'dd/MM/yyyy', { locale: ptBR })}</TableCell>
+              <TableCell className="px-6">
                 <Badge 
                   className={cn(
-                    'font-bold rounded-lg px-2.5 py-0.5 shadow-sm border-none', 
+                    'font-bold rounded-lg px-2.5 py-0.5 shadow-sm border-none transition-all group-hover:scale-105', 
                     transaction.type === 'income' 
                       ? 'bg-emerald-100 text-emerald-700' 
                       : 'bg-rose-100 text-rose-700'
@@ -143,13 +147,13 @@ export default function TransactionList({ transactions, onDelete, loading }: Tra
                   {transaction.type === 'income' ? 'Renda' : 'Despesa'}
                 </Badge>
               </TableCell>
-              <TableCell className={cn('text-right font-mono font-bold text-base', transaction.type === 'income' ? 'text-emerald-600' : 'text-rose-600')}>
+              <TableCell className={cn('text-right font-mono font-bold text-base px-6', transaction.type === 'income' ? 'text-emerald-600' : 'text-rose-600')}>
                 {transaction.type === 'income' ? '+' : '-'}{formatCurrency(transaction.amount)}
               </TableCell>
-              <TableCell className="text-right">
+              <TableCell className="text-right px-6">
                 <AlertDialog>
                   <AlertDialogTrigger asChild>
-                    <Button variant="ghost" size="icon" className="rounded-xl hover:bg-rose-50 hover:text-rose-600 text-slate-400 transition-all">
+                    <Button variant="ghost" size="icon" className="rounded-xl hover:bg-rose-50 hover:text-rose-600 text-slate-300 transition-all cursor-pointer">
                       <Trash2 className="h-5 w-5" />
                     </Button>
                   </AlertDialogTrigger>
@@ -157,7 +161,7 @@ export default function TransactionList({ transactions, onDelete, loading }: Tra
                     <AlertDialogHeader>
                       <AlertDialogTitle className="text-xl">Excluir transação?</AlertDialogTitle>
                       <AlertDialogDescription>
-                        Esta ação removerá permanentemente este registro do seu histórico.
+                        Esta ação removerá permanentemente este registro do seu histórico financeiro.
                       </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter className="mt-4 gap-2">
