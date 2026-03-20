@@ -22,8 +22,10 @@ export default function AccountsPayableClient() {
   
   const [statusFilter, setStatusFilter] = useState('todas');
   const [sortOrder, setSortOrder] = useState('asc');
-  const [year, setYear] = useState('todas');
-  const [month, setMonth] = useState('todas');
+  
+  // Define o filtro inicial como o mês e ano atuais
+  const [year, setYear] = useState(new Date().getFullYear().toString());
+  const [month, setMonth] = useState((new Date().getMonth() + 1).toString());
 
   const fetchAccounts = useCallback(async () => {
     if (!token) return;
@@ -164,7 +166,7 @@ export default function AccountsPayableClient() {
             </SelectContent>
           </Select>
         </div>
-        <Button onClick={() => handleOpenModal()} className="w-full lg:w-auto h-11 px-8 rounded-xl font-semibold shadow-lg shadow-primary/20">
+        <Button onClick={() => handleOpenModal()} className="w-full lg:w-auto h-11 px-8 rounded-xl font-semibold shadow-lg shadow-primary/20 hover:scale-[1.02] transition-transform">
           <PlusCircle className="mr-2 h-5 w-5" />
           Nova Conta
         </Button>
