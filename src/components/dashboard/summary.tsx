@@ -54,6 +54,7 @@ export default function Summary() {
       });
       if (!response.ok) throw new Error('Falha ao buscar resumo');
       const data = await response.json();
+      console.log(data);
       setSummary(data);
     } catch (error) {
       toast({ variant: 'destructive', title: 'Erro', description: (error as Error).message });
