@@ -1,6 +1,7 @@
+
 "use client";
 
-import { useState, useEffect, createContext, useContext, ReactNode, createElement } from 'react';
+import { useState, useEffect, createContext, useContext, ReactNode, createElement, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import type { AuthResponse, User } from '@/lib/types';
 
@@ -22,34 +23,49 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
   const router = useRouter();
 
+  const logout = useCallback(() => {
+    localStorage.removeItem(USER_STORAGE_KEY);
+    setUser(null);
+    setToken(null);
+    router.replace('/login');
+  }, [router]);
+
   useEffect(() => {
-    try {
-      const storedUser = localStorage.getItem(USER_STORAGE_KEY);
-      if (storedUser) {
-        const { user: userData, token: userToken }: AuthResponse = JSON.parse(storedUser);
-        setUser(userData);
-        setToken(userToken);
+    const validateSession = async () => {
+      try {
+        const storedUser = localStorage.getItem(USER_STORAGE_KEY);
+        if (storedUser) {
+          const authData: AuthResponse = JSON.parse(storedUser);
+          
+          // Verifica a validade do token fazendo uma chamada simples ao backend
+          const response = await fetch('https://financial-control-9s01.onrender.com/list-accounts', {
+            headers: { 'Authorization': `Bearer ${authData.token}` }
+          });
+
+          if (response.status === 401) {
+            // Token expirado ou inválido
+            logout();
+          } else {
+            setUser(authData.user);
+            setToken(authData.token);
+          }
+        }
+      } catch (error) {
+        console.error("Falha ao validar sessão", error);
+        logout();
+      } finally {
+        setLoading(false);
       }
-    } catch (error) {
-      console.error("Falha ao analisar dados do usuário do localStorage", error);
-      localStorage.removeItem(USER_STORAGE_KEY);
-    } finally {
-      setLoading(false);
-    }
-  }, []);
+    };
+
+    validateSession();
+  }, [logout]);
 
   const login = (authResponse: AuthResponse) => {
     localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(authResponse));
     setUser(authResponse.user);
     setToken(authResponse.token);
     router.push('/');
-  };
-
-  const logout = () => {
-    localStorage.removeItem(USER_STORAGE_KEY);
-    setUser(null);
-    setToken(null);
-    router.push('/login');
   };
 
   const value = { user, token, login, logout, loading };
