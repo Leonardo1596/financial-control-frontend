@@ -11,9 +11,10 @@ import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import { AuthProvider, useAuth } from "@/hooks/use-auth";
 import { Landmark, Loader2, ArrowRight } from "lucide-react";
+import { API_BASE_URL } from "@/lib/api";
 
 async function loginUser(data: z.infer<typeof formSchema>) {
-  const response = await fetch("https://financial-control-9s01.onrender.com/login", {
+  const response = await fetch(`${API_BASE_URL}/login`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(data),

@@ -11,6 +11,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '
 import { Input } from '@/components/ui/input';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { Loader2, Landmark } from 'lucide-react';
+import { API_BASE_URL } from '@/lib/api';
 
 const formSchema = z.object({
   name: z.string().min(1, 'Nome da conta é obrigatório (ex: Nubank)'),
@@ -41,7 +42,7 @@ export default function AccountsForm({ isOpen, onClose, onSuccess }: AccountsFor
   const onSubmit = async (values: FormValues) => {
     setIsLoading(true);
     try {
-      const response = await fetch('https://financial-control-9s01.onrender.com/create-account', {
+      const response = await fetch(`${API_BASE_URL}/create-account`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

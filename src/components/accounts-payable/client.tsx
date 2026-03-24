@@ -11,6 +11,7 @@ import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { PlusCircle, Filter } from 'lucide-react';
 import { Skeleton } from '../ui/skeleton';
+import { API_BASE_URL } from '@/lib/api';
 
 export default function AccountsPayableClient() {
   const { token } = useAuth();
@@ -23,7 +24,6 @@ export default function AccountsPayableClient() {
   const [statusFilter, setStatusFilter] = useState('todas');
   const [sortOrder, setSortOrder] = useState('asc');
   
-  // Define o filtro inicial como o mês e ano atuais
   const [year, setYear] = useState(new Date().getFullYear().toString());
   const [month, setMonth] = useState((new Date().getMonth() + 1).toString());
 
@@ -31,7 +31,7 @@ export default function AccountsPayableClient() {
     if (!token) return;
     setLoading(true);
     try {
-      const response = await fetch('https://financial-control-9s01.onrender.com/list', {
+      const response = await fetch(`${API_BASE_URL}/list`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       if (!response.ok) throw new Error('Falha ao buscar contas a pagar');
@@ -65,7 +65,7 @@ export default function AccountsPayableClient() {
 
   const handlePay = async (id: string) => {
     try {
-      const response = await fetch(`https://financial-control-9s01.onrender.com/pay/${id}`, {
+      const response = await fetch(`${API_BASE_URL}/pay/${id}`, {
         method: 'PATCH',
         headers: { 'Authorization': `Bearer ${token}` }
       });
@@ -79,7 +79,7 @@ export default function AccountsPayableClient() {
 
   const handleDelete = async (id: string) => {
     try {
-      const response = await fetch(`https://financial-control-9s01.onrender.com/delete/${id}`, {
+      const response = await fetch(`${API_BASE_URL}/delete/${id}`, {
         method: 'DELETE',
         headers: { 'Authorization': `Bearer ${token}` }
       });

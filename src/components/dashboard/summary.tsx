@@ -6,6 +6,7 @@ import { SummaryCard, SummaryCardSkeleton } from './summary-card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { TrendingUp, TrendingDown, Wallet, Calendar, Landmark } from 'lucide-react';
 import type { Summary, UserAccount } from '@/lib/types';
+import { API_BASE_URL } from '@/lib/api';
 
 export default function Summary() {
   const { token } = useAuth();
@@ -21,7 +22,7 @@ export default function Summary() {
   useEffect(() => {
     async function fetchAccounts() {
       try {
-        const response = await fetch('https://financial-control-9s01.onrender.com/list-accounts', {
+        const response = await fetch(`${API_BASE_URL}/list-accounts`, {
           headers: { 'Authorization': `Bearer ${token}` }
         });
         if (response.ok) {
@@ -44,7 +45,7 @@ export default function Summary() {
   const fetchSummary = async () => {
     setLoading(true);
     try {
-      let url = `https://financial-control-9s01.onrender.com/summary?month=${month}&year=${year}`;
+      let url = `${API_BASE_URL}/summary?month=${month}&year=${year}`;
       if (selectedAccountId !== 'todas') {
         url += `&accountId=${selectedAccountId}`;
       }
@@ -83,20 +84,22 @@ export default function Summary() {
           </div>
         </div>
         <div className="flex gap-3 flex-wrap justify-center w-full lg:w-auto">
-          <Select value={selectedAccountId} onValueChange={setSelectedAccountId}>
-            <SelectTrigger className="w-full sm:w-[200px] h-11 bg-slate-50 border-none rounded-xl font-medium">
-              <div className="flex items-center gap-2">
-                <Landmark className="h-4 w-4 text-slate-400" />
-                <SelectValue placeholder="Todas as contas" />
-              </div>
-            </SelectTrigger>
-            <SelectContent className="rounded-xl">
-              <SelectItem value="todas">Todas as contas</SelectItem>
-              {accounts.map(acc => (
-                <SelectItem key={acc._id} value={acc._id}>{acc.name}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <div className="flex gap-2 w-full sm:w-auto">
+            <Select value={selectedAccountId} onValueChange={setSelectedAccountId}>
+              <SelectTrigger className="flex-1 sm:w-[200px] h-11 bg-slate-50 border-none rounded-xl font-medium">
+                <div className="flex items-center gap-2">
+                  <Landmark className="h-4 w-4 text-slate-400" />
+                  <SelectValue placeholder="Todas as contas" />
+                </div>
+              </SelectTrigger>
+              <SelectContent className="rounded-xl">
+                <SelectItem value="todas">Todas as contas</SelectItem>
+                {accounts.map(acc => (
+                  <SelectItem key={acc._id} value={acc._id}>{acc.name}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
           <div className="flex gap-2 w-full sm:w-auto">
             <Select value={month} onValueChange={setMonth}>
               <SelectTrigger className="flex-1 sm:w-[140px] h-11 bg-slate-50 border-none rounded-xl font-medium">

@@ -18,6 +18,7 @@ import { ptBR } from 'date-fns/locale';
 import { CalendarIcon, Loader2, MousePointer2, Landmark } from 'lucide-react';
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from '@/components/ui/card';
 import type { UserAccount } from '@/lib/types';
+import { API_BASE_URL } from '@/lib/api';
 
 const formSchema = z.object({
   description: z.string().min(1, { message: 'A descrição é obrigatória' }),
@@ -41,7 +42,7 @@ export default function TransactionForm({ onTransactionAdded }: { onTransactionA
   useEffect(() => {
     async function fetchAccounts() {
       try {
-        const response = await fetch('https://financial-control-9s01.onrender.com/list-accounts', {
+        const response = await fetch(`${API_BASE_URL}/list-accounts`, {
           headers: { 'Authorization': `Bearer ${token}` }
         });
         if (response.ok) {
@@ -67,7 +68,7 @@ export default function TransactionForm({ onTransactionAdded }: { onTransactionA
         userId: user.id,
         date: format(values.date, 'yyyy-MM-dd'),
       };
-      const response = await fetch('https://financial-control-9s01.onrender.com/create-transaction', {
+      const response = await fetch(`${API_BASE_URL}/create-transaction`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
         body: JSON.stringify(payload),

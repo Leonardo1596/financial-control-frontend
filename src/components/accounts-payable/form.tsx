@@ -19,6 +19,7 @@ import { format, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { CalendarIcon, Loader2 } from 'lucide-react';
 import type { AccountPayable } from '@/lib/types';
+import { API_BASE_URL } from '@/lib/api';
 
 const formSchema = z.object({
   description: z.string().min(1, 'Descrição é obrigatória'),
@@ -79,8 +80,8 @@ export default function AccountsPayableForm({ isOpen, onClose, onSuccess, accoun
     setIsLoading(true);
     try {
       const url = accountToEdit
-        ? `https://financial-control-9s01.onrender.com/update/${accountToEdit._id}`
-        : 'https://financial-control-9s01.onrender.com/create';
+        ? `${API_BASE_URL}/update/${accountToEdit._id}`
+        : `${API_BASE_URL}/create`;
       
       const method = accountToEdit ? 'PUT' : 'POST';
 

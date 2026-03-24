@@ -15,6 +15,7 @@ import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import type { UserAccount } from '@/lib/types';
+import { API_BASE_URL } from '@/lib/api';
 
 export default function FileUpload({ onUploadSuccess }: { onUploadSuccess: () => void }) {
   const { token } = useAuth();
@@ -30,7 +31,7 @@ export default function FileUpload({ onUploadSuccess }: { onUploadSuccess: () =>
   useEffect(() => {
     async function fetchAccounts() {
       try {
-        const response = await fetch('https://financial-control-9s01.onrender.com/list-accounts', {
+        const response = await fetch(`${API_BASE_URL}/list-accounts`, {
           headers: { 'Authorization': `Bearer ${token}` }
         });
         if (response.ok) {
@@ -79,7 +80,7 @@ export default function FileUpload({ onUploadSuccess }: { onUploadSuccess: () =>
     }
 
     try {
-      const response = await fetch('https://financial-control-9s01.onrender.com/import', {
+      const response = await fetch(`${API_BASE_URL}/import`, {
         method: 'POST',
         headers: { 'Authorization': `Bearer ${token}` },
         body: formData,
@@ -185,7 +186,7 @@ export default function FileUpload({ onUploadSuccess }: { onUploadSuccess: () =>
             <span className="truncate flex-1">{file.name}</span>
           </div>
         )}
-        <Button onClick={handleUpload} disabled={isButtonDisabled} className="w-full h-11 rounded-xl font-bold shadow-lg shadow-primary/20">
+        <Button onClick={handleUpload} disabled={isButtonDisabled} className="w-full h-11 rounded-xl font-bold shadow-lg shadow-primary/20 mt-2">
           {isLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <UploadCloud className="mr-2 h-4 w-4" />}
           Importar Agora
         </Button>

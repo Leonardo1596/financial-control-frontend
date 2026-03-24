@@ -1,9 +1,9 @@
-
 "use client";
 
 import { useState, useEffect, createContext, useContext, ReactNode, createElement, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import type { AuthResponse, User } from '@/lib/types';
+import { API_BASE_URL } from '@/lib/api';
 
 const USER_STORAGE_KEY = 'fintrack_user';
 
@@ -37,13 +37,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         if (storedUser) {
           const authData: AuthResponse = JSON.parse(storedUser);
           
-          // Verifica a validade do token fazendo uma chamada simples ao backend
-          const response = await fetch('https://financial-control-9s01.onrender.com/list-accounts', {
+          const response = await fetch(`${API_BASE_URL}/list-accounts`, {
             headers: { 'Authorization': `Bearer ${authData.token}` }
           });
 
           if (response.status === 401) {
-            // Token expirado ou inválido
             logout();
           } else {
             setUser(authData.user);

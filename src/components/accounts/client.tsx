@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useEffect, useCallback } from 'react';
@@ -10,6 +9,7 @@ import AccountsForm from './form';
 import { Button } from '@/components/ui/button';
 import { PlusCircle, Wallet, Filter } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { API_BASE_URL } from '@/lib/api';
 
 export default function AccountsClient() {
   const { token } = useAuth();
@@ -25,7 +25,7 @@ export default function AccountsClient() {
     if (!token) return;
     setLoading(true);
     try {
-      const response = await fetch(`https://financial-control-9s01.onrender.com/list-accounts?month=${month}&year=${year}`, {
+      const response = await fetch(`${API_BASE_URL}/list-accounts?month=${month}&year=${year}`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       if (!response.ok) throw new Error('Falha ao buscar contas');
@@ -52,7 +52,7 @@ export default function AccountsClient() {
 
   const handleDelete = async (id: string) => {
     try {
-      const response = await fetch(`https://financial-control-9s01.onrender.com/delete-account/${id}`, {
+      const response = await fetch(`${API_BASE_URL}/delete-account/${id}`, {
         method: 'DELETE',
         headers: { 'Authorization': `Bearer ${token}` }
       });

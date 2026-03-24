@@ -13,6 +13,7 @@ import { Loader2, Trash2, LayoutGrid, Plus, Filter, Landmark } from 'lucide-reac
 import { cn } from '@/lib/utils';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { AlertDialog as AD, AlertDialogAction as ADA, AlertDialogCancel as ADC, AlertDialogContent as ADContent, AlertDialogDescription as ADDescription, AlertDialogFooter as ADFooter, AlertDialogHeader as ADHeader, AlertDialogTitle as ADTitle, AlertDialogTrigger as ADTrigger } from '@/components/ui/alert-dialog';
+import { API_BASE_URL } from '@/lib/api';
 
 export default function TransactionClient() {
   const { token } = useAuth();
@@ -30,13 +31,11 @@ export default function TransactionClient() {
     if (!token) return;
     setLoading(true);
     try {
-      // Busca transações
-      const transResponse = await fetch(`https://financial-control-9s01.onrender.com/list-transaction`, {
+      const transResponse = await fetch(`${API_BASE_URL}/list-transaction`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       
-      // Busca contas para mapear nomes na tabela e filtros
-      const accountsResponse = await fetch('https://financial-control-9s01.onrender.com/list-accounts', {
+      const accountsResponse = await fetch(`${API_BASE_URL}/list-accounts`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
 
@@ -61,7 +60,7 @@ export default function TransactionClient() {
 
   const handleDelete = async (transactionId: string) => {
     try {
-      const response = await fetch(`https://financial-control-9s01.onrender.com/delete-transaction/${transactionId}`, {
+      const response = await fetch(`${API_BASE_URL}/delete-transaction/${transactionId}`, {
         method: 'DELETE',
         headers: { 'Authorization': `Bearer ${token}` }
       });
@@ -76,7 +75,7 @@ export default function TransactionClient() {
   const handleDeleteAll = async () => {
     setIsDeletingAll(true);
     try {
-      const response = await fetch('https://financial-control-9s01.onrender.com/delete-all-transactions', {
+      const response = await fetch(`${API_BASE_URL}/delete-all-transactions`, {
         method: 'DELETE',
         headers: { 'Authorization': `Bearer ${token}` },
       });
