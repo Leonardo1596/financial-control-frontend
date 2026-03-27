@@ -43,7 +43,6 @@ function LoginPageContent() {
     }
   }, [user, loading, router]);
 
-
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: { email: "", password: "" },
@@ -58,6 +57,8 @@ function LoginPageContent() {
         title: "Login bem-sucedido",
         description: `Bem-vindo de volta, ${data.user.name}!`,
       });
+
+      router.replace("/"); // redireciona depois do login
     } catch (error) {
       toast({
         variant: "destructive",
@@ -70,11 +71,11 @@ function LoginPageContent() {
   }
 
   if (loading || user) {
-      return (
-          <div className="flex h-screen w-screen items-center justify-center bg-background">
-              <Loader2 className="h-8 w-8 animate-spin text-primary" />
-          </div>
-      )
+    return (
+      <div className="flex h-screen w-screen items-center justify-center bg-background">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
   }
 
   return (
