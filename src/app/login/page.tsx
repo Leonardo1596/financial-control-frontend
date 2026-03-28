@@ -12,6 +12,7 @@ import { useToast } from "@/hooks/use-toast";
 import { AuthProvider, useAuth } from "@/hooks/use-auth";
 import { Landmark, Loader2, ArrowRight } from "lucide-react";
 import { API_BASE_URL } from "@/lib/api";
+import { Preferences } from '@capacitor/preferences';
 
 async function loginUser(data: z.infer<typeof formSchema>) {
   const response = await fetch(`${API_BASE_URL}/login`, {
@@ -20,14 +21,14 @@ async function loginUser(data: z.infer<typeof formSchema>) {
     body: JSON.stringify(data),
   });
   if (!response.ok) {
-    const errorData = await response.json().catch(() => ({ message: 'Falha no login devido a erro no servidor.' }));
+    const errorData = await response.json().catch(() => ({ message: 'Falha no login.' }));
     throw new Error(errorData.message || 'Falha no login');
   }
   return response.json();
 }
 
 const formSchema = z.object({
-  email: z.string().email({ message: "Endereço de e-mail inválido." }),
+  email: z.string().email({ message: "E-mail inválido." }),
   password: z.string().min(1, { message: "A senha é obrigatória." }),
 });
 
@@ -51,32 +52,51 @@ function LoginPageContent() {
   async function onSubmit(values: z.infer<typeof formSchema>) {
     setIsLoading(true);
     try {
+      // 1. Login
       const data = await loginUser(values);
-      login(data);
-      toast({
-        title: "Login bem-sucedido",
-        description: `Bem-vindo de volta, ${data.user.name}!`,
+      
+      // 2. Busca de Contas
+      const accountsResponse = await fetch(`${API_BASE_URL}/list-accounts`, {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${data.token}`,
+        },
       });
+      
+      if (!accountsResponse.ok) throw new Error("Falha ao buscar contas");
+      const accountsData = await accountsResponse.json();
 
-      router.replace("/"); // redireciona depois do login
+      // 3. PERSISTÊNCIA PARA O ANDROID (CAPACITOR)
+      // Salvamos o básico
+      await Preferences.set({ key: 'userToken', value: data.token });
+      await Preferences.set({ key: 'userId', value: data.user.id });
+      
+      // SALVANDO CADA CONTA INDIVIDUALMENTE (Correção necessária para o Java)
+      if (Array.isArray(accountsData)) {
+        for (const acc of accountsData) {
+          // Cria chaves como: account_nubank, account_rico, account_carteira
+          const key = `account_${acc.name.toLowerCase()}`;
+          await Preferences.set({ key: key, value: acc._id });
+        }
+      }
+
+      // 4. Finalização
+      login(data);
+      toast({ title: "Login bem-sucedido", description: `Bem-vindo, ${data.user.name}!` });
+      router.replace("/");
     } catch (error) {
       toast({
         variant: "destructive",
-        title: "Falha no Login",
-        description: error instanceof Error ? error.message : "Ocorreu um erro desconhecido.",
+        title: "Erro",
+        description: error instanceof Error ? error.message : "Erro desconhecido.",
       });
     } finally {
       setIsLoading(false);
     }
   }
 
-  if (loading || user) {
-    return (
-      <div className="flex h-screen w-screen items-center justify-center bg-background">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
-      </div>
-    );
-  }
+  if (loading || user) return <div className="flex h-screen w-screen items-center justify-center"><Loader2 className="h-8 w-8 animate-spin" /></div>;
 
   return (
     <main className="flex min-h-screen">
@@ -146,9 +166,5 @@ function LoginPageContent() {
 }
 
 export default function LoginPage() {
-    return (
-        <AuthProvider>
-            <LoginPageContent />
-        </AuthProvider>
-    )
+    return (<AuthProvider><LoginPageContent /></AuthProvider>)
 }
