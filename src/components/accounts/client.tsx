@@ -71,8 +71,9 @@ export default function AccountsClient() {
   }));
 
   return (
-    <div className="space-y-10">
-      <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 flex flex-col lg:flex-row justify-between items-center gap-6">
+    <div className="flex flex-col w-full max-w-full space-y-10 overflow-hidden">
+      {/* Header e Filtros */}
+      <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 flex flex-col lg:flex-row justify-between items-center gap-6 w-full">
         <div className="flex items-center gap-4 w-full lg:w-auto">
           <div className="p-3 bg-primary/10 rounded-xl">
             <Wallet className="h-6 w-6 text-primary" />
@@ -113,7 +114,8 @@ export default function AccountsClient() {
         </div>
       </div>
 
-      <div className="bg-white rounded-3xl shadow-xl shadow-slate-200/50 border border-slate-100 overflow-hidden">
+      {/* Container da Lista com Isolamento de Grid */}
+      <div className="grid grid-cols-1 w-full overflow-hidden bg-white rounded-3xl shadow-xl shadow-slate-200/50 border border-slate-100">
         <AccountsList
           accounts={accounts}
           onDelete={handleDelete}

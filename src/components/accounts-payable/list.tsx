@@ -37,6 +37,7 @@ export default function AccountsPayableList({ accounts, onPay, onEdit, onDelete,
         await onPay(id);
         setPayingId(null);
     }
+
   const renderSkeletons = () => (
     Array.from({ length: 5 }).map((_, index) => (
       <TableRow key={index}>
@@ -51,80 +52,84 @@ export default function AccountsPayableList({ accounts, onPay, onEdit, onDelete,
   );
 
   return (
-    <Table>
-      <TableCaption className="pb-6">{!loading && accounts.length === 0 ? 'Nenhuma conta encontrada.' : `Total de ${accounts.length} contas listadas.`}</TableCaption>
-      <TableHeader className="bg-slate-50/50">
-        <TableRow className="hover:bg-transparent">
-          <TableHead className="py-4 font-bold text-slate-600">Descrição</TableHead>
-          <TableHead className="py-4 font-bold text-slate-600">Vencimento</TableHead>
-          <TableHead className="py-4 font-bold text-slate-600">Valor</TableHead>
-          <TableHead className="py-4 font-bold text-slate-600">Status</TableHead>
-          <TableHead className="py-4 font-bold text-slate-600">Categoria</TableHead>
-          <TableHead className="text-right py-4 font-bold text-slate-600">Ações</TableHead>
-        </TableRow>
-      </TableHeader>
-      <TableBody>
-        {loading ? renderSkeletons() : accounts.map((account) => {
-          const utcDate = new Date(account.dueDate);
-          const adjustedDate = new Date(utcDate.getTime() + utcDate.getTimezoneOffset() * 60000);
-          return (
-          <TableRow key={account._id} className="group transition-colors">
-            <TableCell className="font-semibold text-slate-800 py-4">{account.description}</TableCell>
-            <TableCell className="text-muted-foreground">{format(adjustedDate, 'dd/MM/yyyy', { locale: ptBR })}</TableCell>
-            <TableCell className="font-mono font-medium">{formatCurrency(account.amount)}</TableCell>
-            <TableCell>
-              <Badge className={cn('font-bold capitalize rounded-lg px-2.5 py-0.5 shadow-sm', statusStyles[account.status])}>
-                {account.status}
-              </Badge>
-            </TableCell>
-            <TableCell>
-              <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">{account.category}</span>
-            </TableCell>
-            <TableCell className="text-right">
-              <AlertDialog>
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" size="icon" className="cursor-pointer hover:bg-slate-100 rounded-xl transition-all">
-                      <MoreHorizontal className="h-5 w-5 text-slate-400 group-hover:text-slate-600" />
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end" className="rounded-xl p-2 shadow-xl border-slate-100">
-                    {account.status !== 'paga' && (
-                      <DropdownMenuItem onSelect={() => handlePayClick(account._id)} disabled={payingId === account._id} className="cursor-pointer rounded-lg py-2.5">
-                        {payingId === account._id ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Check className="mr-2 h-4 w-4 text-emerald-500" />}
-                        Marcar como paga
-                      </DropdownMenuItem>
-                    )}
-                    <DropdownMenuItem onSelect={() => onEdit(account)} className="cursor-pointer rounded-lg py-2.5">
-                      <Edit className="mr-2 h-4 w-4 text-primary" />
-                      Editar
-                    </DropdownMenuItem>
-                    <AlertDialogTrigger asChild>
-                       <DropdownMenuItem className="text-red-600 focus:text-red-600 focus:bg-red-50 cursor-pointer rounded-lg py-2.5">
-                          <Trash2 className="mr-2 h-4 w-4" />
-                          Excluir
-                      </DropdownMenuItem>
-                    </AlertDialogTrigger>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-                <AlertDialogContent className="rounded-2xl border-none shadow-2xl">
-                  <AlertDialogHeader>
-                    <AlertDialogTitle className="text-xl">Confirmar exclusão?</AlertDialogTitle>
-                    <AlertDialogDescription>
-                      Esta ação não pode ser desfeita. Isso excluirá permanentemente esta conta do seu controle financeiro.
-                    </AlertDialogDescription>
-                  </AlertDialogHeader>
-                  <AlertDialogFooter className="mt-4 gap-2">
-                    <AlertDialogCancel className="cursor-pointer rounded-xl border-none bg-slate-100 hover:bg-slate-200">Cancelar</AlertDialogCancel>
-                    <AlertDialogAction className={cn(buttonVariants({ variant: "destructive" }), "cursor-pointer rounded-xl shadow-lg shadow-rose-500/20")} onClick={() => onDelete(account._id)}>Excluir Conta</AlertDialogAction>
-                  </AlertDialogFooter>
-                </AlertDialogContent>
-              </AlertDialog>
-            </TableCell>
+    <div className="w-full overflow-x-auto scrollbar-thin scrollbar-thumb-slate-200">
+      <Table className="w-full min-w-[900px]">
+        <TableCaption className="pb-6">
+          {!loading && accounts.length === 0 ? 'Nenhuma conta encontrada.' : `Total de ${accounts.length} contas listadas.`}
+        </TableCaption>
+        <TableHeader className="bg-slate-50/50 border-b border-slate-100">
+          <TableRow className="hover:bg-transparent">
+            <TableHead className="py-5 px-6 font-bold text-slate-600 whitespace-nowrap">Descrição</TableHead>
+            <TableHead className="py-5 px-6 font-bold text-slate-600 whitespace-nowrap">Vencimento</TableHead>
+            <TableHead className="py-5 px-6 font-bold text-slate-600 whitespace-nowrap">Valor</TableHead>
+            <TableHead className="py-5 px-6 font-bold text-slate-600 whitespace-nowrap">Status</TableHead>
+            <TableHead className="py-5 px-6 font-bold text-slate-600 whitespace-nowrap">Categoria</TableHead>
+            <TableHead className="text-right py-5 px-6 font-bold text-slate-600 whitespace-nowrap">Ações</TableHead>
           </TableRow>
-          );
-        })}
-      </TableBody>
-    </Table>
+        </TableHeader>
+        <TableBody>
+          {loading ? renderSkeletons() : accounts.map((account) => {
+            const utcDate = new Date(account.dueDate);
+            const adjustedDate = new Date(utcDate.getTime() + utcDate.getTimezoneOffset() * 60000);
+            return (
+            <TableRow key={account._id} className="group transition-colors hover:bg-slate-50/50">
+              <TableCell className="font-semibold text-slate-800 py-5 px-6 whitespace-nowrap">{account.description}</TableCell>
+              <TableCell className="text-muted-foreground px-6 whitespace-nowrap">{format(adjustedDate, 'dd/MM/yyyy', { locale: ptBR })}</TableCell>
+              <TableCell className="font-mono font-bold text-slate-700 px-6 whitespace-nowrap">{formatCurrency(account.amount)}</TableCell>
+              <TableCell className="px-6 whitespace-nowrap">
+                <Badge className={cn('font-bold capitalize rounded-lg px-2.5 py-0.5 shadow-sm border-none', statusStyles[account.status])}>
+                  {account.status}
+                </Badge>
+              </TableCell>
+              <TableCell className="px-6 whitespace-nowrap">
+                <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">{account.category}</span>
+              </TableCell>
+              <TableCell className="text-right px-6 whitespace-nowrap">
+                <AlertDialog>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="ghost" size="icon" className="cursor-pointer hover:bg-slate-100 rounded-xl transition-all">
+                        <MoreHorizontal className="h-5 w-5 text-slate-300 group-hover:text-slate-600" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end" className="rounded-xl p-2 shadow-xl border-slate-100 min-w-[160px]">
+                      {account.status !== 'paga' && (
+                        <DropdownMenuItem onSelect={() => handlePayClick(account._id)} disabled={payingId === account._id} className="cursor-pointer rounded-lg py-2.5 font-medium text-emerald-600 focus:text-emerald-700 focus:bg-emerald-50">
+                          {payingId === account._id ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Check className="mr-2 h-4 w-4" />}
+                          Marcar como paga
+                        </DropdownMenuItem>
+                      )}
+                      <DropdownMenuItem onSelect={() => onEdit(account)} className="cursor-pointer rounded-lg py-2.5 font-medium">
+                        <Edit className="mr-2 h-4 w-4 text-slate-400" />
+                        Editar Conta
+                      </DropdownMenuItem>
+                      <AlertDialogTrigger asChild>
+                         <DropdownMenuItem className="text-rose-600 focus:text-rose-700 focus:bg-rose-50 cursor-pointer rounded-lg py-2.5 font-medium">
+                            <Trash2 className="mr-2 h-4 w-4" />
+                            Excluir
+                        </DropdownMenuItem>
+                      </AlertDialogTrigger>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                  <AlertDialogContent className="rounded-2xl border-none shadow-2xl">
+                    <AlertDialogHeader>
+                      <AlertDialogTitle className="text-xl">Confirmar exclusão?</AlertDialogTitle>
+                      <AlertDialogDescription>
+                        Esta ação não pode ser desfeita. Isso excluirá permanentemente esta conta do seu controle financeiro.
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter className="mt-4 gap-2">
+                      <AlertDialogCancel className="cursor-pointer rounded-xl border-none bg-slate-100 hover:bg-slate-200">Cancelar</AlertDialogCancel>
+                      <AlertDialogAction className={cn(buttonVariants({ variant: "destructive" }), "cursor-pointer rounded-xl shadow-lg shadow-rose-500/20")} onClick={() => onDelete(account._id)}>Excluir Conta</AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
+              </TableCell>
+            </TableRow>
+            );
+          })}
+        </TableBody>
+      </Table>
+    </div>
   );
 }

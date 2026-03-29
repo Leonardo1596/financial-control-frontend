@@ -12,7 +12,17 @@ import { Button, buttonVariants } from '@/components/ui/button';
 import { Loader2, Trash2, LayoutGrid, Plus, Filter, Landmark } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { AlertDialog as AD, AlertDialogAction as ADA, AlertDialogCancel as ADC, AlertDialogContent as ADContent, AlertDialogDescription as ADDescription, AlertDialogFooter as ADFooter, AlertDialogHeader as ADHeader, AlertDialogTitle as ADTitle, AlertDialogTrigger as ADTrigger } from '@/components/ui/alert-dialog';
+import { 
+  AlertDialog as AD, 
+  AlertDialogAction as ADA, 
+  AlertDialogCancel as ADC, 
+  AlertDialogContent as ADContent, 
+  AlertDialogDescription as ADDescription, 
+  AlertDialogFooter as ADFooter, 
+  AlertDialogHeader as ADHeader, 
+  AlertDialogTitle as ADTitle, 
+  AlertDialogTrigger as ADTrigger 
+} from '@/components/ui/alert-dialog';
 import { API_BASE_URL } from '@/lib/api';
 
 export default function TransactionClient() {
@@ -79,11 +89,8 @@ export default function TransactionClient() {
         method: 'DELETE',
         headers: { 'Authorization': `Bearer ${token}` },
       });
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({ message: 'Falha ao deletar todas as transações.' }));
-        throw new Error(errorData.message || 'Falha ao deletar todas as transações.');
-      }
-      toast({ title: 'Sucesso', description: 'Todas as transações foram excluídas com sucesso.' });
+      if (!response.ok) throw new Error('Falha ao deletar transações');
+      toast({ title: 'Sucesso', description: 'Histórico limpo com sucesso.' });
       fetchData();
     } catch (error) {
       toast({ variant: 'destructive', title: 'Erro', description: (error as Error).message });
@@ -114,8 +121,9 @@ export default function TransactionClient() {
   }));
 
   return (
-    <div className="space-y-10">
-      <div className="bg-white rounded-3xl shadow-xl shadow-slate-200/50 border border-slate-100 overflow-hidden">
+    <div className="flex flex-col w-full max-w-full space-y-10 overflow-hidden">
+      {/* Container de Ações Rápidas */}
+      <div className="bg-white rounded-3xl shadow-xl shadow-slate-200/50 border border-slate-100 overflow-hidden w-full">
         <Accordion type="single" collapsible className="w-full">
           <AccordionItem value="item-1" className="border-none">
             <AccordionTrigger className='px-8 py-6 text-lg font-bold hover:no-underline hover:bg-slate-50 transition-all group'>
@@ -136,7 +144,8 @@ export default function TransactionClient() {
         </Accordion>
       </div>
 
-      <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 flex flex-col lg:flex-row justify-between items-center gap-6">
+      {/* Barra de Filtros e Cabeçalho do Histórico */}
+      <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 flex flex-col lg:flex-row justify-between items-center gap-6 w-full">
         <div className='flex items-center gap-4 w-full lg:w-auto'>
           <div className="p-3 bg-slate-50 rounded-xl">
             <LayoutGrid className="h-6 w-6 text-slate-400" />
@@ -152,6 +161,7 @@ export default function TransactionClient() {
             <Filter className="h-4 w-4" />
             <span className="text-xs font-bold uppercase tracking-widest">Filtros</span>
           </div>
+
           <Select value={selectedAccountId} onValueChange={setSelectedAccountId}>
             <SelectTrigger className="w-full sm:w-[180px] bg-slate-50 border-none rounded-xl h-11 font-medium hover:bg-slate-100 transition-colors">
               <div className="flex items-center gap-2">
@@ -166,6 +176,7 @@ export default function TransactionClient() {
               ))}
             </SelectContent>
           </Select>
+
           <Select value={month} onValueChange={setMonth}>
             <SelectTrigger className="w-full sm:w-[150px] bg-slate-50 border-none rounded-xl h-11 font-medium hover:bg-slate-100 transition-colors">
               <SelectValue placeholder="Mês" />
@@ -175,6 +186,7 @@ export default function TransactionClient() {
               {months.map(m => <SelectItem key={m.value} value={m.value}>{m.label}</SelectItem>)}
             </SelectContent>
           </Select>
+
           <Select value={year} onValueChange={setYear}>
             <SelectTrigger className="w-full sm:w-[120px] bg-slate-50 border-none rounded-xl h-11 font-medium hover:bg-slate-100 transition-colors">
               <SelectValue placeholder="Ano" />
@@ -184,6 +196,7 @@ export default function TransactionClient() {
               {years.map(y => <SelectItem key={y} value={y}>{y}</SelectItem>)}
             </SelectContent>
           </Select>
+
           <AD>
             <ADTrigger asChild>
               <Button variant="ghost" disabled={filteredTransactions.length === 0 || loading} className="text-rose-500 hover:text-rose-600 hover:bg-rose-50 h-11 rounded-xl w-full sm:w-auto">
@@ -195,7 +208,7 @@ export default function TransactionClient() {
               <ADHeader>
                 <ADTitle className="text-xl">Você tem certeza absoluta?</ADTitle>
                 <ADDescription>
-                  Esta ação não pode ser desfeita. Isso excluirá permanentemente TODAS as suas transações para o período selecionado.
+                  Esta ação excluirá permanentemente TODAS as suas transações filtradas.
                 </ADDescription>
               </ADHeader>
               <ADFooter className="mt-4 gap-2">
@@ -214,7 +227,8 @@ export default function TransactionClient() {
         </div>
       </div>
 
-      <div className="bg-white rounded-3xl shadow-xl shadow-slate-200/50 border border-slate-100 overflow-hidden">
+      {/* CONTAINER DA LISTA: CORREÇÃO DE LARGURA APLICADA AQUI */}
+      <div className="grid grid-cols-1 w-full overflow-hidden bg-white rounded-3xl shadow-xl shadow-slate-200/50 border border-slate-100">
         <TransactionList 
           transactions={filteredTransactions} 
           accounts={accounts}

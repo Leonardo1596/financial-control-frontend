@@ -49,20 +49,18 @@ export default function TransactionList({ transactions, accounts = [], onDelete,
   const renderSkeletons = () => (
     Array.from({ length: 5 }).map((_, index) => (
       <TableRow key={index}>
-        <TableCell><Skeleton className="h-4 w-full max-w-[200px]" /></TableCell>
-        <TableCell><Skeleton className="h-4 w-[100px]" /></TableCell>
-        <TableCell><Skeleton className="h-4 w-[100px]" /></TableCell>
-        <TableCell><Skeleton className="h-6 w-[70px] rounded-full" /></TableCell>
-        <TableCell className="text-right"><Skeleton className="h-4 w-[80px] ml-auto" /></TableCell>
-        <TableCell className="text-right"><Skeleton className="h-8 w-8 rounded ml-auto" /></TableCell>
+        <TableCell className="whitespace-nowrap"><Skeleton className="h-4 w-full max-w-[200px]" /></TableCell>
+        <TableCell className="whitespace-nowrap"><Skeleton className="h-4 w-[100px]" /></TableCell>
+        <TableCell className="whitespace-nowrap"><Skeleton className="h-4 w-[100px]" /></TableCell>
+        <TableCell className="whitespace-nowrap"><Skeleton className="h-6 w-[70px] rounded-full" /></TableCell>
+        <TableCell className="text-right whitespace-nowrap"><Skeleton className="h-4 w-[80px] ml-auto" /></TableCell>
+        <TableCell className="text-right whitespace-nowrap"><Skeleton className="h-8 w-8 rounded ml-auto" /></TableCell>
       </TableRow>
     ))
   )
 
   const renderPagination = () => {
-    if (loading || totalPages <= 1) {
-        return null;
-    }
+    if (loading || totalPages <= 1) return null;
 
     const range: (number | string)[] = [];
     for (let i = 1; i <= totalPages; i++) {
@@ -89,22 +87,19 @@ export default function TransactionList({ transactions, accounts = [], onDelete,
                     Anterior
                 </Button>
                 <div className="flex items-center gap-1">
-                    {range.map((page, index) => {
-                        if (page === '...') {
-                            return <span key={index} className="px-1 text-slate-300">...</span>;
-                        }
-                        return (
-                            <Button
-                                key={index}
-                                variant={currentPage === page ? "default" : "ghost"}
-                                size="sm"
-                                className={cn("h-8 w-8 rounded-lg p-0 font-bold text-xs", currentPage === page ? "shadow-md shadow-primary/20" : "hover:bg-white")}
-                                onClick={() => setCurrentPage(page as number)}
-                            >
-                                {page}
-                            </Button>
-                        );
-                    })}
+                    {range.map((page, index) => (
+                        <Button
+                            key={index}
+                            variant={currentPage === page ? "default" : "ghost"}
+                            size="sm"
+                            className={cn("h-8 w-8 rounded-lg p-0 font-bold text-xs", 
+                               page === '...' ? "pointer-events-none text-slate-300" : (currentPage === page ? "shadow-md shadow-primary/20" : "hover:bg-white")
+                            )}
+                            onClick={() => typeof page === 'number' && setCurrentPage(page)}
+                        >
+                            {page}
+                        </Button>
+                    ))}
                 </div>
                 <Button
                     variant="ghost"
@@ -121,76 +116,80 @@ export default function TransactionList({ transactions, accounts = [], onDelete,
 };
 
   return (
-    <>
-      <Table>
-        <TableCaption className="pb-6 pt-4 text-xs font-medium uppercase tracking-widest text-slate-400">
-          {!loading && transactions.length === 0 ? 'Sem transações neste período.' : `Exibindo ${paginatedTransactions.length} de ${transactions.length} registros`}
-        </TableCaption>
-        <TableHeader className="bg-slate-50/50 border-b border-slate-100">
-          <TableRow className="hover:bg-transparent">
-            <TableHead className="py-5 px-6 font-bold text-slate-600">Descrição</TableHead>
-            <TableHead className="py-5 px-6 font-bold text-slate-600">Data</TableHead>
-            <TableHead className="py-5 px-6 font-bold text-slate-600">Conta</TableHead>
-            <TableHead className="py-5 px-6 font-bold text-slate-600">Tipo</TableHead>
-            <TableHead className="text-right py-5 px-6 font-bold text-slate-600">Valor</TableHead>
-            <TableHead className="text-right py-5 px-6 font-bold text-slate-600">Ações</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {loading ? renderSkeletons() : paginatedTransactions.map((transaction) => {
-            const utcDate = new Date(transaction.date);
-            const adjustedDate = new Date(utcDate.getTime() + utcDate.getTimezoneOffset() * 60000);
-            return (
-            <TableRow key={transaction._id} className="group transition-colors hover:bg-slate-50/50">
-              <TableCell className="font-semibold text-slate-800 py-5 px-6">{transaction.description}</TableCell>
-              <TableCell className="text-muted-foreground px-6">{format(adjustedDate, 'dd/MM/yyyy', { locale: ptBR })}</TableCell>
-              <TableCell className="px-6">
-                <div className="flex items-center gap-2 text-slate-600">
-                  <Landmark className="h-3.5 w-3.5 text-slate-400" />
-                  <span className="text-xs font-medium">{getAccountName(transaction.accountId)}</span>
-                </div>
-              </TableCell>
-              <TableCell className="px-6">
-                <Badge 
-                  className={cn(
-                    'font-bold rounded-lg px-2.5 py-0.5 shadow-sm border-none transition-all group-hover:scale-105', 
-                    transaction.type === 'income' 
-                      ? 'bg-emerald-100 text-emerald-700' 
-                      : 'bg-rose-100 text-rose-700'
-                  )}
-                >
-                  {transaction.type === 'income' ? 'Renda' : 'Despesa'}
-                </Badge>
-              </TableCell>
-              <TableCell className={cn('text-right font-mono font-bold text-base px-6', transaction.type === 'income' ? 'text-emerald-600' : 'text-rose-600')}>
-                {transaction.type === 'income' ? '+' : '-'}{formatCurrency(transaction.amount)}
-              </TableCell>
-              <TableCell className="text-right px-6">
-                <AlertDialog>
-                  <AlertDialogTrigger asChild>
-                    <Button variant="ghost" size="icon" className="rounded-xl hover:bg-rose-50 hover:text-rose-600 text-slate-300 transition-all cursor-pointer">
-                      <Trash2 className="h-5 w-5" />
-                    </Button>
-                  </AlertDialogTrigger>
-                  <AlertDialogContent className="rounded-2xl border-none shadow-2xl">
-                    <AlertDialogHeader>
-                      <AlertDialogTitle className="text-xl">Excluir transação?</AlertDialogTitle>
-                      <AlertDialogDescription>
-                        Esta ação removerá permanentemente este registro do seu histórico financeiro.
-                      </AlertDialogDescription>
-                    </AlertDialogHeader>
-                    <AlertDialogFooter className="mt-4 gap-2">
-                      <AlertDialogCancel className="rounded-xl border-none bg-slate-100 hover:bg-slate-200">Cancelar</AlertDialogCancel>
-                      <AlertDialogAction className={cn(buttonVariants({variant: "destructive"}), "rounded-xl shadow-lg shadow-rose-500/20")} onClick={() => onDelete(transaction._id)}>Confirmar Exclusão</AlertDialogAction>
-                    </AlertDialogFooter>
-                  </AlertDialogContent>
-                </AlertDialog>
-              </TableCell>
+    <div className="w-full">
+      {/* ESTE CONTAINER É O SEGREDO: overflow-x-auto e w-full */}
+      <div className="relative w-full overflow-x-auto scrollbar-thin scrollbar-thumb-slate-200">
+        {/* Adicionamos uma min-width para que a tabela não "esmague" as colunas em telas pequenas */}
+        <Table className="w-full min-w-[1000px] border-collapse">
+          <TableCaption className="pb-6 pt-4 text-xs font-medium uppercase tracking-widest text-slate-400">
+            {!loading && transactions.length === 0 ? 'Sem transações neste período.' : `Exibindo ${paginatedTransactions.length} de ${transactions.length} registros`}
+          </TableCaption>
+          <TableHeader className="bg-slate-50/50 border-b border-slate-100">
+            <TableRow className="hover:bg-transparent">
+              <TableHead className="py-5 px-6 font-bold text-slate-600 whitespace-nowrap">Descrição</TableHead>
+              <TableHead className="py-5 px-6 font-bold text-slate-600 whitespace-nowrap">Data</TableHead>
+              <TableHead className="py-5 px-6 font-bold text-slate-600 whitespace-nowrap">Conta</TableHead>
+              <TableHead className="py-5 px-6 font-bold text-slate-600 whitespace-nowrap">Tipo</TableHead>
+              <TableHead className="text-right py-5 px-6 font-bold text-slate-600 whitespace-nowrap">Valor</TableHead>
+              <TableHead className="text-right py-5 px-6 font-bold text-slate-600 whitespace-nowrap">Ações</TableHead>
             </TableRow>
-          )})}
-        </TableBody>
-      </Table>
+          </TableHeader>
+          <TableBody>
+            {loading ? renderSkeletons() : paginatedTransactions.map((transaction) => {
+              const utcDate = new Date(transaction.date);
+              const adjustedDate = new Date(utcDate.getTime() + utcDate.getTimezoneOffset() * 60000);
+              return (
+              <TableRow key={transaction._id} className="group transition-colors hover:bg-slate-50/50">
+                <TableCell className="font-semibold text-slate-800 py-5 px-6 whitespace-nowrap">{transaction.description}</TableCell>
+                <TableCell className="text-muted-foreground px-6 whitespace-nowrap">{format(adjustedDate, 'dd/MM/yyyy', { locale: ptBR })}</TableCell>
+                <TableCell className="px-6 whitespace-nowrap">
+                  <div className="flex items-center gap-2 text-slate-600">
+                    <Landmark className="h-3.5 w-3.5 text-slate-400" />
+                    <span className="text-xs font-medium">{getAccountName(transaction.accountId)}</span>
+                  </div>
+                </TableCell>
+                <TableCell className="px-6 whitespace-nowrap">
+                  <Badge 
+                    className={cn(
+                      'font-bold rounded-lg px-2.5 py-0.5 shadow-sm border-none transition-all group-hover:scale-105', 
+                      transaction.type === 'income' 
+                        ? 'bg-emerald-100 text-emerald-700' 
+                        : 'bg-rose-100 text-rose-700'
+                    )}
+                  >
+                    {transaction.type === 'income' ? 'Renda' : 'Despesa'}
+                  </Badge>
+                </TableCell>
+                <TableCell className={cn('text-right font-mono font-bold text-base px-6 whitespace-nowrap', transaction.type === 'income' ? 'text-emerald-600' : 'text-rose-600')}>
+                  {transaction.type === 'income' ? '+' : '-'}{formatCurrency(transaction.amount)}
+                </TableCell>
+                <TableCell className="text-right px-6 whitespace-nowrap">
+                  <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                      <Button variant="ghost" size="icon" className="rounded-xl hover:bg-rose-50 hover:text-rose-600 text-slate-300 transition-all cursor-pointer">
+                        <Trash2 className="h-5 w-5" />
+                      </Button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent className="rounded-2xl border-none shadow-2xl">
+                      <AlertDialogHeader>
+                        <AlertDialogTitle className="text-xl">Excluir transação?</AlertDialogTitle>
+                        <AlertDialogDescription>
+                          Esta ação removerá permanentemente este registro do seu histórico financeiro.
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter className="mt-4 gap-2">
+                        <AlertDialogCancel className="rounded-xl border-none bg-slate-100 hover:bg-slate-200">Cancelar</AlertDialogCancel>
+                        <AlertDialogAction className={cn(buttonVariants({variant: "destructive"}), "rounded-xl shadow-lg shadow-rose-500/20")} onClick={() => onDelete(transaction._id)}>Confirmar Exclusão</AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
+                </TableCell>
+              </TableRow>
+            )})}
+          </TableBody>
+        </Table>
+      </div>
       {renderPagination()}
-    </>
+    </div>
   );
 }

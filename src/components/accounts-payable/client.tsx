@@ -119,7 +119,7 @@ export default function AccountsPayableClient() {
   }));
 
   return (
-    <div className="space-y-10">
+    <div className="flex flex-col w-full max-w-full space-y-10 overflow-hidden">
       {loading ? (
         <div className="grid gap-6 md:grid-cols-3">
             <Skeleton className='h-32 rounded-2xl' />
@@ -130,7 +130,7 @@ export default function AccountsPayableClient() {
         <AccountsPayableSummary accounts={displayedAccounts} />
       )}
       
-      <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 flex flex-col lg:flex-row justify-between items-center gap-6">
+      <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 flex flex-col lg:flex-row justify-between items-center gap-6 w-full">
         <div className="flex flex-col sm:flex-row gap-4 w-full lg:w-auto">
           <div className="flex items-center gap-2 text-muted-foreground mr-2 hidden sm:flex">
             <Filter className="h-4 w-4" />
@@ -140,7 +140,7 @@ export default function AccountsPayableClient() {
             <SelectTrigger className="w-full sm:w-[150px] bg-slate-50 border-none rounded-xl h-11">
               <SelectValue placeholder="Mês" />
             </SelectTrigger>
-            <SelectContent>
+            <SelectContent className="rounded-xl">
               <SelectItem value="todas">Todos os meses</SelectItem>
               {months.map(m => <SelectItem key={m.value} value={m.value}>{m.label}</SelectItem>)}
             </SelectContent>
@@ -149,7 +149,7 @@ export default function AccountsPayableClient() {
             <SelectTrigger className="w-full sm:w-[130px] bg-slate-50 border-none rounded-xl h-11">
               <SelectValue placeholder="Ano" />
             </SelectTrigger>
-            <SelectContent>
+            <SelectContent className="rounded-xl">
               <SelectItem value="todas">Todos os anos</SelectItem>
               {years.map(y => <SelectItem key={y} value={y}>{y}</SelectItem>)}
             </SelectContent>
@@ -158,7 +158,7 @@ export default function AccountsPayableClient() {
             <SelectTrigger className="w-full sm:w-[160px] bg-slate-50 border-none rounded-xl h-11">
               <SelectValue placeholder="Status" />
             </SelectTrigger>
-            <SelectContent>
+            <SelectContent className="rounded-xl">
               <SelectItem value="todas">Todos os status</SelectItem>
               <SelectItem value="pendente">Pendente</SelectItem>
               <SelectItem value="paga">Paga</SelectItem>
@@ -172,7 +172,8 @@ export default function AccountsPayableClient() {
         </Button>
       </div>
 
-      <div className="bg-white rounded-3xl shadow-xl shadow-slate-200/50 border border-slate-100 overflow-hidden">
+      {/* CONTAINER CORRIGIDO: Grid isolation para evitar que a tabela estique o pai */}
+      <div className="grid grid-cols-1 w-full overflow-hidden bg-white rounded-3xl shadow-xl shadow-slate-200/50 border border-slate-100">
         <AccountsPayableList
           accounts={displayedAccounts}
           onPay={handlePay}
