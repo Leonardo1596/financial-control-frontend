@@ -28,46 +28,143 @@ public class NotificationListener extends NotificationListenerService {
     @Override
     public void onNotificationPosted(StatusBarNotification sbn) {
         super.onNotificationPosted(sbn);
+
         if (sbn.getKey().equals(lastNotificationKey)) return;
         lastNotificationKey = sbn.getKey();
 
         String packageName = sbn.getPackageName();
 
+        CharSequence titleCs = sbn.getNotification().extras.getCharSequence("android.title");
+        CharSequence textCs = sbn.getNotification().extras.getCharSequence("android.text");
+
+        String title = titleCs != null ? titleCs.toString() : "";
+        String text = textCs != null ? textCs.toString() : "";
+
+        String normalizedTitle = title.toLowerCase().trim();
+        String normalizedText = text.toLowerCase().trim();
+
+        Log.d(TAG, "Package: " + packageName);
+        Log.d(TAG, "Title: " + title);
+        Log.d(TAG, "Text: " + text);
+
+        // 🔥 NUBANK
         if (packageName.equals("com.nu.production")) {
-            parsePixReceivedNubank(sbn);
-        } else if (packageName.equals("br.com.rico.mobile")) {
+            parseNubank(sbn);
+        }
+
+        // 🔥 RICO
+        else if (packageName.equals("br.com.rico.mobile")) {
             parsePixReceivedRico(sbn);
             parsePixSentRico(sbn);
         }
+
+        // 🔥 FAKE (SIMULANDO NUBANK)
+        else if (packageName.equals("com.argonremote.notificationgenerator")) {
+
+            if (normalizedTitle.contains("transferência recebida")) {
+                Log.d(TAG, "FAKE -> NUBANK RECEBIDO");
+                parseNubank(sbn);
+            }
+
+            else if (normalizedTitle.contains("compra no débito")) {
+                Log.d(TAG, "FAKE -> NUBANK COMPRA");
+                parseNubank(sbn);
+            }
+
+            // fallback antigo (rico)
+            else if (normalizedText.contains("pix realizado") || normalizedText.contains("enviou um pix")) {
+                Log.d(TAG, "FAKE -> PIX ENVIADO (RICO)");
+                parsePixSentRico(sbn);
+            }
+
+            else if (normalizedText.contains("pix recebido") || normalizedText.contains("recebeu um pix")) {
+                Log.d(TAG, "FAKE -> PIX RECEBIDO (RICO)");
+                parsePixReceivedRico(sbn);
+            }
+
+            else if (normalizedText.contains("compra")) {
+                Log.d(TAG, "FAKE -> COMPRA (RICO)");
+                parsePixSentRico(sbn);
+            }
+        }
     }
 
-    private void parsePixReceivedNubank(StatusBarNotification sbn) {
-        CharSequence text = sbn.getNotification().extras.getCharSequence("android.text");
-        if (text == null) return;
-        String message = text.toString();
-        
-        // Verifica se é transferência recebida (ajuste o título se necessário)
-        sendTransactionToBackend(parseAmount(extractValue(message)), message, "income", "nubank");
+    // =========================
+    // 🔥 NUBANK PARSER
+    // =========================
+    private void parseNubank(StatusBarNotification sbn) {
+        String fullMessage = getFullMessage(sbn);
+
+        CharSequence titleCs = sbn.getNotification().extras.getCharSequence("android.title");
+        String title = titleCs != null ? titleCs.toString().toLowerCase() : "";
+
+        double amount = parseAmount(extractValue(fullMessage));
+
+        Log.d(TAG, "NUBANK FULL: " + fullMessage);
+        Log.d(TAG, "NUBANK VALUE: " + amount);
+
+        if (amount <= 0) return;
+
+        // 💰 RECEBIDO
+        if (title.contains("transferência recebida")) {
+            Log.d(TAG, "NUBANK -> INCOME");
+            sendTransactionToBackend(amount, fullMessage, "income", "nubank");
+        }
+
+        // 💸 COMPRA
+        else if (title.contains("compra no débito")) {
+            Log.d(TAG, "NUBANK -> EXPENSE");
+            sendTransactionToBackend(amount, fullMessage, "expense", "nubank");
+        }
     }
 
+    // =========================
+    // 🔥 RICO
+    // =========================
     private void parsePixReceivedRico(StatusBarNotification sbn) {
-        CharSequence text = sbn.getNotification().extras.getCharSequence("android.text");
-        if (text == null) return;
-        String message = text.toString();
-        
+        String message = getFullMessage(sbn);
+
         if (message.contains("recebeu um Pix")) {
-            sendTransactionToBackend(parseAmount(extractValue(message)), message, "income", "rico");
+            double amount = parseAmount(extractValue(message));
+            sendTransactionToBackend(amount, message, "income", "rico");
         }
     }
 
     private void parsePixSentRico(StatusBarNotification sbn) {
-        CharSequence text = sbn.getNotification().extras.getCharSequence("android.text");
-        if (text == null) return;
-        String message = text.toString();
-        
-        if (message.contains("enviou um Pix")) {
-            sendTransactionToBackend(parseAmount(extractValue(message)), message, "expense", "rico");
+        String fullMessage = getFullMessage(sbn).toLowerCase();
+        String originalMessage = getFullMessage(sbn);
+
+        Log.d(TAG, "RICO FULL: " + fullMessage);
+
+        // PIX ENVIADO
+        if (fullMessage.contains("enviou um pix")) {
+            double amount = parseAmount(extractValue(originalMessage));
+            sendTransactionToBackend(amount, originalMessage, "expense", "rico");
         }
+
+        // COMPRA
+        else if (fullMessage.contains("compra")) {
+            double amount = parseAmount(extractValue(originalMessage));
+
+            if (amount > 0) {
+                sendTransactionToBackend(amount, originalMessage, "expense", "rico");
+            } else {
+                Log.e(TAG, "VALOR NÃO IDENTIFICADO NA COMPRA RICO");
+            }
+        }
+    }
+
+    // =========================
+    // 🧼 HELPERS
+    // =========================
+    private String getFullMessage(StatusBarNotification sbn) {
+        CharSequence titleCs = sbn.getNotification().extras.getCharSequence("android.title");
+        CharSequence textCs = sbn.getNotification().extras.getCharSequence("android.text");
+
+        String title = titleCs != null ? titleCs.toString() : "";
+        String text = textCs != null ? textCs.toString() : "";
+
+        return (title + " " + text).trim();
     }
 
     private String extractValue(String text) {
@@ -88,17 +185,15 @@ public class NotificationListener extends NotificationListenerService {
 
     private void sendTransactionToBackend(double amount, String description, String type, String source) {
         SharedPreferences prefs = getSharedPreferences("CapacitorStorage", Context.MODE_PRIVATE);
-        
-        // Tenta buscar com o prefixo _cap_ (padrão Capacitor) e sem (fallback)
+
         String userId = prefs.getString("_cap_userId", prefs.getString("userId", null));
         String bearerToken = prefs.getString("_cap_userToken", prefs.getString("userToken", null));
-        
-        // Busca a conta específica: account_nubank ou account_rico
+
         String accountKey = "account_" + source.toLowerCase();
         String accountId = prefs.getString("_cap_" + accountKey, prefs.getString(accountKey, null));
 
         if (userId == null || bearerToken == null || accountId == null) {
-            Log.e(TAG, "DADOS INCOMPLETOS para " + source + ". Verifique o Login.");
+            Log.e(TAG, "DADOS INCOMPLETOS para " + source);
             return;
         }
 
@@ -110,6 +205,8 @@ public class NotificationListener extends NotificationListenerService {
                 + "\"accountId\":\"" + accountId + "\","
                 + "\"source\":\"" + source + "\""
                 + "}";
+
+        Log.d(TAG, "JSON ENVIADO: " + json);
 
         RequestBody body = RequestBody.create(json, MediaType.get("application/json; charset=utf-8"));
         Request request = new Request.Builder()
