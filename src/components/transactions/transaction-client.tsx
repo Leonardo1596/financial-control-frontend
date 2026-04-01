@@ -41,13 +41,10 @@ export default function TransactionClient() {
     if (!token) return;
     setLoading(true);
     try {
-      const transResponse = await fetch(`${API_BASE_URL}/list-transaction`, {
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
-      
-      const accountsResponse = await fetch(`${API_BASE_URL}/list-accounts`, {
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
+      const [transResponse, accountsResponse] = await Promise.all([
+        fetch(`${API_BASE_URL}/list-transaction`, { headers: { Authorization: `Bearer ${token}` } }),
+        fetch(`${API_BASE_URL}/list-accounts`, { headers: { Authorization: `Bearer ${token}` } })
+      ]);
 
       if (!transResponse.ok || !accountsResponse.ok) throw new Error('Falha ao buscar dados');
 
@@ -72,7 +69,7 @@ export default function TransactionClient() {
     try {
       const response = await fetch(`${API_BASE_URL}/delete-transaction/${transactionId}`, {
         method: 'DELETE',
-        headers: { 'Authorization': `Bearer ${token}` }
+        headers: { Authorization: `Bearer ${token}` }
       });
       if (!response.ok) throw new Error('Falha ao deletar transação');
       toast({ title: 'Sucesso', description: 'Transação deletada.' });
@@ -87,7 +84,7 @@ export default function TransactionClient() {
     try {
       const response = await fetch(`${API_BASE_URL}/delete-all-transactions`, {
         method: 'DELETE',
-        headers: { 'Authorization': `Bearer ${token}` },
+        headers: { Authorization: `Bearer ${token}` },
       });
       if (!response.ok) throw new Error('Falha ao deletar transações');
       toast({ title: 'Sucesso', description: 'Histórico limpo com sucesso.' });
@@ -102,11 +99,10 @@ export default function TransactionClient() {
   const filteredTransactions = useMemo(() => {
     return transactions.filter(transaction => {
       const transDate = new Date(transaction.date);
-      const adjustedDate = new Date(transDate.getTime() + transDate.getTimezoneOffset() * 60000);
-      const transMonth = (adjustedDate.getMonth() + 1).toString();
-      const transYear = adjustedDate.getFullYear().toString();
+      const transMonth = (transDate.getMonth() + 1).toString().padStart(1, '0'); // padStart garante string coerente
+      const transYear = transDate.getFullYear().toString();
 
-      const monthMatch = month === 'todas' || transMonth === month;
+      const monthMatch = month === 'todas' || parseInt(transMonth) === parseInt(month);
       const yearMatch = year === 'todas' || transYear === year;
       const accountMatch = selectedAccountId === 'todas' || transaction.accountId === selectedAccountId;
 
@@ -227,7 +223,7 @@ export default function TransactionClient() {
         </div>
       </div>
 
-      {/* CONTAINER DA LISTA: CORREÇÃO DE LARGURA APLICADA AQUI */}
+      {/* CONTAINER DA LISTA */}
       <div className="grid grid-cols-1 w-full overflow-hidden bg-white rounded-3xl shadow-xl shadow-slate-200/50 border border-slate-100">
         <TransactionList 
           transactions={filteredTransactions} 

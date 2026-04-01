@@ -1,7 +1,9 @@
 package com.example.app;
 
 import android.content.Context;
+import android.content.Intent;
 import android.content.SharedPreferences;
+import android.os.Build;
 import android.service.notification.NotificationListenerService;
 import android.service.notification.StatusBarNotification;
 import android.util.Log;
@@ -24,6 +26,21 @@ public class NotificationListener extends NotificationListenerService {
     private static final String BACKEND_URL = "https://financial-control-442c.onrender.com/create-transaction";
     private OkHttpClient client = new OkHttpClient();
     private String lastNotificationKey = null;
+
+    @Override
+    public void onListenerConnected() {
+        super.onListenerConnected();
+
+        // Inicia ForegroundService se não estiver rodando
+        Intent serviceIntent = new Intent(this, MyForegroundService.class);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            startForegroundService(serviceIntent);
+        } else {
+            startService(serviceIntent);
+        }
+
+        Log.d(TAG, "NotificationListener conectado e serviço iniciado.");
+    }
 
     @Override
     public void onNotificationPosted(StatusBarNotification sbn) {
