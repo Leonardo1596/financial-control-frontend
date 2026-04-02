@@ -9,7 +9,7 @@
 
     <application
         android:allowBackup="true"
-        android:label="App"
+        android:label="FinTrack"
         android:theme="@style/Theme.AppCompat.Light.NoActionBar">
 
         <activity

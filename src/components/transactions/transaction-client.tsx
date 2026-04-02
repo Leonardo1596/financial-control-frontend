@@ -99,8 +99,10 @@ export default function TransactionClient() {
   const filteredTransactions = useMemo(() => {
     return transactions.filter(transaction => {
       const transDate = new Date(transaction.date);
-      const transMonth = (transDate.getMonth() + 1).toString().padStart(1, '0'); // padStart garante string coerente
-      const transYear = transDate.getFullYear().toString();
+
+      // corrigido para UTC para não bagunçar com fuso horário
+      const transMonth = (transDate.getUTCMonth() + 1).toString().padStart(2, '0');
+      const transYear = transDate.getUTCFullYear().toString();
 
       const monthMatch = month === 'todas' || parseInt(transMonth) === parseInt(month);
       const yearMatch = year === 'todas' || transYear === year;
