@@ -51,21 +51,41 @@ export default function AccountsClient() {
     handleCloseModal();
   };
 
+  // ------------------------ DELETE ------------------------
   const handleDelete = async (id: string) => {
     try {
+      // procura a conta pelo id pra pegar o nome
+      const account = accounts.find(acc => acc._id === id);
+      if (!account) throw new Error('Conta não encontrada');
+
       const response = await fetch(`${API_BASE_URL}/delete-account/${id}`, {
         method: 'DELETE',
         headers: { 'Authorization': `Bearer ${token}` }
       });
+
       if (!response.ok) throw new Error('Falha ao deletar conta');
+
+      // Normaliza o nome da conta pra usar como chave no Preferences
+      const normalizeSource = (name: string) => {
+        return name.toLowerCase().trim().replace(/\s+/g, "_");
+      };
+
+      const key = `account_${normalizeSource(account.name)}`;
+
+      // Remove do Capacitor Preferences
+      await Preferences.remove({ key });
+      // opcional: remove _cap_ antigo
+      await Preferences.remove({ key: `_cap_${key}` });
+
       toast({ title: 'Sucesso', description: 'Conta deletada com sucesso.' });
-      await Preferences.remove({ key: 'account_rico' });
-      await Preferences.remove({ key: '_cap_account_rico' });
-      fetchAccounts();
+
+      fetchAccounts(); // atualiza a lista
+
     } catch (error) {
       toast({ variant: 'destructive', title: 'Erro', description: (error as Error).message });
     }
   };
+  // ---------------------------------------------------------
 
   const years = Array.from({ length: 5 }, (_, i) => (new Date().getFullYear() - i).toString());
   const months = Array.from({ length: 12 }, (_, i) => ({
@@ -121,7 +141,7 @@ export default function AccountsClient() {
       <div className="grid grid-cols-1 w-full overflow-hidden bg-white rounded-3xl shadow-xl shadow-slate-200/50 border border-slate-100">
         <AccountsList
           accounts={accounts}
-          onDelete={handleDelete}
+          onDelete={handleDelete} // agora compatível: recebe só id
           loading={loading}
         />
       </div>
