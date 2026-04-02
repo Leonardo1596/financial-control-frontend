@@ -24,7 +24,6 @@ public class MyForegroundService extends Service {
                 .setContentText("Monitorando notificações...")
                 .setSmallIcon(R.mipmap.ic_launcher)
                 .setPriority(NotificationCompat.PRIORITY_LOW)
-                .setCategory(NotificationCompat.CATEGORY_SERVICE)
                 .build();
 
         startForeground(1, notification);
@@ -32,7 +31,6 @@ public class MyForegroundService extends Service {
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-        // Se o serviço for morto, reiniciar automaticamente
         return START_STICKY;
     }
 
@@ -48,8 +46,6 @@ public class MyForegroundService extends Service {
                     "Foreground Service",
                     NotificationManager.IMPORTANCE_LOW
             );
-            channel.setSound(null, null);
-            channel.setLockscreenVisibility(Notification.VISIBILITY_PRIVATE);
 
             NotificationManager manager = getSystemService(NotificationManager.class);
             if (manager != null) manager.createNotificationChannel(channel);

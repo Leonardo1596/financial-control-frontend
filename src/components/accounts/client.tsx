@@ -10,6 +10,7 @@ import { Button } from '@/components/ui/button';
 import { PlusCircle, Wallet, Filter } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { API_BASE_URL } from '@/lib/api';
+import { Preferences } from '@capacitor/preferences';
 
 export default function AccountsClient() {
   const { token } = useAuth();
@@ -58,6 +59,8 @@ export default function AccountsClient() {
       });
       if (!response.ok) throw new Error('Falha ao deletar conta');
       toast({ title: 'Sucesso', description: 'Conta deletada com sucesso.' });
+      await Preferences.remove({ key: 'account_rico' });
+      await Preferences.remove({ key: '_cap_account_rico' });
       fetchAccounts();
     } catch (error) {
       toast({ variant: 'destructive', title: 'Erro', description: (error as Error).message });
@@ -122,7 +125,7 @@ export default function AccountsClient() {
           loading={loading}
         />
       </div>
-      
+
       <AccountsForm
         isOpen={isModalOpen}
         onClose={handleCloseModal}

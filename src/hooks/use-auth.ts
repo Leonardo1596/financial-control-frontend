@@ -4,6 +4,7 @@ import { useState, useEffect, createContext, useContext, ReactNode, createElemen
 import { useRouter } from 'next/navigation';
 import type { AuthResponse, User } from '@/lib/types';
 import { API_BASE_URL } from '@/lib/api';
+import { Preferences } from '@capacitor/preferences';
 
 const USER_STORAGE_KEY = 'fintrack_user';
 
@@ -23,10 +24,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
   const router = useRouter();
 
-  const logout = useCallback(() => {
+  const logout = useCallback(async () => {
     localStorage.removeItem(USER_STORAGE_KEY);
     setUser(null);
     setToken(null);
+    await Preferences.clear();
     router.replace('/login');
   }, [router]);
 
@@ -36,7 +38,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         const storedUser = localStorage.getItem(USER_STORAGE_KEY);
         if (storedUser) {
           const authData: AuthResponse = JSON.parse(storedUser);
-          
+
           const response = await fetch(`${API_BASE_URL}/list-accounts`, {
             headers: { 'Authorization': `Bearer ${authData.token}` }
           });

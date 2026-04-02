@@ -31,23 +31,17 @@ public class NotificationListener extends NotificationListenerService {
     public void onListenerConnected() {
         super.onListenerConnected();
 
-        // Inicia ForegroundService se não estiver rodando
-        Intent serviceIntent = new Intent(this, MyForegroundService.class);
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            startForegroundService(serviceIntent);
-        } else {
-            startService(serviceIntent);
-        }
-
-        Log.d(TAG, "NotificationListener conectado e serviço iniciado.");
+        Log.d(TAG, "NotificationListener conectado.");
     }
 
     @Override
     public void onNotificationPosted(StatusBarNotification sbn) {
         super.onNotificationPosted(sbn);
 
-        if (sbn.getKey().equals(lastNotificationKey)) return;
-        lastNotificationKey = sbn.getKey();
+        if (sbn == null || sbn.getNotification() == null || sbn.getNotification().extras == null) return;
+
+        // if (sbn.getKey().equals(lastNotificationKey)) return;
+        // lastNotificationKey = sbn.getKey();
 
         String packageName = sbn.getPackageName();
 
@@ -64,51 +58,39 @@ public class NotificationListener extends NotificationListenerService {
         Log.d(TAG, "Title: " + title);
         Log.d(TAG, "Text: " + text);
 
-        // 🔥 NUBANK
         if (packageName.equals("com.nu.production")) {
             parseNubank(sbn);
         }
 
-        // 🔥 RICO
         else if (packageName.equals("br.com.rico.mobile")) {
             parsePixReceivedRico(sbn);
             parsePixSentRico(sbn);
         }
 
-        // 🔥 FAKE (SIMULANDO NUBANK)
         else if (packageName.equals("com.argonremote.notificationgenerator")) {
 
             if (normalizedTitle.contains("transferência recebida")) {
-                Log.d(TAG, "FAKE -> NUBANK RECEBIDO");
                 parseNubank(sbn);
             }
 
             else if (normalizedTitle.contains("compra no débito")) {
-                Log.d(TAG, "FAKE -> NUBANK COMPRA");
                 parseNubank(sbn);
             }
 
-            // fallback antigo (rico)
             else if (normalizedText.contains("pix realizado") || normalizedText.contains("enviou um pix")) {
-                Log.d(TAG, "FAKE -> PIX ENVIADO (RICO)");
                 parsePixSentRico(sbn);
             }
 
             else if (normalizedText.contains("pix recebido") || normalizedText.contains("recebeu um pix")) {
-                Log.d(TAG, "FAKE -> PIX RECEBIDO (RICO)");
                 parsePixReceivedRico(sbn);
             }
 
             else if (normalizedText.contains("compra")) {
-                Log.d(TAG, "FAKE -> COMPRA (RICO)");
                 parsePixSentRico(sbn);
             }
         }
     }
 
-    // =========================
-    // 🔥 NUBANK PARSER
-    // =========================
     private void parseNubank(StatusBarNotification sbn) {
         String fullMessage = getFullMessage(sbn);
 
@@ -117,27 +99,17 @@ public class NotificationListener extends NotificationListenerService {
 
         double amount = parseAmount(extractValue(fullMessage));
 
-        Log.d(TAG, "NUBANK FULL: " + fullMessage);
-        Log.d(TAG, "NUBANK VALUE: " + amount);
-
         if (amount <= 0) return;
 
-        // 💰 RECEBIDO
         if (title.contains("transferência recebida")) {
-            Log.d(TAG, "NUBANK -> INCOME");
             sendTransactionToBackend(amount, fullMessage, "income", "nubank");
         }
 
-        // 💸 COMPRA
         else if (title.contains("compra no débito")) {
-            Log.d(TAG, "NUBANK -> EXPENSE");
             sendTransactionToBackend(amount, fullMessage, "expense", "nubank");
         }
     }
 
-    // =========================
-    // 🔥 RICO
-    // =========================
     private void parsePixReceivedRico(StatusBarNotification sbn) {
         String message = getFullMessage(sbn);
 
@@ -151,29 +123,20 @@ public class NotificationListener extends NotificationListenerService {
         String fullMessage = getFullMessage(sbn).toLowerCase();
         String originalMessage = getFullMessage(sbn);
 
-        Log.d(TAG, "RICO FULL: " + fullMessage);
-
-        // PIX ENVIADO
         if (fullMessage.contains("enviou um pix")) {
             double amount = parseAmount(extractValue(originalMessage));
             sendTransactionToBackend(amount, originalMessage, "expense", "rico");
         }
 
-        // COMPRA
         else if (fullMessage.contains("compra")) {
             double amount = parseAmount(extractValue(originalMessage));
 
             if (amount > 0) {
                 sendTransactionToBackend(amount, originalMessage, "expense", "rico");
-            } else {
-                Log.e(TAG, "VALOR NÃO IDENTIFICADO NA COMPRA RICO");
             }
         }
     }
 
-    // =========================
-    // 🧼 HELPERS
-    // =========================
     private String getFullMessage(StatusBarNotification sbn) {
         CharSequence titleCs = sbn.getNotification().extras.getCharSequence("android.title");
         CharSequence textCs = sbn.getNotification().extras.getCharSequence("android.text");
@@ -205,14 +168,15 @@ public class NotificationListener extends NotificationListenerService {
 
         String userId = prefs.getString("_cap_userId", prefs.getString("userId", null));
         String bearerToken = prefs.getString("_cap_userToken", prefs.getString("userToken", null));
-
         String accountKey = "account_" + source.toLowerCase();
         String accountId = prefs.getString("_cap_" + accountKey, prefs.getString(accountKey, null));
-
-        if (userId == null || bearerToken == null || accountId == null) {
-            Log.e(TAG, "DADOS INCOMPLETOS para " + source);
+        Log.d(TAG, "ACCOUNT ID (" + source + "): " + accountId);
+        if (accountId == null) {
+            Log.e(TAG, "Account ID para " + source + " não encontrado. Transação ignorada.");
             return;
         }
+
+        if (userId == null || bearerToken == null || accountId == null) return;
 
         String json = "{"
                 + "\"user\":\"" + userId + "\","
@@ -222,8 +186,6 @@ public class NotificationListener extends NotificationListenerService {
                 + "\"accountId\":\"" + accountId + "\","
                 + "\"source\":\"" + source + "\""
                 + "}";
-
-        Log.d(TAG, "JSON ENVIADO: " + json);
 
         RequestBody body = RequestBody.create(json, MediaType.get("application/json; charset=utf-8"));
         Request request = new Request.Builder()
@@ -240,11 +202,6 @@ public class NotificationListener extends NotificationListenerService {
 
             @Override
             public void onResponse(Call call, Response response) throws IOException {
-                if (response.isSuccessful()) {
-                    Log.i(TAG, "Transação de " + source + " enviada!");
-                } else {
-                    Log.e(TAG, "Erro Backend: " + response.code());
-                }
                 response.close();
             }
         });

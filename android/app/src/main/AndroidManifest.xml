@@ -1,8 +1,8 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.example.app">
 
-    <!-- Permissões -->
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE"/>
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC"/>
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED"/>
     <uses-permission android:name="android.permission.INTERNET"/>
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
@@ -12,7 +12,6 @@
         android:label="App"
         android:theme="@style/Theme.AppCompat.Light.NoActionBar">
 
-        <!-- MAIN ACTIVITY -->
         <activity
             android:name=".MainActivity"
             android:exported="true">
@@ -22,13 +21,11 @@
             </intent-filter>
         </activity>
 
-        <!-- Foreground Service -->
         <service
             android:name=".MyForegroundService"
             android:exported="false"
-            android:foregroundServiceType="connectedDevice|dataSync|mediaPlayback|location" />
+            android:foregroundServiceType="dataSync" />
 
-        <!-- Notification Listener -->
         <service
             android:name=".NotificationListener"
             android:label="Notification Listener"
@@ -39,7 +36,6 @@
             </intent-filter>
         </service>
 
-        <!-- Reiniciar após ligar celular -->
         <receiver
             android:name=".BootReceiver"
             android:enabled="true"

@@ -36,7 +36,6 @@ export function useBiometricAuth() {
         if (success) {
           setAuthorized(true);
         } else {
-          localStorage.removeItem("fintrack_user");
           setAuthorized(false);
         }
 
