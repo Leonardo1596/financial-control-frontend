@@ -7,11 +7,11 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/form-components/ui/form";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import { AuthProvider, useAuth } from "@/hooks/use-auth";
-import { Landmark, Loader2, ArrowRight, Mail, Lock } from "lucide-react";
+import { Landmark, Loader2, ArrowRight } from "lucide-react";
 import { API_BASE_URL } from "@/lib/api";
 import { Preferences } from '@capacitor/preferences';
 
@@ -124,12 +124,9 @@ function LoginPageContent() {
                 name="email"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>E-mail</FormLabel>
+                    <FormLabel>Email</FormLabel>
                     <FormControl>
-                      <div className="relative">
-                        <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
-                        <Input placeholder="nome@exemplo.com" className="pl-10 h-12 rounded-xl" {...field} />
-                      </div>
+                      <Input placeholder="nome@exemplo.com" className="h-12" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -145,25 +142,21 @@ function LoginPageContent() {
                         <Button variant="link" className="px-0 font-normal text-sm" type="button">Esqueceu a senha?</Button>
                     </div>
                     <FormControl>
-                      <div className="relative">
-                        <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
-                        <Input type="password" placeholder="••••••••" className="pl-10 h-12 rounded-xl" {...field} />
-                      </div>
+                      <Input type="password" placeholder="••••••••" className="h-12" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
               />
-              <Button type="submit" className="w-full h-12 text-lg font-semibold shadow-lg shadow-primary/20 rounded-xl" disabled={isLoading}>
+              <Button type="submit" className="w-full h-12 text-lg font-semibold shadow-lg shadow-primary/20" disabled={isLoading}>
                 {isLoading ? <Loader2 className="mr-2 h-5 w-5 animate-spin" /> : <>Entrar <ArrowRight className="ml-2 h-5 w-5" /></>}
               </Button>
             </form>
           </Form>
-
           <p className="text-center text-sm text-muted-foreground">
-            Ainda não tem uma conta?{" "}
-            <Link href="/register" className="text-primary font-bold hover:underline">
-              Cadastre-se grátis
+            Não tem uma conta?{" "}
+            <Link href="/register" className="font-bold text-primary hover:underline">
+              Cadastre-se agora
             </Link>
           </p>
         </div>
