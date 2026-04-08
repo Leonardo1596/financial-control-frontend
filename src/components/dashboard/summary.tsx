@@ -41,6 +41,7 @@ export default function Summary() {
       fetchSummary();
     }
   }, [token, year, month, selectedAccountId]);
+  console.log(summary);
 
   const fetchSummary = async () => {
     setLoading(true);
@@ -49,6 +50,8 @@ export default function Summary() {
       if (selectedAccountId !== 'todas') {
         url += `&accountId=${selectedAccountId}`;
       }
+
+  console.log("URL FINAL:", url);
 
       const response = await fetch(url, {
         headers: { 'Authorization': `Bearer ${token}` }
