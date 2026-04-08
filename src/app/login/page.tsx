@@ -11,7 +11,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import { AuthProvider, useAuth } from "@/hooks/use-auth";
-import { Landmark, Loader2, ArrowRight } from "lucide-react";
+import { Landmark, Loader2, ArrowRight, UserPlus } from "lucide-react";
 import { API_BASE_URL } from "@/lib/api";
 import { Preferences } from '@capacitor/preferences';
 
@@ -77,7 +77,7 @@ function LoginPageContent() {
       }
 
       login(data);
-      toast({ title: "Login bem-sucedido", description: `Bem-vindo, ${data.user.name}!` });
+      toast({ title: "Login bem-sucedido", description: `Bem-vindo de volta, ${data.user.name}!` });
       router.replace("/");
     } catch (error) {
       toast({
@@ -90,33 +90,37 @@ function LoginPageContent() {
     }
   }
 
-  if (loading || user) return <div className="flex h-screen w-screen items-center justify-center"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>;
+  if (loading || user) return <div className="flex h-screen w-screen items-center justify-center bg-background"><Loader2 className="h-10 w-10 animate-spin text-primary" /></div>;
 
   return (
-    <main className="flex min-h-screen">
+    <main className="flex min-h-screen bg-background">
+      {/* Lado Esquerdo - Branding */}
       <div className="hidden lg:flex flex-col justify-between w-1/2 bg-primary p-12 text-primary-foreground">
         <div className="flex items-center gap-3">
-          <div className="bg-white/20 p-2 rounded-xl backdrop-blur-sm">
+          <div className="bg-white/20 p-2.5 rounded-xl backdrop-blur-md">
             <Landmark className="h-8 w-8 text-white" />
           </div>
           <span className="text-2xl font-bold tracking-tight">FinTrack</span>
         </div>
         <div>
           <h1 className="text-5xl font-bold leading-tight mb-6">Controle suas finanças com inteligência.</h1>
-          <p className="text-xl text-primary-foreground/80 max-w-lg">
-            A ferramenta definitiva para gestão de contas, transações e planejamento financeiro pessoal.
+          <p className="text-xl text-primary-foreground/80 max-w-lg leading-relaxed">
+            A ferramenta definitiva para gestão de contas, transações e planejamento financeiro pessoal de alto nível.
           </p>
         </div>
-        <div className="text-sm text-primary-foreground/60">
+        <div className="text-sm text-primary-foreground/60 font-medium">
           © 2024 FinTrack. Todos os direitos reservados.
         </div>
       </div>
-      <div className="flex flex-col items-center justify-center w-full lg:w-1/2 p-8 bg-background">
+
+      {/* Lado Direito - Formulário */}
+      <div className="flex flex-col items-center justify-center w-full lg:w-1/2 p-8">
         <div className="w-full max-w-md space-y-8">
-          <div className="text-center lg:text-left">
-            <h2 className="text-3xl font-bold tracking-tight">Entrar na sua conta</h2>
-            <p className="text-muted-foreground mt-2">Gestão financeira ao seu alcance.</p>
+          <div className="text-center lg:text-left space-y-2">
+            <h2 className="text-3xl font-bold tracking-tight text-slate-900">Entrar na sua conta</h2>
+            <p className="text-slate-500">Gestão financeira ao seu alcance.</p>
           </div>
+
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
               <FormField
@@ -124,9 +128,9 @@ function LoginPageContent() {
                 name="email"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Email</FormLabel>
+                    <FormLabel className="text-sm font-semibold text-slate-700">Email</FormLabel>
                     <FormControl>
-                      <Input placeholder="nome@exemplo.com" className="h-12 rounded-xl" {...field} />
+                      <Input placeholder="nome@exemplo.com" className="h-12 rounded-xl border-slate-200 focus:ring-primary/20" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -138,26 +142,27 @@ function LoginPageContent() {
                 render={({ field }) => (
                   <FormItem>
                     <div className="flex items-center justify-between">
-                        <FormLabel>Senha</FormLabel>
-                        <Button variant="link" className="px-0 font-normal text-sm" type="button">Esqueceu a senha?</Button>
+                        <FormLabel className="text-sm font-semibold text-slate-700">Senha</FormLabel>
+                        <Button variant="link" className="px-0 font-bold text-xs uppercase tracking-wider text-primary" type="button">Esqueceu?</Button>
                     </div>
                     <FormControl>
-                      <Input type="password" placeholder="••••••••" className="h-12 rounded-xl" {...field} />
+                      <Input type="password" placeholder="••••••••" className="h-12 rounded-xl border-slate-200 focus:ring-primary/20" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
               />
-              <Button type="submit" className="w-full h-12 text-lg font-semibold shadow-lg shadow-primary/20 rounded-xl" disabled={isLoading}>
-                {isLoading ? <Loader2 className="mr-2 h-5 w-5 animate-spin" /> : <>Entrar <ArrowRight className="ml-2 h-5 w-5" /></>}
+              <Button type="submit" className="w-full h-12 text-lg font-bold shadow-xl shadow-primary/20 rounded-xl transition-all hover:scale-[1.01]" disabled={isLoading}>
+                {isLoading ? <Loader2 className="mr-2 h-5 w-5 animate-spin" /> : <>Entrar Agora <ArrowRight className="ml-2 h-5 w-5" /></>}
               </Button>
             </form>
           </Form>
-          <div className="text-center">
-            <p className="text-sm text-muted-foreground">
+
+          <div className="text-center pt-4">
+            <p className="text-sm text-slate-500">
               Não tem uma conta?{" "}
-              <Link href="/register" className="text-primary font-bold hover:underline">
-                Cadastre-se grátis
+              <Link href="/register" className="text-primary font-bold hover:underline inline-flex items-center gap-1">
+                <UserPlus className="h-4 w-4" /> Cadastre-se grátis
               </Link>
             </p>
           </div>

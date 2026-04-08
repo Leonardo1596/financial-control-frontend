@@ -11,7 +11,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import { AuthProvider } from "@/hooks/use-auth";
-import { Landmark, Loader2, ArrowRight, UserPlus } from "lucide-react";
+import { Landmark, Loader2, UserPlus, ArrowRight } from "lucide-react";
 import { API_BASE_URL } from "@/lib/api";
 
 const formSchema = z.object({
@@ -53,7 +53,7 @@ function RegisterPageContent() {
       }
 
       toast({
-        title: "Conta criada!",
+        title: "Conta criada com sucesso!",
         description: "Agora você pode entrar com suas credenciais.",
       });
       router.push("/login");
@@ -69,30 +69,34 @@ function RegisterPageContent() {
   }
 
   return (
-    <main className="flex min-h-screen">
+    <main className="flex min-h-screen bg-background">
+      {/* Lado Esquerdo - Branding */}
       <div className="hidden lg:flex flex-col justify-between w-1/2 bg-primary p-12 text-primary-foreground">
         <div className="flex items-center gap-3">
-          <div className="bg-white/20 p-2 rounded-xl backdrop-blur-sm">
+          <div className="bg-white/20 p-2.5 rounded-xl backdrop-blur-md">
             <Landmark className="h-8 w-8 text-white" />
           </div>
           <span className="text-2xl font-bold tracking-tight">FinTrack</span>
         </div>
         <div>
           <h1 className="text-5xl font-bold leading-tight mb-6">Comece sua jornada financeira hoje.</h1>
-          <p className="text-xl text-primary-foreground/80 max-w-lg">
-            Junte-se a milhares de pessoas que já organizaram sua vida financeira com o FinTrack.
+          <p className="text-xl text-primary-foreground/80 max-w-lg leading-relaxed">
+            Junte-se a milhares de pessoas que já organizaram sua vida financeira com inteligência e simplicidade.
           </p>
         </div>
-        <div className="text-sm text-primary-foreground/60">
+        <div className="text-sm text-primary-foreground/60 font-medium">
           © 2024 FinTrack. Todos os direitos reservados.
         </div>
       </div>
-      <div className="flex flex-col items-center justify-center w-full lg:w-1/2 p-8 bg-background overflow-y-auto">
+
+      {/* Lado Direito - Formulário */}
+      <div className="flex flex-col items-center justify-center w-full lg:w-1/2 p-8 overflow-y-auto">
         <div className="w-full max-w-md space-y-8 py-12">
-          <div className="text-center lg:text-left">
-            <h2 className="text-3xl font-bold tracking-tight">Criar nova conta</h2>
-            <p className="text-muted-foreground mt-2">Simples, rápido e seguro.</p>
+          <div className="text-center lg:text-left space-y-2">
+            <h2 className="text-3xl font-bold tracking-tight text-slate-900">Criar nova conta</h2>
+            <p className="text-slate-500">Gestão financeira profissional ao seu alcance.</p>
           </div>
+
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5">
               <FormField
@@ -100,9 +104,9 @@ function RegisterPageContent() {
                 name="name"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Nome Completo</FormLabel>
+                    <FormLabel className="text-sm font-semibold text-slate-700">Nome</FormLabel>
                     <FormControl>
-                      <Input placeholder="Seu nome" className="h-12 rounded-xl" {...field} />
+                      <Input placeholder="Como devemos te chamar?" className="h-12 rounded-xl border-slate-200 focus:ring-primary/20" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -113,50 +117,54 @@ function RegisterPageContent() {
                 name="email"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>E-mail</FormLabel>
+                    <FormLabel className="text-sm font-semibold text-slate-700">E-mail</FormLabel>
                     <FormControl>
-                      <Input placeholder="nome@exemplo.com" className="h-12 rounded-xl" {...field} />
+                      <Input placeholder="nome@exemplo.com" className="h-12 rounded-xl border-slate-200 focus:ring-primary/20" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
               />
-              <FormField
-                control={form.control}
-                name="password"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Senha</FormLabel>
-                    <FormControl>
-                      <Input type="password" placeholder="••••••••" className="h-12 rounded-xl" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="confirmPassword"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Confirmar Senha</FormLabel>
-                    <FormControl>
-                      <Input type="password" placeholder="••••••••" className="h-12 rounded-xl" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <Button type="submit" className="w-full h-12 text-lg font-semibold shadow-lg shadow-primary/20 rounded-xl" disabled={isLoading}>
-                {isLoading ? <Loader2 className="mr-2 h-5 w-5 animate-spin" /> : <>Criar Conta <UserPlus className="ml-2 h-5 w-5" /></>}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <FormField
+                  control={form.control}
+                  name="password"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-sm font-semibold text-slate-700">Senha</FormLabel>
+                      <FormControl>
+                        <Input type="password" placeholder="••••••••" className="h-12 rounded-xl border-slate-200 focus:ring-primary/20" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="confirmPassword"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-sm font-semibold text-slate-700">Confirmar</FormLabel>
+                      <FormControl>
+                        <Input type="password" placeholder="••••••••" className="h-12 rounded-xl border-slate-200 focus:ring-primary/20" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+
+              <Button type="submit" className="w-full h-12 text-lg font-bold shadow-xl shadow-primary/20 rounded-xl transition-all hover:scale-[1.01]" disabled={isLoading}>
+                {isLoading ? <Loader2 className="mr-2 h-5 w-5 animate-spin" /> : <>Criar Minha Conta <UserPlus className="ml-2 h-5 w-5" /></>}
               </Button>
             </form>
           </Form>
-          <div className="text-center">
-            <p className="text-sm text-muted-foreground">
-              Já tem uma conta?{" "}
-              <Link href="/login" className="text-primary font-bold hover:underline">
-                Fazer login
+
+          <div className="text-center pt-4">
+            <p className="text-sm text-slate-500">
+              Já possui uma conta?{" "}
+              <Link href="/login" className="text-primary font-bold hover:underline inline-flex items-center">
+                Fazer login <ArrowRight className="ml-1 h-3 w-3" />
               </Link>
             </p>
           </div>
