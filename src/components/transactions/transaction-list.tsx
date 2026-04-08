@@ -157,7 +157,7 @@ export default function TransactionList({ transactions, accounts = [], onDelete,
                         : 'bg-rose-100 text-rose-700'
                     )}
                   >
-                    {transaction.type === 'income' ? 'Renda' : 'Despesa'}
+                    {transaction.type === 'income' ? 'Receita' : 'Despesa'}
                   </Badge>
                 </TableCell>
                 <TableCell className={cn('text-right font-mono font-bold text-base px-6 whitespace-nowrap', transaction.type === 'income' ? 'text-emerald-600' : 'text-rose-600')}>

@@ -14,7 +14,7 @@ export default function Summary() {
   const [summary, setSummary] = useState<Summary | null>(null);
   const [accounts, setAccounts] = useState<UserAccount[]>([]);
   const [loading, setLoading] = useState(true);
-  
+
   const [year, setYear] = useState(new Date().getFullYear().toString());
   const [month, setMonth] = useState((new Date().getMonth() + 1).toString());
   const [selectedAccountId, setSelectedAccountId] = useState('todas');
@@ -41,7 +41,6 @@ export default function Summary() {
       fetchSummary();
     }
   }, [token, year, month, selectedAccountId]);
-  console.log(summary);
 
   const fetchSummary = async () => {
     setLoading(true);
@@ -51,14 +50,11 @@ export default function Summary() {
         url += `&accountId=${selectedAccountId}`;
       }
 
-  console.log("URL FINAL:", url);
-
       const response = await fetch(url, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       if (!response.ok) throw new Error('Falha ao buscar resumo');
       const data = await response.json();
-      console.log(data);
       setSummary(data);
     } catch (error) {
       toast({ variant: 'destructive', title: 'Erro', description: (error as Error).message });
@@ -133,9 +129,9 @@ export default function Summary() {
           </>
         ) : (
           <>
-            <SummaryCard title="Renda" value={summary?.income ?? 0} icon={TrendingUp} color="text-emerald-500" />
+            <SummaryCard title="Saldo" value={summary?.balance ?? 0} icon={Wallet} color="text-primary" />
+            <SummaryCard title="Receita" value={summary?.income ?? 0} icon={TrendingUp} color="text-emerald-500" />
             <SummaryCard title="Despesa" value={summary?.expense ?? 0} icon={TrendingDown} color="text-rose-500" />
-            <SummaryCard title="Saldo Período" value={summary?.balance ?? 0} icon={Wallet} color="text-primary" />
           </>
         )}
       </div>

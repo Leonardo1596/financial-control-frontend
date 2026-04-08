@@ -146,7 +146,7 @@ export default function TransactionForm({ onTransactionAdded }: { onTransactionA
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent className="rounded-xl">
-                      <SelectItem value="income">Renda</SelectItem>
+                      <SelectItem value="income">Receita</SelectItem>
                       <SelectItem value="expense">Despesa</SelectItem>
                     </SelectContent>
                   </Select>
