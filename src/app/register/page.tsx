@@ -10,8 +10,8 @@ import { Button } from "@/components/ui/button";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
-import { AuthProvider, useAuth } from "@/hooks/use-auth";
-import { Landmark, Loader2, ArrowRight } from "lucide-react";
+import { AuthProvider } from "@/hooks/use-auth";
+import { Landmark, Loader2, ArrowRight, UserPlus } from "lucide-react";
 import { API_BASE_URL } from "@/lib/api";
 
 const formSchema = z.object({
@@ -26,7 +26,6 @@ const formSchema = z.object({
 
 function RegisterPageContent() {
   const router = useRouter();
-  const { login } = useAuth();
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
 
@@ -42,24 +41,27 @@ function RegisterPageContent() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-            name: values.name,
-            email: values.email,
-            password: values.password
+          name: values.name,
+          email: values.email,
+          password: values.password,
         }),
       });
 
       if (!response.ok) {
-        const errorData = await response.json().catch(() => ({ message: 'Falha no cadastro.' }));
-        throw new Error(errorData.message || 'Falha no cadastro');
+        const errorData = await response.json().catch(() => ({ message: 'Erro ao criar conta.' }));
+        throw new Error(errorData.message || 'Falha no registro');
       }
 
-      toast({ title: "Conta criada!", description: "Agora você pode entrar no sistema." });
+      toast({
+        title: "Conta criada!",
+        description: "Agora você pode entrar com suas credenciais.",
+      });
       router.push("/login");
     } catch (error) {
       toast({
         variant: "destructive",
-        title: "Erro ao cadastrar",
-        description: error instanceof Error ? error.message : "Erro desconhecido.",
+        title: "Erro no cadastro",
+        description: error instanceof Error ? error.message : "Ocorreu um erro inesperado.",
       });
     } finally {
       setIsLoading(false);
@@ -78,21 +80,21 @@ function RegisterPageContent() {
         <div>
           <h1 className="text-5xl font-bold leading-tight mb-6">Comece sua jornada financeira hoje.</h1>
           <p className="text-xl text-primary-foreground/80 max-w-lg">
-            Junte-se a milhares de pessoas que já transformaram sua relação com o dinheiro usando o FinTrack.
+            Junte-se a milhares de pessoas que já organizaram sua vida financeira com o FinTrack.
           </p>
         </div>
         <div className="text-sm text-primary-foreground/60">
           © 2024 FinTrack. Todos os direitos reservados.
         </div>
       </div>
-      <div className="flex flex-col items-center justify-center w-full lg:w-1/2 p-8 bg-background">
-        <div className="w-full max-w-md space-y-8">
+      <div className="flex flex-col items-center justify-center w-full lg:w-1/2 p-8 bg-background overflow-y-auto">
+        <div className="w-full max-w-md space-y-8 py-12">
           <div className="text-center lg:text-left">
             <h2 className="text-3xl font-bold tracking-tight">Criar nova conta</h2>
-            <p className="text-muted-foreground mt-2">Preencha os dados para começar sua gestão.</p>
+            <p className="text-muted-foreground mt-2">Simples, rápido e seguro.</p>
           </div>
           <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5">
               <FormField
                 control={form.control}
                 name="name"
@@ -100,7 +102,7 @@ function RegisterPageContent() {
                   <FormItem>
                     <FormLabel>Nome Completo</FormLabel>
                     <FormControl>
-                      <Input placeholder="Seu nome" className="h-11" {...field} />
+                      <Input placeholder="Seu nome" className="h-12 rounded-xl" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -111,53 +113,53 @@ function RegisterPageContent() {
                 name="email"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Email</FormLabel>
+                    <FormLabel>E-mail</FormLabel>
                     <FormControl>
-                      <Input placeholder="nome@exemplo.com" className="h-11" {...field} />
+                      <Input placeholder="nome@exemplo.com" className="h-12 rounded-xl" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
               />
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <FormField
-                    control={form.control}
-                    name="password"
-                    render={({ field }) => (
-                    <FormItem>
-                        <FormLabel>Senha</FormLabel>
-                        <FormControl>
-                        <Input type="password" placeholder="••••••••" className="h-11" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                    </FormItem>
-                    )}
-                />
-                <FormField
-                    control={form.control}
-                    name="confirmPassword"
-                    render={({ field }) => (
-                    <FormItem>
-                        <FormLabel>Confirmar</FormLabel>
-                        <FormControl>
-                        <Input type="password" placeholder="••••••••" className="h-11" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                    </FormItem>
-                    )}
-                />
-              </div>
-              <Button type="submit" className="w-full h-12 text-lg font-semibold shadow-lg shadow-primary/20 mt-4" disabled={isLoading}>
-                {isLoading ? <Loader2 className="mr-2 h-5 w-5 animate-spin" /> : <>Criar conta <ArrowRight className="ml-2 h-5 w-5" /></>}
+              <FormField
+                control={form.control}
+                name="password"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Senha</FormLabel>
+                    <FormControl>
+                      <Input type="password" placeholder="••••••••" className="h-12 rounded-xl" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="confirmPassword"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Confirmar Senha</FormLabel>
+                    <FormControl>
+                      <Input type="password" placeholder="••••••••" className="h-12 rounded-xl" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <Button type="submit" className="w-full h-12 text-lg font-semibold shadow-lg shadow-primary/20 rounded-xl" disabled={isLoading}>
+                {isLoading ? <Loader2 className="mr-2 h-5 w-5 animate-spin" /> : <>Criar Conta <UserPlus className="ml-2 h-5 w-5" /></>}
               </Button>
             </form>
           </Form>
-          <p className="text-center text-sm text-muted-foreground">
-            Já tem uma conta?{" "}
-            <Link href="/login" className="font-bold text-primary hover:underline">
-              Fazer login
-            </Link>
-          </p>
+          <div className="text-center">
+            <p className="text-sm text-muted-foreground">
+              Já tem uma conta?{" "}
+              <Link href="/login" className="text-primary font-bold hover:underline">
+                Fazer login
+              </Link>
+            </p>
+          </div>
         </div>
       </div>
     </main>
@@ -165,5 +167,9 @@ function RegisterPageContent() {
 }
 
 export default function RegisterPage() {
-    return (<AuthProvider><RegisterPageContent /></AuthProvider>)
+  return (
+    <AuthProvider>
+      <RegisterPageContent />
+    </AuthProvider>
+  );
 }

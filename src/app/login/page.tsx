@@ -7,7 +7,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/form-components/ui/form";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import { AuthProvider, useAuth } from "@/hooks/use-auth";
@@ -90,7 +90,7 @@ function LoginPageContent() {
     }
   }
 
-  if (loading || user) return <div className="flex h-screen w-screen items-center justify-center"><Loader2 className="h-8 w-8 animate-spin" /></div>;
+  if (loading || user) return <div className="flex h-screen w-screen items-center justify-center"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>;
 
   return (
     <main className="flex min-h-screen">
@@ -126,7 +126,7 @@ function LoginPageContent() {
                   <FormItem>
                     <FormLabel>Email</FormLabel>
                     <FormControl>
-                      <Input placeholder="nome@exemplo.com" className="h-12" {...field} />
+                      <Input placeholder="nome@exemplo.com" className="h-12 rounded-xl" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -142,23 +142,25 @@ function LoginPageContent() {
                         <Button variant="link" className="px-0 font-normal text-sm" type="button">Esqueceu a senha?</Button>
                     </div>
                     <FormControl>
-                      <Input type="password" placeholder="••••••••" className="h-12" {...field} />
+                      <Input type="password" placeholder="••••••••" className="h-12 rounded-xl" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
               />
-              <Button type="submit" className="w-full h-12 text-lg font-semibold shadow-lg shadow-primary/20" disabled={isLoading}>
+              <Button type="submit" className="w-full h-12 text-lg font-semibold shadow-lg shadow-primary/20 rounded-xl" disabled={isLoading}>
                 {isLoading ? <Loader2 className="mr-2 h-5 w-5 animate-spin" /> : <>Entrar <ArrowRight className="ml-2 h-5 w-5" /></>}
               </Button>
             </form>
           </Form>
-          <p className="text-center text-sm text-muted-foreground">
-            Não tem uma conta?{" "}
-            <Link href="/register" className="font-bold text-primary hover:underline">
-              Cadastre-se agora
-            </Link>
-          </p>
+          <div className="text-center">
+            <p className="text-sm text-muted-foreground">
+              Não tem uma conta?{" "}
+              <Link href="/register" className="text-primary font-bold hover:underline">
+                Cadastre-se grátis
+              </Link>
+            </p>
+          </div>
         </div>
       </div>
     </main>
