@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -10,79 +10,48 @@ import { Button } from "@/components/ui/button";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
-import { AuthProvider, useAuth } from "@/hooks/use-auth";
-import { Landmark, Loader2, ArrowRight, Mail, Lock } from "lucide-react";
+import { Landmark, Loader2, ArrowRight, User, Mail, Lock } from "lucide-react";
 import { API_BASE_URL } from "@/lib/api";
-import { Preferences } from '@capacitor/preferences';
-
-async function loginUser(data: z.infer<typeof formSchema>) {
-  const response = await fetch(`${API_BASE_URL}/login`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(data),
-  });
-  if (!response.ok) {
-    const errorData = await response.json().catch(() => ({ message: 'Falha no login.' }));
-    throw new Error(errorData.message || 'Falha no login');
-  }
-  return response.json();
-}
 
 const formSchema = z.object({
+  name: z.string().min(3, { message: "O nome deve ter pelo menos 3 caracteres." }),
   email: z.string().email({ message: "E-mail inválido." }),
-  password: z.string().min(1, { message: "A senha é obrigatória." }),
+  password: z.string().min(6, { message: "A senha deve ter pelo menos 6 caracteres." }),
 });
 
-function LoginPageContent() {
+export default function RegisterPage() {
   const router = useRouter();
-  const { login, user, loading } = useAuth();
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
 
-  useEffect(() => {
-    if (!loading && user) {
-      router.replace('/');
-    }
-  }, [user, loading, router]);
-
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
-    defaultValues: { email: "", password: "" },
+    defaultValues: { name: "", email: "", password: "" },
   });
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
     setIsLoading(true);
     try {
-      const data = await loginUser(values);
-      
-      const accountsResponse = await fetch(`${API_BASE_URL}/list-accounts`, {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${data.token}`,
-        },
+      const response = await fetch(`${API_BASE_URL}/register`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(values),
       });
-      
-      if (!accountsResponse.ok) throw new Error("Falha ao buscar contas");
-      const accountsData = await accountsResponse.json();
 
-      await Preferences.set({ key: 'userToken', value: data.token });
-      await Preferences.set({ key: 'userId', value: data.user.id });
-      
-      if (Array.isArray(accountsData)) {
-        for (const acc of accountsData) {
-          const key = `account_${acc.name.toLowerCase()}`;
-          await Preferences.set({ key: key, value: acc._id });
-        }
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ message: 'Erro ao cadastrar.' }));
+        throw new Error(errorData.message || 'Falha no cadastro');
       }
 
-      login(data);
-      toast({ title: "Login bem-sucedido", description: `Bem-vindo, ${data.user.name}!` });
-      router.replace("/");
+      toast({
+        title: "Conta criada!",
+        description: "Agora você já pode entrar no FinTrack.",
+      });
+      router.push("/login");
     } catch (error) {
       toast({
         variant: "destructive",
-        title: "Erro",
+        title: "Erro no cadastro",
         description: error instanceof Error ? error.message : "Erro desconhecido.",
       });
     } finally {
@@ -90,10 +59,9 @@ function LoginPageContent() {
     }
   }
 
-  if (loading || user) return <div className="flex h-screen w-screen items-center justify-center"><Loader2 className="h-8 w-8 animate-spin" /></div>;
-
   return (
     <main className="flex min-h-screen">
+      {/* Lado Esquerdo - Branding */}
       <div className="hidden lg:flex flex-col justify-between w-1/2 bg-primary p-12 text-primary-foreground">
         <div className="flex items-center gap-3">
           <div className="bg-white/20 p-2 rounded-xl backdrop-blur-sm">
@@ -102,23 +70,43 @@ function LoginPageContent() {
           <span className="text-2xl font-bold tracking-tight">FinTrack</span>
         </div>
         <div>
-          <h1 className="text-5xl font-bold leading-tight mb-6">Controle suas finanças com inteligência.</h1>
+          <h1 className="text-5xl font-bold leading-tight mb-6">Comece sua jornada financeira hoje.</h1>
           <p className="text-xl text-primary-foreground/80 max-w-lg">
-            A ferramenta definitiva para gestão de contas, transações e planejamento financeiro pessoal.
+            Junte-se a milhares de pessoas que já controlam seus gastos e planejam o futuro com o FinTrack.
           </p>
         </div>
         <div className="text-sm text-primary-foreground/60">
           © 2024 FinTrack. Todos os direitos reservados.
         </div>
       </div>
+
+      {/* Lado Direito - Formulário */}
       <div className="flex flex-col items-center justify-center w-full lg:w-1/2 p-8 bg-background">
         <div className="w-full max-w-md space-y-8">
           <div className="text-center lg:text-left">
-            <h2 className="text-3xl font-bold tracking-tight">Entrar na sua conta</h2>
-            <p className="text-muted-foreground mt-2">Gestão financeira ao seu alcance.</p>
+            <h2 className="text-3xl font-bold tracking-tight">Criar nova conta</h2>
+            <p className="text-muted-foreground mt-2">Simples, rápido e seguro.</p>
           </div>
+
           <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5">
+              <FormField
+                control={form.control}
+                name="name"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Nome Completo</FormLabel>
+                    <FormControl>
+                      <div className="relative">
+                        <User className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+                        <Input placeholder="Seu nome" className="pl-10 h-12 rounded-xl" {...field} />
+                      </div>
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
               <FormField
                 control={form.control}
                 name="email"
@@ -135,15 +123,13 @@ function LoginPageContent() {
                   </FormItem>
                 )}
               />
+
               <FormField
                 control={form.control}
                 name="password"
                 render={({ field }) => (
                   <FormItem>
-                    <div className="flex items-center justify-between">
-                        <FormLabel>Senha</FormLabel>
-                        <Button variant="link" className="px-0 font-normal text-sm" type="button">Esqueceu a senha?</Button>
-                    </div>
+                    <FormLabel>Senha</FormLabel>
                     <FormControl>
                       <div className="relative">
                         <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
@@ -154,24 +140,21 @@ function LoginPageContent() {
                   </FormItem>
                 )}
               />
-              <Button type="submit" className="w-full h-12 text-lg font-semibold shadow-lg shadow-primary/20 rounded-xl" disabled={isLoading}>
-                {isLoading ? <Loader2 className="mr-2 h-5 w-5 animate-spin" /> : <>Entrar <ArrowRight className="ml-2 h-5 w-5" /></>}
+
+              <Button type="submit" className="w-full h-12 text-lg font-semibold shadow-lg shadow-primary/20 mt-2 rounded-xl" disabled={isLoading}>
+                {isLoading ? <Loader2 className="mr-2 h-5 w-5 animate-spin" /> : <>Criar Conta <ArrowRight className="ml-2 h-5 w-5" /></>}
               </Button>
             </form>
           </Form>
 
           <p className="text-center text-sm text-muted-foreground">
-            Ainda não tem uma conta?{" "}
-            <Link href="/register" className="text-primary font-bold hover:underline">
-              Cadastre-se grátis
+            Já tem uma conta?{" "}
+            <Link href="/login" className="text-primary font-bold hover:underline">
+              Fazer login
             </Link>
           </p>
         </div>
       </div>
     </main>
   );
-}
-
-export default function LoginPage() {
-    return (<AuthProvider><LoginPageContent /></AuthProvider>)
 }
