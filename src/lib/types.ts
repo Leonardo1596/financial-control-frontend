@@ -34,7 +34,7 @@ export interface AccountPayable {
   status: 'pendente' | 'paga' | 'atrasada';
   category: string;
   type: 'fixa' | 'variavel';
-  recurring: boolean;
+  installments: number;
 }
 
 export interface UserAccount {
