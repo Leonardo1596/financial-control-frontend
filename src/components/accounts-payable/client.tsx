@@ -12,6 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { PlusCircle, Filter } from 'lucide-react';
 import { Skeleton } from '../ui/skeleton';
 import { API_BASE_URL } from '@/lib/api';
+import { scheduleAllPayments } from '@/services/notifications'; // 🟢 import notifications
 
 export default function AccountsPayableClient() {
   const { token } = useAuth();
@@ -36,7 +37,15 @@ export default function AccountsPayableClient() {
       });
       if (!response.ok) throw new Error('Falha ao buscar contas a pagar');
       const data = await response.json();
+      console.log('Contas a pagar recebidas:', data);
       setAccounts(Array.isArray(data) ? data : []);
+
+      // 🟢 agenda notificações apenas para contas pendentes
+      scheduleAllPayments(
+        Array.isArray(data) ? data.filter(acc => acc.status === 'pendente') : [],
+        2 // dias antes do vencimento
+      );
+
     } catch (error) {
       toast({ variant: 'destructive', title: 'Erro', description: (error as Error).message });
     } finally {
@@ -172,7 +181,6 @@ export default function AccountsPayableClient() {
         </Button>
       </div>
 
-      {/* CONTAINER CORRIGIDO: Grid isolation para evitar que a tabela estique o pai */}
       <div className="grid grid-cols-1 w-full overflow-hidden bg-white rounded-3xl shadow-xl shadow-slate-200/50 border border-slate-100">
         <AccountsPayableList
           accounts={displayedAccounts}
