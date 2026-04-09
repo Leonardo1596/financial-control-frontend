@@ -15,6 +15,11 @@ import { Landmark, Loader2, ArrowRight, UserPlus } from "lucide-react";
 import { API_BASE_URL } from "@/lib/api";
 import { Preferences } from '@capacitor/preferences';
 
+const formSchema = z.object({
+  email: z.string().email({ message: "E-mail inválido." }),
+  password: z.string().min(1, { message: "A senha é obrigatória." }),
+});
+
 async function loginUser(data: z.infer<typeof formSchema>) {
   const response = await fetch(`${API_BASE_URL}/login`, {
     method: "POST",
@@ -27,11 +32,6 @@ async function loginUser(data: z.infer<typeof formSchema>) {
   }
   return response.json();
 }
-
-const formSchema = z.object({
-  email: z.string().email({ message: "E-mail inválido." }),
-  password: z.string().min(1, { message: "A senha é obrigatória." }),
-});
 
 function LoginPageContent() {
   const router = useRouter();
@@ -54,7 +54,8 @@ function LoginPageContent() {
     setIsLoading(true);
     try {
       const data = await loginUser(values);
-      
+
+      // Busca contas
       const accountsResponse = await fetch(`${API_BASE_URL}/list-accounts`, {
         method: "GET",
         headers: {
@@ -62,13 +63,24 @@ function LoginPageContent() {
           Authorization: `Bearer ${data.token}`,
         },
       });
-      
-      if (!accountsResponse.ok) throw new Error("Falha ao buscar contas");
-      const accountsData = await accountsResponse.json();
 
+      let accountsData: any[] = [];
+      try {
+        accountsData = await accountsResponse.json();
+      } catch {
+        accountsData = [];
+      }
+
+      // Só lança erro se não vier nada
+      if (!accountsResponse.ok && accountsData.length === 0) {
+        throw new Error("Falha ao buscar contas");
+      }
+
+      // Salva token e id no Preferences
       await Preferences.set({ key: 'userToken', value: data.token });
       await Preferences.set({ key: 'userId', value: data.user.id });
-      
+
+      // Salva contas no Preferences
       if (Array.isArray(accountsData)) {
         for (const acc of accountsData) {
           const key = `account_${acc.name.toLowerCase()}`;
@@ -90,7 +102,13 @@ function LoginPageContent() {
     }
   }
 
-  if (loading || user) return <div className="flex h-screen w-screen items-center justify-center bg-background"><Loader2 className="h-10 w-10 animate-spin text-primary" /></div>;
+  if (loading || user) {
+    return (
+      <div className="flex h-screen w-screen items-center justify-center bg-background">
+        <Loader2 className="h-10 w-10 animate-spin text-primary" />
+      </div>
+    );
+  }
 
   return (
     <main className="flex min-h-screen bg-background">
@@ -142,8 +160,8 @@ function LoginPageContent() {
                 render={({ field }) => (
                   <FormItem>
                     <div className="flex items-center justify-between">
-                        <FormLabel className="text-sm font-semibold text-slate-700">Senha</FormLabel>
-                        <Button variant="link" className="px-0 font-bold text-xs uppercase tracking-wider text-primary" type="button">Esqueceu?</Button>
+                      <FormLabel className="text-sm font-semibold text-slate-700">Senha</FormLabel>
+                      <Button variant="link" className="px-0 font-bold text-xs uppercase tracking-wider text-primary" type="button">Esqueceu?</Button>
                     </div>
                     <FormControl>
                       <Input type="password" placeholder="••••••••" className="h-12 rounded-xl border-slate-200 focus:ring-primary/20" {...field} />
@@ -173,5 +191,5 @@ function LoginPageContent() {
 }
 
 export default function LoginPage() {
-    return (<AuthProvider><LoginPageContent /></AuthProvider>)
+  return (<AuthProvider><LoginPageContent /></AuthProvider>)
 }
