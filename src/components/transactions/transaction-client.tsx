@@ -43,7 +43,7 @@ export default function TransactionClient() {
     try {
       const [transResponse, accountsResponse] = await Promise.all([
         fetch(`${API_BASE_URL}/list-transaction`, { headers: { Authorization: `Bearer ${token}` } }),
-        fetch(`${API_BASE_URL}/list-accounts`, { headers: { Authorization: `Bearer ${token}` } })
+        fetch(`${API_BASE_URL}/list-accounts?month=${month}&year=${year}`, { headers: { Authorization: `Bearer ${token}` } })
       ]);
 
       if (!transResponse.ok || !accountsResponse.ok) throw new Error('Falha ao buscar dados');

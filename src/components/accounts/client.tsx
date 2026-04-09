@@ -31,8 +31,10 @@ export default function AccountsClient() {
       });
       if (!response.ok) throw new Error('Falha ao buscar contas');
       const data = await response.json();
+      console.log('Contas recebidas:', data);
       setAccounts(Array.isArray(data) ? data : []);
     } catch (error) {
+      console.error('Erro ao buscar contas:', error);
       toast({ variant: 'destructive', title: 'Erro', description: (error as Error).message });
     } finally {
       setLoading(false);

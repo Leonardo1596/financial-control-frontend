@@ -22,7 +22,7 @@ export default function Summary() {
   useEffect(() => {
     async function fetchAccounts() {
       try {
-        const response = await fetch(`${API_BASE_URL}/list-accounts`, {
+        const response = await fetch(`${API_BASE_URL}/list-accounts?month=${month}&year=${year}`, {
           headers: { 'Authorization': `Bearer ${token}` }
         });
         if (response.ok) {

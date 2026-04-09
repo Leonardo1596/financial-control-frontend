@@ -33,6 +33,8 @@ export default function TransactionForm({ onTransactionAdded }: { onTransactionA
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
   const [accounts, setAccounts] = useState<UserAccount[]>([]);
+  const [year, setYear] = useState(new Date().getFullYear().toString());
+  const [month, setMonth] = useState((new Date().getMonth() + 1).toString());
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -42,7 +44,7 @@ export default function TransactionForm({ onTransactionAdded }: { onTransactionA
   useEffect(() => {
     async function fetchAccounts() {
       try {
-        const response = await fetch(`${API_BASE_URL}/list-accounts`, {
+        const response = await fetch(`${API_BASE_URL}/list-accounts?month=${month}&year=${year}`, {
           headers: { 'Authorization': `Bearer ${token}` }
         });
         if (response.ok) {

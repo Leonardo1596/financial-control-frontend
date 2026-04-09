@@ -38,6 +38,8 @@ function LoginPageContent() {
   const { login, user, loading } = useAuth();
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
+  const [year, setYear] = useState(new Date().getFullYear().toString());
+  const [month, setMonth] = useState((new Date().getMonth() + 1).toString());
 
   useEffect(() => {
     if (!loading && user) {
@@ -56,7 +58,7 @@ function LoginPageContent() {
       const data = await loginUser(values);
 
       // Busca contas
-      const accountsResponse = await fetch(`${API_BASE_URL}/list-accounts`, {
+      const accountsResponse = await fetch(`${API_BASE_URL}/list-accounts?month=${month}&year=${year}`, {
         method: "GET",
         headers: {
           "Content-Type": "application/json",

@@ -26,12 +26,14 @@ export default function FileUpload({ onUploadSuccess }: { onUploadSuccess: () =>
   const [accountId, setAccountId] = useState<string>('');
   const [accounts, setAccounts] = useState<UserAccount[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [year, setYear] = useState(new Date().getFullYear().toString());
+  const [month, setMonth] = useState((new Date().getMonth() + 1).toString());
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     async function fetchAccounts() {
       try {
-        const response = await fetch(`${API_BASE_URL}/list-accounts`, {
+        const response = await fetch(`${API_BASE_URL}/list-accounts?month=${month}&year=${year}`, {
           headers: { 'Authorization': `Bearer ${token}` }
         });
         if (response.ok) {

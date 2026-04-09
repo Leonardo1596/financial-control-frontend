@@ -22,6 +22,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [token, setToken] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const [month, setMonth] = useState((new Date().getMonth() + 1).toString());
+  const [year, setYear] = useState(new Date().getFullYear().toString());
   const router = useRouter();
 
   const logout = useCallback(async () => {
@@ -39,7 +41,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         if (storedUser) {
           const authData: AuthResponse = JSON.parse(storedUser);
 
-          const response = await fetch(`${API_BASE_URL}/list-accounts`, {
+          const response = await fetch(`${API_BASE_URL}/list-accounts?month=${month}&year=${year}`, {
             headers: { 'Authorization': `Bearer ${authData.token}` }
           });
 
