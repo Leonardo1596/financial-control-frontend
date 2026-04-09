@@ -36,21 +36,21 @@ export function AppSidebar() {
         {navItems.map((item) => {
           const isActive = pathname === item.href;
           return (
-            <Link key={item.label} href={item.href} passHref legacyBehavior>
-              <a
-                className={cn(
-                  "flex items-center justify-between group rounded-xl px-4 py-3 text-sm font-medium transition-all duration-200",
-                  isActive
-                    ? "bg-primary text-primary-foreground shadow-md shadow-primary/20"
-                    : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
-                )}
-              >
-                <div className="flex items-center gap-3">
-                  <item.icon className={cn("h-5 w-5", isActive ? "" : "text-muted-foreground group-hover:text-accent-foreground")} />
-                  {item.label}
-                </div>
-                {isActive && <ChevronRight className="h-4 w-4" />}
-              </a>
+            <Link
+              key={item.label}
+              href={item.href}
+              className={cn(
+                "flex items-center justify-between group rounded-xl px-4 py-3 text-sm font-medium transition-all duration-200",
+                isActive
+                  ? "bg-primary text-primary-foreground shadow-md shadow-primary/20"
+                  : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
+              )}
+            >
+              <div className="flex items-center gap-3">
+                <item.icon className={cn("h-5 w-5", isActive ? "" : "text-muted-foreground group-hover:text-accent-foreground")} />
+                {item.label}
+              </div>
+              {isActive && <ChevronRight className="h-4 w-4" />}
             </Link>
           );
         })}

@@ -45,19 +45,19 @@ export function MobileHeader() {
 
           <nav className="flex-1 space-y-1 px-4 py-4">
             {navItems.map((item) => (
-              <Link key={item.label} href={item.href} passHref legacyBehavior>
-                <a
-                  onClick={() => setOpen(false)}
-                  className={cn(
-                    "flex items-center gap-3 rounded-lg px-3 py-2 text-base font-medium transition-colors",
-                    pathname === item.href
-                      ? "bg-primary text-primary-foreground"
-                      : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
-                  )}
-                >
-                  <item.icon className="h-5 w-5" />
-                  {item.label}
-                </a>
+              <Link
+                key={item.label}
+                href={item.href}
+                onClick={() => setOpen(false)}
+                className={cn(
+                  "flex items-center gap-3 rounded-lg px-3 py-2 text-base font-medium transition-colors",
+                  pathname === item.href
+                    ? "bg-primary text-primary-foreground"
+                    : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
+                )}
+              >
+                <item.icon className="h-5 w-5" />
+                {item.label}
               </Link>
             ))}
           </nav>
