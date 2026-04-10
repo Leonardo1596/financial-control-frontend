@@ -77,9 +77,9 @@ export default function AccountsForm({ isOpen, onClose, onSuccess, accountToEdit
         },
         body: JSON.stringify(values),
       });
-
+      
       if (!response.ok) throw new Error(`Falha ao ${accountToEdit ? 'atualizar' : 'criar'} conta bancária`);
-
+      
       const data = await response.json();
       const accountId = accountToEdit ? accountToEdit._id : data._id;
       const source = normalizeSource(values.name);

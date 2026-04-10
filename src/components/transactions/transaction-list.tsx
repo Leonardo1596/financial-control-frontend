@@ -1,16 +1,14 @@
 "use client";
 
-import { useState, useEffect } from 'react';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow, TableCaption } from '@/components/ui/table';
+import { useState, useEffect, useMemo } from 'react';
 import { Button, buttonVariants } from '@/components/ui/button';
-import { Trash2, Landmark } from 'lucide-react';
+import { Trash2, Landmark, CalendarDays, ChevronRight } from 'lucide-react';
 import type { Transaction, UserAccount } from '@/lib/types';
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { Skeleton } from '@/components/ui/skeleton';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
-import { Badge } from '@/components/ui/badge';
 
 interface TransactionListProps {
   transactions: Transaction[];
@@ -19,7 +17,7 @@ interface TransactionListProps {
   loading: boolean;
 }
 
-const TRANSACTIONS_PER_PAGE = 15;
+const TRANSACTIONS_PER_PAGE = 20;
 
 export default function TransactionList({ transactions, accounts = [], onDelete, loading }: TransactionListProps) {
   const [currentPage, setCurrentPage] = useState(1);
@@ -33,10 +31,8 @@ export default function TransactionList({ transactions, accounts = [], onDelete,
   useEffect(() => {
     if (currentPage > totalPages && totalPages > 0) {
       setCurrentPage(1);
-    } else if (transactions.length > 0 && paginatedTransactions.length === 0 && currentPage > 1) {
-      setCurrentPage(currentPage - 1);
     }
-  }, [transactions, currentPage, totalPages, paginatedTransactions.length]);
+  }, [transactions.length, totalPages, currentPage]);
     
   const formatCurrency = (value: number) => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value);
 
@@ -46,149 +42,144 @@ export default function TransactionList({ transactions, accounts = [], onDelete,
     return account ? account.name : 'Conta não encontrada';
   };
 
+  const groupedTransactions = useMemo(() => {
+    return paginatedTransactions.reduce((groups, transaction) => {
+      const utcDate = new Date(transaction.date);
+      const adjustedDate = new Date(utcDate.getTime() + utcDate.getTimezoneOffset() * 60000);
+      const dateKey = format(adjustedDate, 'dd/MM/yyyy', { locale: ptBR });
+      
+      if (!groups[dateKey]) {
+        groups[dateKey] = [];
+      }
+      groups[dateKey].push(transaction);
+      return groups;
+    }, {} as Record<string, Transaction[]>);
+  }, [paginatedTransactions]);
+
   const renderSkeletons = () => (
-    Array.from({ length: 5 }).map((_, index) => (
-      <TableRow key={index}>
-        <TableCell className="whitespace-nowrap"><Skeleton className="h-4 w-full max-w-[200px]" /></TableCell>
-        <TableCell className="whitespace-nowrap"><Skeleton className="h-4 w-[100px]" /></TableCell>
-        <TableCell className="whitespace-nowrap"><Skeleton className="h-4 w-[100px]" /></TableCell>
-        <TableCell className="whitespace-nowrap"><Skeleton className="h-6 w-[70px] rounded-full" /></TableCell>
-        <TableCell className="text-right whitespace-nowrap"><Skeleton className="h-4 w-[80px] ml-auto" /></TableCell>
-        <TableCell className="text-right whitespace-nowrap"><Skeleton className="h-8 w-8 rounded ml-auto" /></TableCell>
-      </TableRow>
-    ))
-  )
+    <div className="space-y-6">
+      {Array.from({ length: 3 }).map((_, i) => (
+        <div key={i} className="space-y-3">
+          <Skeleton className="h-6 w-32 rounded-lg" />
+          <div className="space-y-2">
+            <Skeleton className="h-16 w-full rounded-2xl" />
+            <Skeleton className="h-16 w-full rounded-2xl" />
+          </div>
+        </div>
+      ))}
+    </div>
+  );
 
   const renderPagination = () => {
     if (loading || totalPages <= 1) return null;
 
-    const range: (number | string)[] = [];
-    for (let i = 1; i <= totalPages; i++) {
-        if (i === 1 || i === totalPages || (i >= currentPage - 1 && i <= currentPage + 1)) {
-            range.push(i);
-        } else if (range[range.length - 1] !== '...') {
-            range.push('...');
-        }
-    }
-
     return (
-        <div className="flex flex-col sm:flex-row items-center justify-between p-6 bg-slate-50/50 border-t border-slate-100 gap-4">
-             <div className="text-xs font-bold uppercase tracking-widest text-muted-foreground order-2 sm:order-1">
-                Página {currentPage} de {totalPages}
-            </div>
-            <div className="flex items-center space-x-2 order-1 sm:order-2">
-                <Button
-                    variant="ghost"
-                    size="sm"
-                    className="rounded-lg font-bold text-xs uppercase hover:bg-white"
-                    onClick={() => setCurrentPage(currentPage - 1)}
-                    disabled={currentPage === 1}
-                >
-                    Anterior
-                </Button>
-                <div className="flex items-center gap-1">
-                    {range.map((page, index) => (
-                        <Button
-                            key={index}
-                            variant={currentPage === page ? "default" : "ghost"}
-                            size="sm"
-                            className={cn("h-8 w-8 rounded-lg p-0 font-bold text-xs", 
-                               page === '...' ? "pointer-events-none text-slate-300" : (currentPage === page ? "shadow-md shadow-primary/20" : "hover:bg-white")
-                            )}
-                            onClick={() => typeof page === 'number' && setCurrentPage(page)}
-                        >
-                            {page}
-                        </Button>
-                    ))}
-                </div>
-                <Button
-                    variant="ghost"
-                    size="sm"
-                    className="rounded-lg font-bold text-xs uppercase hover:bg-white"
-                    onClick={() => setCurrentPage(currentPage + 1)}
-                    disabled={currentPage === totalPages}
-                >
-                    Próxima
-                </Button>
-            </div>
+      <div className="flex items-center justify-between p-6 bg-white rounded-2xl border border-slate-100 mt-8 shadow-sm">
+        <div className="text-xs font-bold uppercase tracking-widest text-muted-foreground">
+          Página {currentPage} de {totalPages}
         </div>
+        <div className="flex items-center space-x-2">
+          <Button
+            variant="ghost"
+            size="sm"
+            className="rounded-lg font-bold text-xs uppercase"
+            onClick={() => setCurrentPage(currentPage - 1)}
+            disabled={currentPage === 1}
+          >
+            Anterior
+          </Button>
+          <Button
+            variant="ghost"
+            size="sm"
+            className="rounded-lg font-bold text-xs uppercase"
+            onClick={() => setCurrentPage(currentPage + 1)}
+            disabled={currentPage === totalPages}
+          >
+            Próxima
+          </Button>
+        </div>
+      </div>
     );
-};
+  };
+
+  if (loading) return renderSkeletons();
+
+  if (transactions.length === 0) {
+    return (
+      <div className="flex flex-col items-center justify-center py-20 px-4 bg-slate-50 rounded-3xl border-2 border-dashed border-slate-200">
+        <CalendarDays className="h-12 w-12 text-slate-300 mb-3" />
+        <p className="text-slate-500 font-medium">Nenhuma transação encontrada neste período.</p>
+      </div>
+    );
+  }
 
   return (
-    <div className="w-full">
-      {/* ESTE CONTAINER É O SEGREDO: overflow-x-auto e w-full */}
-      <div className="relative w-full overflow-x-auto scrollbar-thin scrollbar-thumb-slate-200">
-        {/* Adicionamos uma min-width para que a tabela não "esmague" as colunas em telas pequenas */}
-        <Table className="w-full min-w-[1000px] border-collapse">
-          <TableCaption className="pb-6 pt-4 text-xs font-medium uppercase tracking-widest text-slate-400">
-            {!loading && transactions.length === 0 ? 'Sem transações neste período.' : `Exibindo ${paginatedTransactions.length} de ${transactions.length} registros`}
-          </TableCaption>
-          <TableHeader className="bg-slate-50/50 border-b border-slate-100">
-            <TableRow className="hover:bg-transparent">
-              <TableHead className="py-5 px-6 font-bold text-slate-600 whitespace-nowrap">Descrição</TableHead>
-              <TableHead className="py-5 px-6 font-bold text-slate-600 whitespace-nowrap">Data</TableHead>
-              <TableHead className="py-5 px-6 font-bold text-slate-600 whitespace-nowrap">Conta</TableHead>
-              <TableHead className="py-5 px-6 font-bold text-slate-600 whitespace-nowrap">Tipo</TableHead>
-              <TableHead className="text-right py-5 px-6 font-bold text-slate-600 whitespace-nowrap">Valor</TableHead>
-              <TableHead className="text-right py-5 px-6 font-bold text-slate-600 whitespace-nowrap">Ações</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {loading ? renderSkeletons() : paginatedTransactions.map((transaction) => {
-              const utcDate = new Date(transaction.date);
-              const adjustedDate = new Date(utcDate.getTime() + utcDate.getTimezoneOffset() * 60000);
-              return (
-              <TableRow key={transaction._id} className="group transition-colors hover:bg-slate-50/50">
-                <TableCell className="font-semibold text-slate-800 py-5 px-6 whitespace-nowrap">{transaction.description}</TableCell>
-                <TableCell className="text-muted-foreground px-6 whitespace-nowrap">{format(adjustedDate, 'dd/MM/yyyy', { locale: ptBR })}</TableCell>
-                <TableCell className="px-6 whitespace-nowrap">
-                  <div className="flex items-center gap-2 text-slate-600">
-                    <Landmark className="h-3.5 w-3.5 text-slate-400" />
-                    <span className="text-xs font-medium">{getAccountName(transaction.accountId)}</span>
+    <div className="w-full space-y-8">
+      {Object.entries(groupedTransactions).map(([date, items]) => (
+        <div key={date} className="space-y-3">
+          <div className="flex items-center gap-2 px-1">
+            <div className="h-1.5 w-1.5 rounded-full bg-primary" />
+            <h4 className="text-sm font-bold text-slate-400 uppercase tracking-widest">{date}</h4>
+          </div>
+          
+          <div className="grid gap-2">
+            {items.map((transaction) => (
+              <AlertDialog key={transaction._id}>
+                <AlertDialogTrigger asChild>
+                  <div className="group flex items-center justify-between p-4 bg-white rounded-2xl border border-slate-100 shadow-sm hover:shadow-md hover:border-primary/20 transition-all cursor-pointer">
+                    <div className="flex items-center gap-4 min-w-0">
+                      <div className={cn(
+                        "p-3 rounded-xl transition-colors",
+                        transaction.type === 'income' ? "bg-emerald-50 text-emerald-600 group-hover:bg-emerald-100" : "bg-rose-50 text-rose-600 group-hover:bg-rose-100"
+                      )}>
+                        <Landmark className="h-5 w-5" />
+                      </div>
+                      <div className="flex flex-col min-w-0">
+                        <span className="font-bold text-slate-900 truncate group-hover:text-primary transition-colors">{transaction.description}</span>
+                        <div className="flex items-center gap-1.5 text-xs text-slate-400 font-medium">
+                          <Landmark className="h-3 w-3" />
+                          <span>{getAccountName(transaction.accountId)}</span>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <div className="flex items-center gap-4 shrink-0">
+                      <div className="text-right">
+                        <span className={cn(
+                          "font-mono font-bold text-lg block",
+                          transaction.type === 'income' ? "text-emerald-500" : "text-rose-500"
+                        )}>
+                          {transaction.type === 'income' ? '+' : '-'}{formatCurrency(transaction.amount)}
+                        </span>
+                      </div>
+                      <ChevronRight className="h-4 w-4 text-slate-300 group-hover:text-primary transition-colors" />
+                    </div>
                   </div>
-                </TableCell>
-                <TableCell className="px-6 whitespace-nowrap">
-                  <Badge 
-                    className={cn(
-                      'font-bold rounded-lg px-2.5 py-0.5 shadow-sm border-none transition-all group-hover:scale-105', 
-                      transaction.type === 'income' 
-                        ? 'bg-emerald-100 text-emerald-700' 
-                        : 'bg-rose-100 text-rose-700'
-                    )}
-                  >
-                    {transaction.type === 'income' ? 'Receita' : 'Despesa'}
-                  </Badge>
-                </TableCell>
-                <TableCell className={cn('text-right font-mono font-bold text-base px-6 whitespace-nowrap', transaction.type === 'income' ? 'text-emerald-600' : 'text-rose-600')}>
-                  {transaction.type === 'income' ? '+' : '-'}{formatCurrency(transaction.amount)}
-                </TableCell>
-                <TableCell className="text-right px-6 whitespace-nowrap">
-                  <AlertDialog>
-                    <AlertDialogTrigger asChild>
-                      <Button variant="ghost" size="icon" className="rounded-xl hover:bg-rose-50 hover:text-rose-600 text-slate-300 transition-all cursor-pointer">
-                        <Trash2 className="h-5 w-5" />
-                      </Button>
-                    </AlertDialogTrigger>
-                    <AlertDialogContent className="rounded-2xl border-none shadow-2xl">
-                      <AlertDialogHeader>
-                        <AlertDialogTitle className="text-xl">Excluir transação?</AlertDialogTitle>
-                        <AlertDialogDescription>
-                          Esta ação removerá permanentemente este registro do seu histórico financeiro.
-                        </AlertDialogDescription>
-                      </AlertDialogHeader>
-                      <AlertDialogFooter className="mt-4 gap-2">
-                        <AlertDialogCancel className="rounded-xl border-none bg-slate-100 hover:bg-slate-200">Cancelar</AlertDialogCancel>
-                        <AlertDialogAction className={cn(buttonVariants({variant: "destructive"}), "rounded-xl shadow-lg shadow-rose-500/20")} onClick={() => onDelete(transaction._id)}>Confirmar Exclusão</AlertDialogAction>
-                      </AlertDialogFooter>
-                    </AlertDialogContent>
-                  </AlertDialog>
-                </TableCell>
-              </TableRow>
-            )})}
-          </TableBody>
-        </Table>
-      </div>
+                </AlertDialogTrigger>
+                
+                <AlertDialogContent className="rounded-3xl border-none shadow-2xl">
+                  <AlertDialogHeader>
+                    <AlertDialogTitle className="text-xl">Excluir transação?</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      Deseja remover permanentemente o registro <strong>{transaction.description}</strong>?
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter className="mt-4 gap-2">
+                    <AlertDialogCancel className="rounded-xl border-none bg-slate-100 hover:bg-slate-200 h-12">Cancelar</AlertDialogCancel>
+                    <AlertDialogAction 
+                      className={cn(buttonVariants({variant: "destructive"}), "rounded-xl shadow-lg shadow-rose-500/20 h-12")} 
+                      onClick={() => onDelete(transaction._id)}
+                    >
+                      Excluir Transação
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
+            ))}
+          </div>
+        </div>
+      ))}
+      
       {renderPagination()}
     </div>
   );

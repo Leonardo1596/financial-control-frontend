@@ -59,7 +59,7 @@ export default function TransactionClient() {
     } finally {
       setLoading(false);
     }
-  }, [token, toast]);
+  }, [token, toast, month, year]);
 
   useEffect(() => {
     fetchData();
@@ -97,19 +97,19 @@ export default function TransactionClient() {
   };
 
   const filteredTransactions = useMemo(() => {
-    return transactions.filter(transaction => {
-      const transDate = new Date(transaction.date);
+    return transactions
+      .filter(transaction => {
+        const transDate = new Date(transaction.date);
+        const transMonth = (transDate.getUTCMonth() + 1).toString();
+        const transYear = transDate.getUTCFullYear().toString();
 
-      // corrigido para UTC para não bagunçar com fuso horário
-      const transMonth = (transDate.getUTCMonth() + 1).toString().padStart(2, '0');
-      const transYear = transDate.getUTCFullYear().toString();
+        const monthMatch = month === 'todas' || parseInt(transMonth) === parseInt(month);
+        const yearMatch = year === 'todas' || transYear === year;
+        const accountMatch = selectedAccountId === 'todas' || transaction.accountId === selectedAccountId;
 
-      const monthMatch = month === 'todas' || parseInt(transMonth) === parseInt(month);
-      const yearMatch = year === 'todas' || transYear === year;
-      const accountMatch = selectedAccountId === 'todas' || transaction.accountId === selectedAccountId;
-
-      return monthMatch && yearMatch && accountMatch;
-    });
+        return monthMatch && yearMatch && accountMatch;
+      })
+      .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
   }, [transactions, month, year, selectedAccountId]);
 
   const years = Array.from({ length: 10 }, (_, i) => (new Date().getFullYear() - i).toString());
@@ -120,7 +120,6 @@ export default function TransactionClient() {
 
   return (
     <div className="flex flex-col w-full max-w-full space-y-10 overflow-hidden">
-      {/* Container de Ações Rápidas */}
       <div className="bg-white rounded-3xl shadow-xl shadow-slate-200/50 border border-slate-100 overflow-hidden w-full">
         <Accordion type="single" collapsible className="w-full">
           <AccordionItem value="item-1" className="border-none">
@@ -142,7 +141,6 @@ export default function TransactionClient() {
         </Accordion>
       </div>
 
-      {/* Barra de Filtros e Cabeçalho do Histórico */}
       <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 flex flex-col lg:flex-row justify-between items-center gap-6 w-full">
         <div className='flex items-center gap-4 w-full lg:w-auto'>
           <div className="p-3 bg-slate-50 rounded-xl">
@@ -225,8 +223,7 @@ export default function TransactionClient() {
         </div>
       </div>
 
-      {/* CONTAINER DA LISTA */}
-      <div className="grid grid-cols-1 w-full overflow-hidden bg-white rounded-3xl shadow-xl shadow-slate-200/50 border border-slate-100">
+      <div className="w-full">
         <TransactionList 
           transactions={filteredTransactions} 
           accounts={accounts}
