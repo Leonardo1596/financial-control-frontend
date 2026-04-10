@@ -1,12 +1,11 @@
 "use client";
 
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow, TableCaption } from '@/components/ui/table';
-import { Button, buttonVariants } from '@/components/ui/button';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Trash2, Landmark } from 'lucide-react';
+import { Landmark, ChevronRight } from 'lucide-react';
 import type { UserAccount } from '@/lib/types';
 import { cn } from '@/lib/utils';
+import { buttonVariants } from '@/components/ui/button';
 
 interface AccountsListProps {
   accounts: UserAccount[];
@@ -17,70 +16,74 @@ interface AccountsListProps {
 const formatCurrency = (value: number) => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value);
 
 export default function AccountsList({ accounts, onDelete, loading }: AccountsListProps) {
-  const renderSkeletons = () => (
-    Array.from({ length: 3 }).map((_, index) => (
-      <TableRow key={index}>
-        <TableCell className="px-8"><Skeleton className="h-4 w-48" /></TableCell>
-        <TableCell className="px-8"><Skeleton className="h-4 w-32" /></TableCell>
-        <TableCell className="text-right px-8"><Skeleton className="h-8 w-8 rounded ml-auto" /></TableCell>
-      </TableRow>
-    ))
-  );
+  if (loading) {
+    return (
+      <div className="grid gap-4">
+        {Array.from({ length: 3 }).map((_, i) => (
+          <Skeleton key={i} className="h-20 w-full rounded-2xl" />
+        ))}
+      </div>
+    );
+  }
+
+  if (accounts.length === 0) {
+    return (
+      <div className="flex flex-col items-center justify-center py-12 px-4 bg-slate-50 rounded-3xl border-2 border-dashed border-slate-200">
+        <Landmark className="h-12 w-12 text-slate-300 mb-3" />
+        <p className="text-slate-500 font-medium">Nenhuma instituição cadastrada.</p>
+      </div>
+    );
+  }
 
   return (
-    <div className="w-full overflow-x-auto scrollbar-thin scrollbar-thumb-slate-200">
-      <Table className="w-full min-w-[600px]">
-        <TableCaption className="pb-6 pt-4 text-xs font-medium uppercase tracking-widest text-slate-400">
-          {!loading && accounts.length === 0 ? 'Nenhuma conta cadastrada.' : `Você possui ${accounts.length} contas ativas.`}
-        </TableCaption>
-        <TableHeader className="bg-slate-50/50 border-b border-slate-100">
-          <TableRow className="hover:bg-transparent">
-            <TableHead className="py-5 px-8 font-bold text-slate-600 whitespace-nowrap">Instituição</TableHead>
-            <TableHead className="py-5 px-8 font-bold text-slate-600 whitespace-nowrap">Saldo Atual</TableHead>
-            <TableHead className="text-right py-5 px-8 font-bold text-slate-600 whitespace-nowrap">Ações</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {loading ? renderSkeletons() : accounts.map((account) => (
-            <TableRow key={account._id} className="group transition-colors hover:bg-slate-50/50">
-              <TableCell className="py-5 px-8 whitespace-nowrap">
-                <div className="flex items-center gap-3">
-                  <div className="p-2 bg-slate-100 rounded-lg group-hover:bg-primary/10 transition-colors">
-                    <Landmark className="h-4 w-4 text-slate-400 group-hover:text-primary" />
-                  </div>
-                  <span className="font-semibold text-slate-800">{account.name}</span>
+    <div className="grid gap-3">
+      {accounts.map((account) => (
+        <AlertDialog key={account._id}>
+          <AlertDialogTrigger asChild>
+            <div className="group flex items-center justify-between p-5 bg-white rounded-2xl border border-slate-100 shadow-sm hover:shadow-md hover:border-primary/20 transition-all cursor-pointer">
+              <div className="flex items-center gap-4">
+                <div className="p-3 bg-slate-50 rounded-xl group-hover:bg-primary/10 transition-colors">
+                  <Landmark className="h-6 w-6 text-slate-400 group-hover:text-primary" />
                 </div>
-              </TableCell>
-              <TableCell className="py-5 px-8 whitespace-nowrap">
-                <span className={cn("font-mono font-bold text-base", account.balance >= 0 ? "text-emerald-600" : "text-rose-600")}>
-                  {formatCurrency(account.balance)}
-                </span>
-              </TableCell>
-              <TableCell className="text-right py-5 px-8 whitespace-nowrap">
-                <AlertDialog>
-                  <AlertDialogTrigger asChild>
-                    <Button variant="ghost" size="icon" className="cursor-pointer hover:bg-rose-50 hover:text-rose-600 text-slate-300 transition-all rounded-xl">
-                      <Trash2 className="h-5 w-5" />
-                    </Button>
-                  </AlertDialogTrigger>
-                  <AlertDialogContent className="rounded-2xl border-none shadow-2xl">
-                    <AlertDialogHeader>
-                      <AlertDialogTitle className="text-xl">Excluir conta bancária?</AlertDialogTitle>
-                      <AlertDialogDescription>
-                        Isso removerá a instituição "{account.name}" do seu perfil. Esta ação não pode ser desfeita.
-                      </AlertDialogDescription>
-                    </AlertDialogHeader>
-                    <AlertDialogFooter className="mt-4 gap-2">
-                      <AlertDialogCancel className="rounded-xl border-none bg-slate-100 hover:bg-slate-200">Cancelar</AlertDialogCancel>
-                      <AlertDialogAction className={cn(buttonVariants({ variant: "destructive" }), "rounded-xl shadow-lg shadow-rose-500/20")} onClick={() => onDelete(account._id)}>Excluir Instituição</AlertDialogAction>
-                    </AlertDialogFooter>
-                  </AlertDialogContent>
-                </AlertDialog>
-              </TableCell>
-            </TableRow>
-          ))}
-        </TableBody>
-      </Table>
+                <div className="flex flex-col">
+                  <span className="font-bold text-slate-900 text-lg">{account.name}</span>
+                  <span className="text-xs font-bold text-slate-400 uppercase tracking-widest">Saldo Atual</span>
+                </div>
+              </div>
+              
+              <div className="flex items-center gap-6">
+                <div className="text-right">
+                  <span className={cn(
+                    "font-mono font-bold text-xl block", 
+                    account.balance >= 0 ? "text-emerald-600" : "text-rose-600"
+                  )}>
+                    {formatCurrency(account.balance)}
+                  </span>
+                </div>
+                <ChevronRight className="h-5 w-5 text-slate-300 group-hover:text-primary transition-colors" />
+              </div>
+            </div>
+          </AlertDialogTrigger>
+          
+          <AlertDialogContent className="rounded-3xl border-none shadow-2xl">
+            <AlertDialogHeader>
+              <AlertDialogTitle className="text-xl">O que deseja fazer?</AlertDialogTitle>
+              <AlertDialogDescription>
+                Você selecionou a instituição <strong>{account.name}</strong>. Atualmente, a única ação disponível é a remoção.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter className="mt-6 gap-3 sm:gap-0">
+              <AlertDialogCancel className="rounded-xl border-none bg-slate-100 hover:bg-slate-200 h-12">Cancelar</AlertDialogCancel>
+              <AlertDialogAction 
+                className={cn(buttonVariants({ variant: "destructive" }), "rounded-xl h-12 shadow-lg shadow-rose-500/20")}
+                onClick={() => onDelete(account._id)}
+              >
+                Remover Instituição
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+      ))}
     </div>
   );
 }
