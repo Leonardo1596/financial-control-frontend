@@ -119,20 +119,20 @@ export default function TransactionClient() {
   }));
 
   return (
-    <div className="flex flex-col w-full max-w-full space-y-10 overflow-hidden">
+    <div className="flex flex-col w-full max-w-full space-y-6 sm:space-y-10 overflow-hidden">
       <div className="bg-white rounded-3xl shadow-xl shadow-slate-200/50 border border-slate-100 overflow-hidden w-full">
         <Accordion type="single" collapsible className="w-full">
           <AccordionItem value="item-1" className="border-none">
-            <AccordionTrigger className='px-8 py-6 text-lg font-bold hover:no-underline hover:bg-slate-50 transition-all group'>
+            <AccordionTrigger className='px-4 sm:px-8 py-4 sm:py-6 text-base sm:text-lg font-bold hover:no-underline hover:bg-slate-50 transition-all group'>
               <div className="flex items-center gap-3">
                 <div className="p-2 bg-primary/10 rounded-xl text-primary group-hover:scale-110 transition-transform">
                   <Plus className="h-5 w-5" />
                 </div>
-                Adicionar Nova Transação
+                Nova Transação
               </div>
             </AccordionTrigger>
-            <AccordionContent className="px-8 pb-8 pt-2">
-              <div className="grid gap-8 md:grid-cols-2">
+            <AccordionContent className="px-4 sm:px-8 pb-6 sm:pb-8 pt-2">
+              <div className="grid gap-6 md:grid-cols-2">
                 <TransactionForm onTransactionAdded={fetchData} />
                 <FileUpload onUploadSuccess={fetchData} />
               </div>
@@ -141,28 +141,28 @@ export default function TransactionClient() {
         </Accordion>
       </div>
 
-      <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 flex flex-col lg:flex-row justify-between items-center gap-6 w-full">
-        <div className='flex items-center gap-4 w-full lg:w-auto'>
-          <div className="p-3 bg-slate-50 rounded-xl">
-            <LayoutGrid className="h-6 w-6 text-slate-400" />
+      <div className="bg-white p-4 sm:p-6 rounded-3xl shadow-sm border border-slate-100 flex flex-col lg:flex-row justify-between items-center gap-4 sm:gap-6 w-full">
+        <div className='flex items-center gap-3 sm:gap-4 w-full lg:w-auto'>
+          <div className="p-2.5 sm:p-3 bg-slate-50 rounded-xl">
+            <LayoutGrid className="h-5 w-5 sm:h-6 sm:w-6 text-slate-400" />
           </div>
           <div>
-            <h3 className="text-lg font-bold">Histórico</h3>
-            <p className="text-sm text-muted-foreground">Analise suas movimentações.</p>
+            <h3 className="text-base sm:text-lg font-bold">Histórico</h3>
+            <p className="text-xs sm:text-sm text-muted-foreground">Suas movimentações.</p>
           </div>
         </div>
         
-        <div className='flex items-center gap-3 flex-wrap justify-center w-full lg:w-auto'>
-          <div className="flex items-center gap-2 text-slate-400 mr-2 hidden sm:flex">
+        <div className='flex items-center gap-2 sm:gap-3 flex-wrap justify-start sm:justify-center w-full lg:w-auto'>
+          <div className="flex items-center gap-2 text-slate-400 mr-2 hidden md:flex">
             <Filter className="h-4 w-4" />
-            <span className="text-xs font-bold uppercase tracking-widest">Filtros</span>
+            <span className="text-[10px] font-bold uppercase tracking-widest">Filtros</span>
           </div>
 
           <Select value={selectedAccountId} onValueChange={setSelectedAccountId}>
-            <SelectTrigger className="w-full sm:w-[180px] bg-slate-50 border-none rounded-xl h-11 font-medium hover:bg-slate-100 transition-colors">
-              <div className="flex items-center gap-2">
-                <Landmark className="h-4 w-4 text-slate-400" />
-                <SelectValue placeholder="Todas as contas" />
+            <SelectTrigger className="w-full sm:w-[160px] bg-slate-50 border-none rounded-xl h-10 sm:h-11 font-medium text-xs sm:text-sm">
+              <div className="flex items-center gap-2 truncate">
+                <Landmark className="h-3.5 w-3.5 text-slate-400 shrink-0" />
+                <SelectValue placeholder="Contas" />
               </div>
             </SelectTrigger>
             <SelectContent className="rounded-xl">
@@ -173,38 +173,40 @@ export default function TransactionClient() {
             </SelectContent>
           </Select>
 
-          <Select value={month} onValueChange={setMonth}>
-            <SelectTrigger className="w-full sm:w-[150px] bg-slate-50 border-none rounded-xl h-11 font-medium hover:bg-slate-100 transition-colors">
-              <SelectValue placeholder="Mês" />
-            </SelectTrigger>
-            <SelectContent className="rounded-xl">
-              <SelectItem value="todas">Todos os meses</SelectItem>
-              {months.map(m => <SelectItem key={m.value} value={m.value}>{m.label}</SelectItem>)}
-            </SelectContent>
-          </Select>
+          <div className="flex gap-2 w-full sm:w-auto">
+            <Select value={month} onValueChange={setMonth}>
+              <SelectTrigger className="flex-1 sm:w-[130px] bg-slate-50 border-none rounded-xl h-10 sm:h-11 font-medium text-xs sm:text-sm">
+                <SelectValue placeholder="Mês" />
+              </SelectTrigger>
+              <SelectContent className="rounded-xl">
+                <SelectItem value="todas">Todos</SelectItem>
+                {months.map(m => <SelectItem key={m.value} value={m.value}>{m.label}</SelectItem>)}
+              </SelectContent>
+            </Select>
 
-          <Select value={year} onValueChange={setYear}>
-            <SelectTrigger className="w-full sm:w-[120px] bg-slate-50 border-none rounded-xl h-11 font-medium hover:bg-slate-100 transition-colors">
-              <SelectValue placeholder="Ano" />
-            </SelectTrigger>
-            <SelectContent className="rounded-xl">
-              <SelectItem value="todas">Todos os anos</SelectItem>
-              {years.map(y => <SelectItem key={y} value={y}>{y}</SelectItem>)}
-            </SelectContent>
-          </Select>
+            <Select value={year} onValueChange={setYear}>
+              <SelectTrigger className="flex-1 sm:w-[100px] bg-slate-50 border-none rounded-xl h-10 sm:h-11 font-medium text-xs sm:text-sm">
+                <SelectValue placeholder="Ano" />
+              </SelectTrigger>
+              <SelectContent className="rounded-xl">
+                <SelectItem value="todas">Todos</SelectItem>
+                {years.map(y => <SelectItem key={y} value={y}>{y}</SelectItem>)}
+              </SelectContent>
+            </Select>
+          </div>
 
           <AD>
             <ADTrigger asChild>
-              <Button variant="ghost" disabled={filteredTransactions.length === 0 || loading} className="text-rose-500 hover:text-rose-600 hover:bg-rose-50 h-11 rounded-xl w-full sm:w-auto">
-                <Trash2 className="mr-2 h-5 w-5" />
-                Limpar Tudo
+              <Button variant="ghost" disabled={filteredTransactions.length === 0 || loading} className="text-rose-500 hover:text-rose-600 hover:bg-rose-50 h-10 sm:h-11 rounded-xl w-full sm:w-auto text-xs font-bold">
+                <Trash2 className="mr-2 h-4 w-4" />
+                Limpar
               </Button>
             </ADTrigger>
-            <ADContent className="rounded-2xl border-none shadow-2xl">
+            <ADContent className="rounded-2xl border-none shadow-2xl max-w-[90vw]">
               <ADHeader>
-                <ADTitle className="text-xl">Você tem certeza absoluta?</ADTitle>
+                <ADTitle className="text-xl">Limpar histórico?</ADTitle>
                 <ADDescription>
-                  Esta ação excluirá permanentemente TODAS as suas transações filtradas.
+                  Esta ação excluirá permanentemente TODAS as suas transações filtradas atualmente.
                 </ADDescription>
               </ADHeader>
               <ADFooter className="mt-4 gap-2">
@@ -223,7 +225,7 @@ export default function TransactionClient() {
         </div>
       </div>
 
-      <div className="w-full">
+      <div className="w-full max-w-full overflow-hidden">
         <TransactionList 
           transactions={filteredTransactions} 
           accounts={accounts}
