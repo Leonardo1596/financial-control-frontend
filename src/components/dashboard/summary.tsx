@@ -1,4 +1,3 @@
-
 "use client";
 import { useState, useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
@@ -55,7 +54,6 @@ export default function Summary() {
         });
         if (response.ok) {
           const data = await response.json();
-          // Pegar apenas as pendentes e ordenar por data
           const filtered = (Array.isArray(data) ? data : [])
             .filter(a => a.status === 'pendente')
             .sort((a, b) => new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime())
@@ -110,38 +108,36 @@ export default function Summary() {
   }));
 
   return (
-    <div className="space-y-12">
+    <div className="space-y-8 sm:space-y-12 max-w-full overflow-hidden">
       {/* Filtros */}
-      <div className="flex flex-col lg:flex-row gap-4 justify-between items-center bg-white p-6 rounded-[2rem] shadow-sm border border-slate-100">
+      <div className="flex flex-col lg:flex-row gap-6 justify-between items-start lg:items-center bg-white p-5 sm:p-6 rounded-[1.5rem] sm:rounded-[2rem] shadow-sm border border-slate-100 w-full overflow-hidden">
         <div className="flex items-center gap-4">
-          <div className="p-3 bg-primary/10 rounded-2xl">
-            <Calendar className="h-6 w-6 text-primary" />
+          <div className="p-2.5 bg-primary/10 rounded-xl">
+            <Calendar className="h-5 w-5 text-primary" />
           </div>
           <div>
-            <h2 className="text-lg font-bold">Análise Mensal</h2>
-            <p className="text-sm text-slate-500">Acompanhe seu desempenho financeiro.</p>
+            <h2 className="text-base sm:text-lg font-bold">Análise Mensal</h2>
+            <p className="text-xs text-slate-500">Seu desempenho financeiro.</p>
           </div>
         </div>
-        <div className="flex gap-3 flex-wrap justify-center w-full lg:w-auto">
-          <div className="flex gap-2 w-full sm:w-auto">
-            <Select value={selectedAccountId} onValueChange={setSelectedAccountId}>
-              <SelectTrigger className="flex-1 sm:w-[200px] h-12 bg-slate-50 border-none rounded-xl font-medium">
-                <div className="flex items-center gap-2">
-                  <Landmark className="h-4 w-4 text-slate-400" />
-                  <SelectValue placeholder="Todas as contas" />
-                </div>
-              </SelectTrigger>
-              <SelectContent className="rounded-xl">
-                <SelectItem value="todas">Todas as instituições</SelectItem>
-                {accounts.map(acc => (
-                  <SelectItem key={acc._id} value={acc._id}>{acc.name}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-          <div className="flex gap-2 w-full sm:w-auto">
+        <div className="flex flex-col sm:flex-row gap-3 w-full lg:w-auto">
+          <Select value={selectedAccountId} onValueChange={setSelectedAccountId}>
+            <SelectTrigger className="w-full sm:w-[200px] h-11 bg-slate-50 border-none rounded-xl font-medium text-sm">
+              <div className="flex items-center gap-2 truncate">
+                <Landmark className="h-4 w-4 text-slate-400 shrink-0" />
+                <SelectValue placeholder="Contas" />
+              </div>
+            </SelectTrigger>
+            <SelectContent className="rounded-xl">
+              <SelectItem value="todas">Todas as instituições</SelectItem>
+              {accounts.map(acc => (
+                <SelectItem key={acc._id} value={acc._id}>{acc.name}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <div className="flex gap-2 w-full">
             <Select value={month} onValueChange={setMonth}>
-              <SelectTrigger className="flex-1 sm:w-[140px] h-12 bg-slate-50 border-none rounded-xl font-medium">
+              <SelectTrigger className="flex-1 sm:w-[130px] h-11 bg-slate-50 border-none rounded-xl font-medium text-sm">
                 <SelectValue placeholder="Mês" />
               </SelectTrigger>
               <SelectContent className="rounded-xl">
@@ -149,7 +145,7 @@ export default function Summary() {
               </SelectContent>
             </Select>
             <Select value={year} onValueChange={setYear}>
-              <SelectTrigger className="flex-1 sm:w-[120px] h-12 bg-slate-50 border-none rounded-xl font-medium">
+              <SelectTrigger className="flex-1 sm:w-[100px] h-11 bg-slate-50 border-none rounded-xl font-medium text-sm">
                 <SelectValue placeholder="Ano" />
               </SelectTrigger>
               <SelectContent className="rounded-xl">
@@ -161,7 +157,7 @@ export default function Summary() {
       </div>
 
       {/* Cards de Resumo */}
-      <div className="grid gap-6 md:grid-cols-3">
+      <div className="grid gap-4 sm:gap-6 grid-cols-1 md:grid-cols-3">
         {loading ? (
           <>
             <SummaryCardSkeleton />
@@ -178,37 +174,37 @@ export default function Summary() {
       </div>
 
       {/* Widgets Inferiores */}
-      <div className="grid gap-8 lg:grid-cols-2">
+      <div className="grid gap-6 sm:gap-8 lg:grid-cols-2">
         
         {/* Widget: Contas Bancárias */}
-        <div className="bg-white rounded-[2.5rem] p-8 shadow-sm border border-slate-100 flex flex-col h-full">
-          <div className="flex items-center justify-between mb-8">
-            <div className="flex items-center gap-4">
-              <div className="p-3 bg-blue-50 rounded-2xl">
-                <Landmark className="h-6 w-6 text-blue-600" />
+        <div className="bg-white rounded-[1.5rem] sm:rounded-[2.5rem] p-6 sm:p-8 shadow-sm border border-slate-100 flex flex-col h-full overflow-hidden">
+          <div className="flex items-center justify-between mb-6 sm:mb-8">
+            <div className="flex items-center gap-3 sm:gap-4">
+              <div className="p-2.5 bg-blue-50 rounded-xl">
+                <Landmark className="h-5 w-5 text-blue-600" />
               </div>
               <div>
-                <h3 className="text-xl font-bold text-slate-900">Suas Contas</h3>
-                <p className="text-sm text-slate-500">Saldo por instituição</p>
+                <h3 className="text-lg sm:text-xl font-bold text-slate-900">Suas Contas</h3>
+                <p className="text-xs sm:text-sm text-slate-500">Saldo por instituição</p>
               </div>
             </div>
           </div>
 
-          <div className="space-y-3 flex-1">
+          <div className="space-y-3 flex-1 overflow-hidden">
             {loading ? (
               Array.from({ length: 3 }).map((_, i) => <Skeleton key={i} className="h-16 w-full rounded-2xl" />)
             ) : accounts.length === 0 ? (
-              <div className="py-12 text-center text-slate-400">Nenhuma conta encontrada.</div>
+              <div className="py-8 text-center text-slate-400 text-sm">Nenhuma conta encontrada.</div>
             ) : (
               accounts.map((account) => (
-                <div key={account._id} className="flex items-center justify-between p-4 bg-slate-50/50 rounded-2xl border border-transparent hover:border-blue-100 hover:bg-blue-50/30 transition-all">
-                  <div className="flex items-center gap-4">
-                    <div className="p-2 bg-white rounded-xl shadow-sm">
-                      <Landmark className="h-5 w-5 text-slate-400" />
+                <div key={account._id} className="flex items-center justify-between p-4 bg-slate-50/50 rounded-2xl border border-transparent hover:border-blue-100 hover:bg-blue-50/30 transition-all overflow-hidden">
+                  <div className="flex items-center gap-3 min-w-0">
+                    <div className="p-2 bg-white rounded-xl shadow-sm shrink-0">
+                      <Landmark className="h-4 w-4 text-slate-400" />
                     </div>
-                    <span className="font-bold text-slate-700">{account.name}</span>
+                    <span className="font-bold text-slate-700 text-sm truncate">{account.name}</span>
                   </div>
-                  <span className="font-mono font-bold text-blue-600">
+                  <span className="font-mono font-bold text-blue-600 text-sm ml-2 shrink-0">
                     {formatCurrency(account.balance)}
                   </span>
                 </div>
@@ -216,32 +212,32 @@ export default function Summary() {
             )}
           </div>
 
-          <Link href="/accounts" className="mt-8">
-            <Button variant="outline" className="w-full h-12 rounded-xl font-bold border-slate-200 hover:bg-slate-50 gap-2">
+          <Link href="/accounts" className="mt-6 sm:mt-8">
+            <Button variant="outline" className="w-full h-11 sm:h-12 rounded-xl font-bold border-slate-200 hover:bg-slate-50 gap-2 text-sm">
               Gerenciar Instituições <ArrowRight className="h-4 w-4" />
             </Button>
           </Link>
         </div>
 
         {/* Widget: Próximos Vencimentos */}
-        <div className="bg-white rounded-[2.5rem] p-8 shadow-sm border border-slate-100 flex flex-col h-full">
-          <div className="flex items-center justify-between mb-8">
-            <div className="flex items-center gap-4">
-              <div className="p-3 bg-amber-50 rounded-2xl">
-                <ReceiptText className="h-6 w-6 text-amber-600" />
+        <div className="bg-white rounded-[1.5rem] sm:rounded-[2.5rem] p-6 sm:p-8 shadow-sm border border-slate-100 flex flex-col h-full overflow-hidden">
+          <div className="flex items-center justify-between mb-6 sm:mb-8">
+            <div className="flex items-center gap-3 sm:gap-4">
+              <div className="p-2.5 bg-amber-50 rounded-xl">
+                <ReceiptText className="h-5 w-5 text-amber-600" />
               </div>
               <div>
-                <h3 className="text-xl font-bold text-slate-900">Próximos Vencimentos</h3>
-                <p className="text-sm text-slate-500">Contas a pagar pendentes</p>
+                <h3 className="text-lg sm:text-xl font-bold text-slate-900">Vencimentos</h3>
+                <p className="text-xs sm:text-sm text-slate-500">Contas pendentes</p>
               </div>
             </div>
           </div>
 
-          <div className="space-y-3 flex-1">
+          <div className="space-y-3 flex-1 overflow-hidden">
             {loadingPayable ? (
               Array.from({ length: 3 }).map((_, i) => <Skeleton key={i} className="h-16 w-full rounded-2xl" />)
             ) : accountsPayable.length === 0 ? (
-              <div className="py-12 text-center text-slate-400">Tudo em dia! Nenhuma conta pendente.</div>
+              <div className="py-8 text-center text-slate-400 text-sm">Tudo em dia!</div>
             ) : (
               accountsPayable.map((account) => {
                 const dueDate = parseISO(account.dueDate);
@@ -251,18 +247,18 @@ export default function Summary() {
                 return (
                   <Dialog key={account._id}>
                     <DialogTrigger asChild>
-                      <div className="group flex items-center justify-between p-4 bg-slate-50/50 rounded-2xl border border-transparent hover:border-amber-100 hover:bg-amber-50/30 transition-all cursor-pointer">
-                        <div className="flex items-center gap-4">
-                          <div className="p-2 bg-white rounded-xl shadow-sm text-amber-600">
-                            <Calendar className="h-5 w-5" />
+                      <div className="group flex items-center justify-between p-4 bg-slate-50/50 rounded-2xl border border-transparent hover:border-amber-100 hover:bg-amber-50/30 transition-all cursor-pointer overflow-hidden">
+                        <div className="flex items-center gap-3 min-w-0">
+                          <div className="p-2 bg-white rounded-xl shadow-sm text-amber-600 shrink-0">
+                            <Calendar className="h-4 w-4" />
                           </div>
-                          <div className="flex flex-col">
-                            <span className="font-bold text-slate-700">{account.description}</span>
+                          <div className="flex flex-col min-w-0">
+                            <span className="font-bold text-slate-700 text-sm truncate">{account.description}</span>
                             <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{formattedDate}</span>
                           </div>
                         </div>
-                        <div className="flex items-center gap-3">
-                          <span className="font-mono font-bold text-slate-900">
+                        <div className="flex items-center gap-2 shrink-0 ml-2">
+                          <span className="font-mono font-bold text-slate-900 text-sm">
                             {formatCurrency(account.amount)}
                           </span>
                           <ChevronRight className="h-4 w-4 text-slate-300 group-hover:text-amber-500 transition-colors" />
@@ -270,36 +266,36 @@ export default function Summary() {
                       </div>
                     </DialogTrigger>
                     
-                    <DialogContent className="rounded-3xl border-none shadow-2xl p-0 overflow-hidden max-w-[90vw] sm:max-w-md">
-                      <div className="h-2 w-full bg-amber-500" />
-                      <div className="p-8">
+                    <DialogContent className="rounded-[1.5rem] sm:rounded-[2rem] border-none shadow-2xl p-0 overflow-hidden max-w-[90vw] sm:max-w-md">
+                      <div className="h-1.5 w-full bg-amber-500" />
+                      <div className="p-6 sm:p-8">
                         <DialogHeader className="mb-6">
                           <div className="mx-auto bg-slate-50 p-4 rounded-2xl w-fit mb-4">
-                            <ReceiptText className="h-8 w-8 text-slate-400" />
+                            <ReceiptText className="h-7 w-7 text-slate-400" />
                           </div>
-                          <DialogTitle className="text-center text-2xl font-bold">{account.description}</DialogTitle>
+                          <DialogTitle className="text-center text-xl sm:text-2xl font-bold">{account.description}</DialogTitle>
                         </DialogHeader>
                         
                         <div className="space-y-4">
-                          <div className="flex items-center justify-between p-5 bg-slate-50 rounded-2xl border border-slate-100">
-                            <span className="text-xs font-bold text-slate-400 uppercase tracking-widest">Valor</span>
-                            <span className="font-mono font-bold text-2xl text-slate-900">{formatCurrency(account.amount)}</span>
+                          <div className="flex items-center justify-between p-4 bg-slate-50 rounded-2xl border border-slate-100">
+                            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Valor</span>
+                            <span className="font-mono font-bold text-xl text-slate-900">{formatCurrency(account.amount)}</span>
                           </div>
                           <div className="grid grid-cols-2 gap-3">
-                            <div className="p-4 bg-slate-50/50 rounded-2xl border border-slate-100 space-y-1 text-center">
+                            <div className="p-3 bg-slate-50/50 rounded-2xl border border-slate-100 space-y-1 text-center">
                               <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest block">Vencimento</span>
-                              <span className="font-bold text-slate-900">{formattedDate}</span>
+                              <span className="font-bold text-slate-900 text-xs">{formattedDate}</span>
                             </div>
-                            <div className="p-4 bg-slate-50/50 rounded-2xl border border-slate-100 space-y-1 text-center">
+                            <div className="p-3 bg-slate-50/50 rounded-2xl border border-slate-100 space-y-1 text-center">
                               <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest block">Status</span>
-                              <Badge className="bg-amber-100 text-amber-700 border-none capitalize font-bold">Pendente</Badge>
+                              <Badge className="bg-amber-100 text-amber-700 border-none capitalize font-bold text-[10px]">Pendente</Badge>
                             </div>
                           </div>
                         </div>
 
-                        <DialogFooter className="mt-8">
+                        <DialogFooter className="mt-6 sm:mt-8">
                           <Link href="/accounts-payable" className="w-full">
-                            <Button className="w-full h-12 rounded-xl font-bold shadow-lg shadow-primary/20">
+                            <Button className="w-full h-11 sm:h-12 rounded-xl font-bold shadow-lg shadow-primary/20 text-sm">
                               Gerenciar Contas
                             </Button>
                           </Link>
@@ -312,8 +308,8 @@ export default function Summary() {
             )}
           </div>
 
-          <Link href="/accounts-payable" className="mt-8">
-            <Button variant="outline" className="w-full h-12 rounded-xl font-bold border-slate-200 hover:bg-slate-50 gap-2">
+          <Link href="/accounts-payable" className="mt-6 sm:mt-8">
+            <Button variant="outline" className="w-full h-11 sm:h-12 rounded-xl font-bold border-slate-200 hover:bg-slate-50 gap-2 text-sm">
               Ver Todas as Contas <ArrowRight className="h-4 w-4" />
             </Button>
           </Link>

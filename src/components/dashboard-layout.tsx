@@ -23,11 +23,11 @@ function AuthenticatedLayout({ children }: { children: React.ReactNode }) {
   }
 
   return (
-      <div className="min-h-screen w-full bg-background flex">
+      <div className="min-h-screen w-full bg-background flex overflow-x-hidden">
         <AppSidebar />
-        <div className="flex-1 flex flex-col md:pl-64">
+        <div className="flex-1 flex flex-col md:pl-64 max-w-full">
           <MobileHeader />
-          <main className="flex-1 w-full max-w-7xl mx-auto p-6 sm:p-8 lg:p-12 xl:p-16 transition-all duration-300">
+          <main className="flex-1 w-full max-w-7xl mx-auto p-4 sm:p-8 lg:p-12 xl:p-16 transition-all duration-300 overflow-x-hidden">
             {children}
           </main>
         </div>
