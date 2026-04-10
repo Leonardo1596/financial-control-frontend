@@ -18,16 +18,20 @@ export default function AccountsClient() {
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
+  const [year, setYear] = useState(new Date().getFullYear().toString());
+  const [month, setMonth] = useState((new Date().getMonth() + 1).toString());
+
   const fetchAccounts = useCallback(async () => {
     if (!token) return;
     setLoading(true);
     try {
       // Chamando sem filtros conforme solicitado para uma visão mais limpa
-      const response = await fetch(`${API_BASE_URL}/list-accounts`, {
+      const response = await fetch(`${API_BASE_URL}/list-accounts?month=${month}&year=${year}`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       if (!response.ok) throw new Error('Falha ao buscar contas');
       const data = await response.json();
+      console.log(data);
       setAccounts(Array.isArray(data) ? data : []);
     } catch (error) {
       console.error('Erro ao buscar contas:', error);
