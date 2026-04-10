@@ -1,4 +1,3 @@
-
 "use client";
 
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
@@ -11,12 +10,13 @@ import { buttonVariants } from '@/components/ui/button';
 interface AccountsListProps {
   accounts: UserAccount[];
   onDelete: (id: string) => Promise<void>;
+  onEdit: (account: UserAccount) => void;
   loading: boolean;
 }
 
 const formatCurrency = (value: number) => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value);
 
-export default function AccountsList({ accounts, onDelete, loading }: AccountsListProps) {
+export default function AccountsList({ accounts, onDelete, onEdit, loading }: AccountsListProps) {
   if (loading) {
     return (
       <div className="grid gap-4">
@@ -73,17 +73,14 @@ export default function AccountsList({ accounts, onDelete, loading }: AccountsLi
             <div className="grid gap-3 py-4">
                <button 
                 className="flex items-center gap-3 w-full p-4 rounded-xl bg-slate-50 hover:bg-slate-100 transition-colors text-left"
-                onClick={() => {
-                  // A funcionalidade de editar pode ser implementada aqui futuramente
-                  alert("Funcionalidade de edição em breve!");
-                }}
+                onClick={() => onEdit(account)}
                >
                  <div className="p-2 bg-blue-100 text-blue-600 rounded-lg">
                     <Edit className="h-5 w-5" />
                  </div>
                  <div className="flex flex-col">
                     <span className="font-bold text-slate-900">Editar Detalhes</span>
-                    <span className="text-xs text-slate-500">Alterar nome ou saldo da instituição</span>
+                    <span className="text-xs text-slate-500">Alterar nome da instituição</span>
                  </div>
                </button>
 

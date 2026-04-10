@@ -17,21 +17,17 @@ export default function AccountsClient() {
   const [accounts, setAccounts] = useState<UserAccount[]>([]);
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
-
-  const [year, setYear] = useState(new Date().getFullYear().toString());
-  const [month, setMonth] = useState((new Date().getMonth() + 1).toString());
+  const [editingAccount, setEditingAccount] = useState<UserAccount | null>(null);
 
   const fetchAccounts = useCallback(async () => {
     if (!token) return;
     setLoading(true);
     try {
-      // Chamando sem filtros conforme solicitado para uma visão mais limpa
-      const response = await fetch(`${API_BASE_URL}/list-accounts?month=${month}&year=${year}`, {
+      const response = await fetch(`${API_BASE_URL}/list-accounts`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       if (!response.ok) throw new Error('Falha ao buscar contas');
       const data = await response.json();
-      console.log(data);
       setAccounts(Array.isArray(data) ? data : []);
     } catch (error) {
       console.error('Erro ao buscar contas:', error);
@@ -45,8 +41,15 @@ export default function AccountsClient() {
     fetchAccounts();
   }, [fetchAccounts]);
 
-  const handleOpenModal = () => setIsModalOpen(true);
-  const handleCloseModal = () => setIsModalOpen(false);
+  const handleOpenModal = (account: UserAccount | null = null) => {
+    setEditingAccount(account);
+    setIsModalOpen(true);
+  };
+
+  const handleCloseModal = () => {
+    setIsModalOpen(false);
+    setEditingAccount(null);
+  };
 
   const handleSuccess = () => {
     fetchAccounts();
@@ -94,7 +97,7 @@ export default function AccountsClient() {
         </div>
 
         <Button 
-          onClick={handleOpenModal} 
+          onClick={() => handleOpenModal()} 
           className="h-11 px-6 rounded-xl font-bold shadow-lg shadow-primary/20 hover:scale-[1.02] transition-all"
         >
           <PlusCircle className="mr-2 h-5 w-5" />
@@ -106,6 +109,7 @@ export default function AccountsClient() {
         <AccountsList
           accounts={accounts}
           onDelete={handleDelete}
+          onEdit={handleOpenModal}
           loading={loading}
         />
       </div>
@@ -114,6 +118,7 @@ export default function AccountsClient() {
         isOpen={isModalOpen}
         onClose={handleCloseModal}
         onSuccess={handleSuccess}
+        accountToEdit={editingAccount}
       />
     </div>
   );

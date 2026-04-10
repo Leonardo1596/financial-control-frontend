@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -13,10 +13,10 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Di
 import { Loader2, Landmark } from 'lucide-react';
 import { API_BASE_URL } from '@/lib/api';
 import { Preferences } from '@capacitor/preferences';
+import type { UserAccount } from '@/lib/types';
 
 const formSchema = z.object({
   name: z.string().min(1, 'Nome da conta é obrigatório (ex: Nubank)'),
-  balance: z.coerce.number().describe('Saldo inicial'),
 });
 
 type FormValues = z.infer<typeof formSchema>;
@@ -25,9 +25,10 @@ interface AccountsFormProps {
   isOpen: boolean;
   onClose: () => void;
   onSuccess: () => void;
+  accountToEdit: UserAccount | null;
 }
 
-export default function AccountsForm({ isOpen, onClose, onSuccess }: AccountsFormProps) {
+export default function AccountsForm({ isOpen, onClose, onSuccess, accountToEdit }: AccountsFormProps) {
   const { token } = useAuth();
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
@@ -36,17 +37,25 @@ export default function AccountsForm({ isOpen, onClose, onSuccess }: AccountsFor
     resolver: zodResolver(formSchema),
     defaultValues: {
       name: '',
-      balance: 0,
     },
   });
 
+  useEffect(() => {
+    if (accountToEdit) {
+      form.reset({
+        name: accountToEdit.name,
+      });
+    } else {
+      form.reset({
+        name: '',
+      });
+    }
+  }, [accountToEdit, form, isOpen]);
+
   const normalizeSource = (name: string) => {
     const lower = name.toLowerCase();
-
     if (lower.includes("nubank")) return "nubank";
     if (lower.includes("rico")) return "rico";
-
-    // fallback genérico
     return lower.replace(/\s+/g, "_");
   };
 
@@ -54,8 +63,14 @@ export default function AccountsForm({ isOpen, onClose, onSuccess }: AccountsFor
     setIsLoading(true);
 
     try {
-      const response = await fetch(`${API_BASE_URL}/create-account`, {
-        method: 'POST',
+      const url = accountToEdit 
+        ? `${API_BASE_URL}/update-account/${accountToEdit._id}`
+        : `${API_BASE_URL}/create-account`;
+      
+      const method = accountToEdit ? 'PUT' : 'POST';
+
+      const response = await fetch(url, {
+        method,
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`
@@ -63,29 +78,23 @@ export default function AccountsForm({ isOpen, onClose, onSuccess }: AccountsFor
         body: JSON.stringify(values),
       });
 
-      if (!response.ok) throw new Error('Falha ao criar conta bancária');
+      if (!response.ok) throw new Error(`Falha ao ${accountToEdit ? 'atualizar' : 'criar'} conta bancária`);
 
       const data = await response.json();
-
-      const accountId = data._id;
-
-      // 🔥 aqui resolve seu caos existencial
+      const accountId = accountToEdit ? accountToEdit._id : data._id;
       const source = normalizeSource(values.name);
 
       if (accountId && source) {
         const key = `account_${source}`;
-
         await Preferences.set({
           key: key,
           value: accountId
         });
-
-        console.log("SALVO NO CAPACITOR:", key, accountId);
       }
 
       toast({
         title: 'Sucesso!',
-        description: 'Nova conta adicionada com sucesso.'
+        description: `Conta ${accountToEdit ? 'atualizada' : 'adicionada'} com sucesso.`
       });
 
       form.reset();
@@ -110,10 +119,10 @@ export default function AccountsForm({ isOpen, onClose, onSuccess }: AccountsFor
             <Landmark className="h-8 w-8 text-primary" />
           </div>
           <DialogTitle className="text-center text-2xl font-bold">
-            Nova Instituição
+            {accountToEdit ? 'Editar Instituição' : 'Nova Instituição'}
           </DialogTitle>
           <DialogDescription className="text-center">
-            Adicione um banco ou corretora para organizar suas transações.
+            {accountToEdit ? 'Atualize o nome do seu banco ou corretora.' : 'Adicione um banco ou corretora para organizar suas transações.'}
           </DialogDescription>
         </DialogHeader>
 
@@ -131,28 +140,6 @@ export default function AccountsForm({ isOpen, onClose, onSuccess }: AccountsFor
                   <FormControl>
                     <Input
                       placeholder="Ex: Nubank, Rico, XP..."
-                      className="bg-slate-50 border-none rounded-xl h-12"
-                      {...field}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="balance"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel className="text-xs font-bold uppercase tracking-wider text-slate-500">
-                    Saldo Inicial
-                  </FormLabel>
-                  <FormControl>
-                    <Input
-                      type="number"
-                      step="0.01"
-                      placeholder="R$ 0,00"
                       className="bg-slate-50 border-none rounded-xl h-12"
                       {...field}
                     />
@@ -180,7 +167,7 @@ export default function AccountsForm({ isOpen, onClose, onSuccess }: AccountsFor
               >
                 {isLoading
                   ? <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-                  : 'Salvar Conta'}
+                  : accountToEdit ? 'Atualizar Conta' : 'Salvar Conta'}
               </Button>
             </DialogFooter>
 
