@@ -9,10 +9,10 @@ import AccountsPayableList from './list';
 import AccountsPayableForm from './form';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { PlusCircle, Filter } from 'lucide-react';
+import { PlusCircle, Filter, Calendar } from 'lucide-react';
 import { Skeleton } from '../ui/skeleton';
 import { API_BASE_URL } from '@/lib/api';
-import { scheduleAllPayments } from '@/services/notifications'; // 🟢 import notifications
+import { scheduleAllPayments } from '@/services/notifications';
 
 export default function AccountsPayableClient() {
   const { token } = useAuth();
@@ -23,7 +23,6 @@ export default function AccountsPayableClient() {
   const [editingAccount, setEditingAccount] = useState<AccountPayable | null>(null);
   
   const [statusFilter, setStatusFilter] = useState('todas');
-  const [sortOrder, setSortOrder] = useState('asc');
   
   const [year, setYear] = useState(new Date().getFullYear().toString());
   const [month, setMonth] = useState((new Date().getMonth() + 1).toString());
@@ -37,13 +36,11 @@ export default function AccountsPayableClient() {
       });
       if (!response.ok) throw new Error('Falha ao buscar contas a pagar');
       const data = await response.json();
-      console.log('Contas a pagar recebidas:', data);
       setAccounts(Array.isArray(data) ? data : []);
 
-      // 🟢 agenda notificações apenas para contas pendentes
       scheduleAllPayments(
         Array.isArray(data) ? data.filter(acc => acc.status === 'pendente') : [],
-        2 // dias antes do vencimento
+        2
       );
 
     } catch (error) {
@@ -114,12 +111,8 @@ export default function AccountsPayableClient() {
         
         return yearMatch && monthMatch && statusMatch;
       })
-      .sort((a, b) => {
-        const dateA = new Date(a.dueDate).getTime();
-        const dateB = new Date(b.dueDate).getTime();
-        return sortOrder === 'asc' ? dateA - dateB : dateB - dateA;
-      });
-  }, [accounts, statusFilter, sortOrder, month, year]);
+      .sort((a, b) => new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime());
+  }, [accounts, statusFilter, month, year]);
 
   const years = Array.from({ length: 5 }, (_, i) => (new Date().getFullYear() - i).toString());
   const months = Array.from({ length: 12 }, (_, i) => ({
@@ -128,43 +121,51 @@ export default function AccountsPayableClient() {
   }));
 
   return (
-    <div className="flex flex-col w-full max-w-full space-y-10 overflow-hidden">
+    <div className="flex flex-col w-full max-w-full space-y-8 sm:space-y-12 overflow-hidden">
       {loading ? (
         <div className="grid gap-6 md:grid-cols-3">
-            <Skeleton className='h-32 rounded-2xl' />
-            <Skeleton className='h-32 rounded-2xl' />
-            <Skeleton className='h-32 rounded-2xl' />
+            <Skeleton className='h-32 rounded-3xl' />
+            <Skeleton className='h-32 rounded-3xl' />
+            <Skeleton className='h-32 rounded-3xl' />
         </div>
       ) : (
         <AccountsPayableSummary accounts={displayedAccounts} />
       )}
       
-      <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 flex flex-col lg:flex-row justify-between items-center gap-6 w-full">
-        <div className="flex flex-col sm:flex-row gap-4 w-full lg:w-auto">
-          <div className="flex items-center gap-2 text-muted-foreground mr-2 hidden sm:flex">
+      <div className="bg-white p-5 sm:p-8 rounded-[2rem] shadow-sm border border-slate-100 flex flex-col lg:flex-row justify-between items-center gap-6 w-full">
+        <div className="flex flex-col sm:flex-row gap-3 w-full lg:w-auto">
+          <div className="flex items-center gap-2 text-slate-400 mr-2 hidden sm:flex">
             <Filter className="h-4 w-4" />
-            <span className="text-xs font-bold uppercase tracking-wider">Filtros</span>
+            <span className="text-[10px] font-bold uppercase tracking-widest">Filtros</span>
           </div>
-          <Select value={month} onValueChange={setMonth}>
-            <SelectTrigger className="w-full sm:w-[150px] bg-slate-50 border-none rounded-xl h-11">
-              <SelectValue placeholder="Mês" />
-            </SelectTrigger>
-            <SelectContent className="rounded-xl">
-              <SelectItem value="todas">Todos os meses</SelectItem>
-              {months.map(m => <SelectItem key={m.value} value={m.value}>{m.label}</SelectItem>)}
-            </SelectContent>
-          </Select>
-          <Select value={year} onValueChange={setYear}>
-            <SelectTrigger className="w-full sm:w-[130px] bg-slate-50 border-none rounded-xl h-11">
-              <SelectValue placeholder="Ano" />
-            </SelectTrigger>
-            <SelectContent className="rounded-xl">
-              <SelectItem value="todas">Todos os anos</SelectItem>
-              {years.map(y => <SelectItem key={y} value={y}>{y}</SelectItem>)}
-            </SelectContent>
-          </Select>
+          
+          <div className="grid grid-cols-2 sm:flex gap-2 w-full">
+            <Select value={month} onValueChange={setMonth}>
+              <SelectTrigger className="w-full sm:w-[150px] bg-slate-50 border-none rounded-xl h-11 font-medium text-sm">
+                <div className="flex items-center gap-2 truncate">
+                  <Calendar className="h-3.5 w-3.5 text-slate-400 shrink-0" />
+                  <SelectValue placeholder="Mês" />
+                </div>
+              </SelectTrigger>
+              <SelectContent className="rounded-xl">
+                <SelectItem value="todas">Todos os meses</SelectItem>
+                {months.map(m => <SelectItem key={m.value} value={m.value}>{m.label}</SelectItem>)}
+              </SelectContent>
+            </Select>
+
+            <Select value={year} onValueChange={setYear}>
+              <SelectTrigger className="w-full sm:w-[120px] bg-slate-50 border-none rounded-xl h-11 font-medium text-sm">
+                <SelectValue placeholder="Ano" />
+              </SelectTrigger>
+              <SelectContent className="rounded-xl">
+                <SelectItem value="todas">Todos os anos</SelectItem>
+                {years.map(y => <SelectItem key={y} value={y}>{y}</SelectItem>)}
+              </SelectContent>
+            </Select>
+          </div>
+
           <Select value={statusFilter} onValueChange={setStatusFilter}>
-            <SelectTrigger className="w-full sm:w-[160px] bg-slate-50 border-none rounded-xl h-11">
+            <SelectTrigger className="w-full sm:w-[160px] bg-slate-50 border-none rounded-xl h-11 font-medium text-sm">
               <SelectValue placeholder="Status" />
             </SelectTrigger>
             <SelectContent className="rounded-xl">
@@ -175,13 +176,17 @@ export default function AccountsPayableClient() {
             </SelectContent>
           </Select>
         </div>
-        <Button onClick={() => handleOpenModal()} className="w-full lg:w-auto h-11 px-8 rounded-xl font-semibold shadow-lg shadow-primary/20 hover:scale-[1.02] transition-transform">
+
+        <Button 
+          onClick={() => handleOpenModal()} 
+          className="w-full lg:w-auto h-12 px-8 rounded-xl font-bold shadow-xl shadow-primary/20 hover:scale-[1.02] transition-all"
+        >
           <PlusCircle className="mr-2 h-5 w-5" />
           Nova Conta
         </Button>
       </div>
 
-      <div className="grid grid-cols-1 w-full overflow-hidden bg-white rounded-3xl shadow-xl shadow-slate-200/50 border border-slate-100">
+      <div className="bg-white rounded-[2.5rem] shadow-xl shadow-slate-200/40 border border-slate-100 overflow-hidden w-full">
         <AccountsPayableList
           accounts={displayedAccounts}
           onPay={handlePay}
