@@ -92,23 +92,33 @@ public class NotificationListener extends NotificationListenerService {
     }
 
     private void parseNubank(StatusBarNotification sbn) {
-        String fullMessage = getFullMessage(sbn);
+    String fullMessage = getFullMessage(sbn).toLowerCase();
 
-        CharSequence titleCs = sbn.getNotification().extras.getCharSequence("android.title");
-        String title = titleCs != null ? titleCs.toString().toLowerCase() : "";
+    CharSequence titleCs = sbn.getNotification().extras.getCharSequence("android.title");
+    String title = titleCs != null ? titleCs.toString().toLowerCase() : "";
 
-        double amount = parseAmount(extractValue(fullMessage));
+    double amount = parseAmount(extractValue(fullMessage));
 
-        if (amount <= 0) return;
+    if (amount <= 0) return;
 
-        if (title.contains("transferência recebida")) {
-            sendTransactionToBackend(amount, fullMessage, "income", "nubank");
-        }
-
-        else if (title.contains("compra no débito")) {
-            sendTransactionToBackend(amount, fullMessage, "expense", "nubank");
-        }
+    // 🚫 Ignorar transações inválidas
+    if (fullMessage.contains("não autorizada") ||
+        fullMessage.contains("negada") ||
+        fullMessage.contains("saldo insuficiente") ||
+        fullMessage.contains("recusada") ||
+        fullMessage.contains("falhou") ||
+        fullMessage.contains("não foi possível")) {
+        return;
     }
+
+    if (title.contains("transferência recebida")) {
+        sendTransactionToBackend(amount, fullMessage, "income", "nubank");
+    }
+
+    else if (title.contains("compra no débito")) {
+        sendTransactionToBackend(amount, fullMessage, "expense", "nubank");
+    }
+}
 
     private void parsePixReceivedRico(StatusBarNotification sbn) {
         String message = getFullMessage(sbn);
@@ -120,22 +130,33 @@ public class NotificationListener extends NotificationListenerService {
     }
 
     private void parsePixSentRico(StatusBarNotification sbn) {
-        String fullMessage = getFullMessage(sbn).toLowerCase();
-        String originalMessage = getFullMessage(sbn);
+    String fullMessage = getFullMessage(sbn).toLowerCase();
+    String originalMessage = getFullMessage(sbn);
 
-        if (fullMessage.contains("enviou um pix")) {
-            double amount = parseAmount(extractValue(originalMessage));
+    if (fullMessage.contains("enviou um pix")) {
+        double amount = parseAmount(extractValue(originalMessage));
+        sendTransactionToBackend(amount, originalMessage, "expense", "rico");
+    } 
+    
+    else if (fullMessage.contains("compra")) {
+
+        // 🚫 Ignorar compras negadas
+        if (fullMessage.contains("negada") ||
+            fullMessage.contains("não autorizada") ||
+            fullMessage.contains("saldo insuficiente") ||
+            fullMessage.contains("recusada") ||
+            fullMessage.contains("falhou") ||
+            fullMessage.contains("não foi possível")) {
+            return;
+        }
+
+        double amount = parseAmount(extractValue(originalMessage));
+
+        if (amount > 0) {
             sendTransactionToBackend(amount, originalMessage, "expense", "rico");
         }
-
-        else if (fullMessage.contains("compra")) {
-            double amount = parseAmount(extractValue(originalMessage));
-
-            if (amount > 0) {
-                sendTransactionToBackend(amount, originalMessage, "expense", "rico");
-            }
-        }
     }
+}
 
     private String getFullMessage(StatusBarNotification sbn) {
         CharSequence titleCs = sbn.getNotification().extras.getCharSequence("android.title");
