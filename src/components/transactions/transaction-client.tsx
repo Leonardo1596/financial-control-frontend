@@ -9,7 +9,8 @@ import TransactionForm from './transaction-form';
 import FileUpload from './file-upload';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { Button, buttonVariants } from '@/components/ui/button';
-import { Loader2, Trash2, LayoutGrid, Plus, Filter, Landmark } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { Loader2, Trash2, LayoutGrid, Plus, Filter, Landmark, Search } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { 
@@ -36,13 +37,18 @@ export default function TransactionClient() {
   const [year, setYear] = useState(new Date().getFullYear().toString());
   const [month, setMonth] = useState((new Date().getMonth() + 1).toString());
   const [selectedAccountId, setSelectedAccountId] = useState('todas');
+  const [searchTerm, setSearchTerm] = useState('');
 
   const fetchData = useCallback(async () => {
     if (!token) return;
     setLoading(true);
     try {
+      const endpoint = searchTerm 
+        ? `${API_BASE_URL}/filter-transactions-by-name?name=${encodeURIComponent(searchTerm)}`
+        : `${API_BASE_URL}/list-transaction`;
+
       const [transResponse, accountsResponse] = await Promise.all([
-        fetch(`${API_BASE_URL}/list-transaction`, { headers: { Authorization: `Bearer ${token}` } }),
+        fetch(endpoint, { headers: { Authorization: `Bearer ${token}` } }),
         fetch(`${API_BASE_URL}/list-accounts?month=${month}&year=${year}`, { headers: { Authorization: `Bearer ${token}` } })
       ]);
 
@@ -59,10 +65,14 @@ export default function TransactionClient() {
     } finally {
       setLoading(false);
     }
-  }, [token, toast, month, year]);
+  }, [token, toast, month, year, searchTerm]);
 
   useEffect(() => {
-    fetchData();
+    const delayDebounceFn = setTimeout(() => {
+      fetchData();
+    }, searchTerm ? 500 : 0);
+
+    return () => clearTimeout(delayDebounceFn);
   }, [fetchData]);
 
   const handleDelete = async (transactionId: string) => {
@@ -99,6 +109,8 @@ export default function TransactionClient() {
   const filteredTransactions = useMemo(() => {
     return transactions
       .filter(transaction => {
+        // Se estivermos buscando por nome via API, o filtro de mês/ano/conta ainda se aplica localmente
+        // para refinar a visão atual do usuário caso ele não tenha colocado "Todas".
         const transDate = new Date(transaction.date);
         const transMonth = (transDate.getUTCMonth() + 1).toString();
         const transYear = transDate.getUTCFullYear().toString();
@@ -146,13 +158,23 @@ export default function TransactionClient() {
           <div className="p-2.5 sm:p-3 bg-slate-50 rounded-xl">
             <LayoutGrid className="h-5 w-5 sm:h-6 sm:w-6 text-slate-400" />
           </div>
-          <div>
+          <div className="flex-1 lg:flex-none">
             <h3 className="text-base sm:text-lg font-bold">Histórico</h3>
             <p className="text-xs sm:text-sm text-muted-foreground">Suas movimentações.</p>
           </div>
         </div>
         
         <div className='flex items-center gap-2 sm:gap-3 flex-wrap justify-start sm:justify-center w-full lg:w-auto'>
+          <div className="relative w-full lg:w-64">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+            <Input 
+              placeholder="Pesquisar por nome..." 
+              className="pl-9 h-10 sm:h-11 bg-slate-50 border-none rounded-xl text-xs sm:text-sm"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
+          </div>
+
           <div className="flex items-center gap-2 text-slate-400 mr-2 hidden md:flex">
             <Filter className="h-4 w-4" />
             <span className="text-[10px] font-bold uppercase tracking-widest">Filtros</span>
