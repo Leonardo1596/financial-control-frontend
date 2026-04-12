@@ -12,7 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { PlusCircle, Filter, Calendar } from 'lucide-react';
 import { Skeleton } from '../ui/skeleton';
 import { API_BASE_URL } from '@/lib/api';
-import { scheduleAllPayments } from '@/services/notifications';
+import { scheduleAllPayments, createNotificationChannel } from '@/services/notifications';
 
 export default function AccountsPayableClient() {
   const { token } = useAuth();
@@ -39,8 +39,7 @@ export default function AccountsPayableClient() {
       setAccounts(Array.isArray(data) ? data : []);
 
       scheduleAllPayments(
-        Array.isArray(data) ? data.filter(acc => acc.status === 'pendente') : [],
-        2
+        Array.isArray(data) ? data.filter(acc => acc.status === 'pendente') : []
       );
 
     } catch (error) {
@@ -51,6 +50,7 @@ export default function AccountsPayableClient() {
   }, [token, toast]);
 
   useEffect(() => {
+    createNotificationChannel();
     fetchAccounts();
   }, [fetchAccounts]);
 
