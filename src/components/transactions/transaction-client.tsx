@@ -201,7 +201,6 @@ export default function TransactionClient() {
                 <SelectValue placeholder="Mês" />
               </SelectTrigger>
               <SelectContent className="rounded-xl">
-                <SelectItem value="todas">Todos</SelectItem>
                 {months.map(m => <SelectItem key={m.value} value={m.value}>{m.label}</SelectItem>)}
               </SelectContent>
             </Select>
@@ -211,7 +210,6 @@ export default function TransactionClient() {
                 <SelectValue placeholder="Ano" />
               </SelectTrigger>
               <SelectContent className="rounded-xl">
-                <SelectItem value="todas">Todos</SelectItem>
                 {years.map(y => <SelectItem key={y} value={y}>{y}</SelectItem>)}
               </SelectContent>
             </Select>

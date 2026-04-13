@@ -7,6 +7,7 @@ import { Landmark, LayoutDashboard, LogOut, ArrowLeftRight, ReceiptText, Chevron
 import { Button } from "./ui/button";
 import { cn } from "@/lib/utils";
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
+import { NotificationBell } from "./notifications/notification-bell";
 
 const getInitials = (name?: string) => {
     return name?.split(' ').map(n => n[0]).join('').toUpperCase() || 'U';
@@ -25,11 +26,14 @@ export function AppSidebar() {
 
   return (
     <aside className="hidden md:flex h-full w-64 flex-col fixed inset-y-0 z-30 border-r bg-card/50 backdrop-blur-xl p-6">
-      <div className="flex items-center gap-3 mb-10">
-        <div className="bg-primary p-2.5 rounded-xl shadow-lg shadow-primary/30">
-            <Landmark className="h-6 w-6 text-primary-foreground" />
+      <div className="flex items-center justify-between mb-10">
+        <div className="flex items-center gap-3">
+          <div className="bg-primary p-2.5 rounded-xl shadow-lg shadow-primary/30">
+              <Landmark className="h-6 w-6 text-primary-foreground" />
+          </div>
+          <h1 className="text-xl font-bold tracking-tight">FinTrack</h1>
         </div>
-        <h1 className="text-xl font-bold tracking-tight">FinTrack</h1>
+        <NotificationBell />
       </div>
 
       <nav className="flex-1 space-y-2">
