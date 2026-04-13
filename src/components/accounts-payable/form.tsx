@@ -29,6 +29,13 @@ const formSchema = z.object({
   installments: z.coerce.number().int().min(1, 'Mínimo de 1 parcela').default(1),
 });
 
+function formatCurrencyFromCents(value: number) {
+  return (value / 100).toLocaleString('pt-BR', {
+    style: 'currency',
+    currency: 'BRL',
+  });
+}
+
 type FormValues = z.infer<typeof formSchema>;
 
 interface AccountsPayableFormProps {
@@ -85,7 +92,7 @@ export default function AccountsPayableForm({ isOpen, onClose, onSuccess, accoun
       const url = accountToEdit
         ? `${API_BASE_URL}/update/${accountToEdit._id}`
         : `${API_BASE_URL}/create`;
-      
+
       const method = accountToEdit ? 'PUT' : 'POST';
 
       const body = {
@@ -127,7 +134,7 @@ export default function AccountsPayableForm({ isOpen, onClose, onSuccess, accoun
       <DialogContent className="sm:max-w-[450px] rounded-3xl border-none shadow-2xl overflow-hidden">
         <DialogHeader className="p-2">
           <div className="mx-auto bg-primary/10 p-3 rounded-2xl w-fit mb-2">
-             <ReceiptText className="h-6 w-6 text-primary" />
+            <ReceiptText className="h-6 w-6 text-primary" />
           </div>
           <DialogTitle className="text-center text-xl font-bold">
             {accountToEdit ? 'Editar Conta' : 'Nova Conta a Pagar'}
@@ -147,18 +154,27 @@ export default function AccountsPayableForm({ isOpen, onClose, onSuccess, accoun
                 </FormControl>
                 <FormMessage />
               </FormItem>
-            )}/>
+            )} />
 
             <div className="grid grid-cols-2 gap-4">
               <FormField control={form.control} name="amount" render={({ field }) => (
                 <FormItem>
                   <FormLabel className="text-xs font-bold uppercase tracking-wider text-slate-500">Valor</FormLabel>
                   <FormControl>
-                    <Input type="number" step="0.01" placeholder="R$ 0,00" className="h-11 rounded-xl bg-slate-50 border-none focus:ring-primary/20" {...field} />
+                    <Input
+                      placeholder="R$ 0,00"
+                      className="h-11 rounded-xl bg-slate-50 border-none focus:ring-primary/20"
+                      value={formatCurrencyFromCents((field.value || 0) * 100)}
+                      onChange={(e) => {
+                        const raw = e.target.value.replace(/\D/g, '');
+                        const cents = Number(raw); // 👈 AGORA É INTEIRO, SEM FLOAT
+                        field.onChange(cents / 100);
+                      }}
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
-              )}/>
+              )} />
               <FormField control={form.control} name="category" render={({ field }) => (
                 <FormItem>
                   <FormLabel className="text-xs font-bold uppercase tracking-wider text-slate-500">Categoria</FormLabel>
@@ -167,7 +183,7 @@ export default function AccountsPayableForm({ isOpen, onClose, onSuccess, accoun
                   </FormControl>
                   <FormMessage />
                 </FormItem>
-              )}/>
+              )} />
             </div>
 
             <div className="grid grid-cols-2 gap-4">
@@ -189,7 +205,7 @@ export default function AccountsPayableForm({ isOpen, onClose, onSuccess, accoun
                   </Popover>
                   <FormMessage />
                 </FormItem>
-              )}/>
+              )} />
 
               <FormField control={form.control} name="type" render={({ field }) => (
                 <FormItem>
@@ -207,7 +223,7 @@ export default function AccountsPayableForm({ isOpen, onClose, onSuccess, accoun
                   </Select>
                   <FormMessage />
                 </FormItem>
-              )}/>
+              )} />
             </div>
 
             <FormField control={form.control} name="installments" render={({ field }) => (
@@ -219,15 +235,15 @@ export default function AccountsPayableForm({ isOpen, onClose, onSuccess, accoun
                 <FormDescription className="text-[10px] leading-tight">Quantas vezes este valor será repetido mensalmente.</FormDescription>
                 <FormMessage />
               </FormItem>
-            )}/>
+            )} />
 
             <DialogFooter className="pt-4 gap-2 sm:gap-0">
-                <Button type="button" variant="ghost" onClick={onClose} disabled={isLoading} className="rounded-xl h-12 font-semibold">
-                  Cancelar
-                </Button>
-                <Button type="submit" disabled={isLoading} className="rounded-xl h-12 font-bold shadow-lg shadow-primary/20">
-                    {isLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : (accountToEdit ? 'Atualizar Conta' : 'Salvar Conta')}
-                </Button>
+              <Button type="button" variant="ghost" onClick={onClose} disabled={isLoading} className="rounded-xl h-12 font-semibold">
+                Cancelar
+              </Button>
+              <Button type="submit" disabled={isLoading} className="rounded-xl h-12 font-bold shadow-lg shadow-primary/20">
+                {isLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : (accountToEdit ? 'Atualizar Conta' : 'Salvar Conta')}
+              </Button>
             </DialogFooter>
           </form>
         </Form>

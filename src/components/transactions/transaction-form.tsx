@@ -28,6 +28,14 @@ const formSchema = z.object({
   accountId: z.string().min(1, { message: 'Selecione uma conta' }),
 });
 
+// ✅ função de formatação (única adição real)
+function formatCurrencyFromCents(value: number) {
+  return (value / 100).toLocaleString('pt-BR', {
+    style: 'currency',
+    currency: 'BRL',
+  });
+}
+
 export default function TransactionForm({ onTransactionAdded }: { onTransactionAdded: () => void }) {
   const { token, user } = useAuth();
   const { toast } = useToast();
@@ -98,10 +106,13 @@ export default function TransactionForm({ onTransactionAdded }: { onTransactionA
       <CardContent className="px-0 pb-0">
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+            
             <FormField control={form.control} name="description" render={({ field }) => (
               <FormItem>
                 <FormLabel className="text-xs font-bold uppercase tracking-wider text-slate-500">Descrição</FormLabel>
-                <FormControl><Input placeholder="ex: Compras de mercado" className="bg-white rounded-xl border-slate-100 h-11" {...field} /></FormControl>
+                <FormControl>
+                  <Input placeholder="ex: Compras de mercado" className="bg-white rounded-xl border-slate-100 h-11" {...field} />
+                </FormControl>
                 <FormMessage />
               </FormItem>
             )}/>
@@ -131,13 +142,27 @@ export default function TransactionForm({ onTransactionAdded }: { onTransactionA
             )}/>
 
             <div className="grid grid-cols-2 gap-4">
+              
+              {/* ✅ AQUI FOI A ÚNICA MUDANÇA REAL */}
               <FormField control={form.control} name="amount" render={({ field }) => (
                 <FormItem>
                   <FormLabel className="text-xs font-bold uppercase tracking-wider text-slate-500">Valor</FormLabel>
-                  <FormControl><Input type="number" step="0.01" placeholder="R$ 0,00" className="bg-white rounded-xl border-slate-100 h-11" {...field} /></FormControl>
+                  <FormControl>
+                    <Input
+                      placeholder="R$ 0,00"
+                      className="bg-white rounded-xl border-slate-100 h-11"
+                      value={formatCurrencyFromCents((field.value || 0) * 100)}
+                      onChange={(e) => {
+                        const raw = e.target.value.replace(/\D/g, '');
+                        const cents = Number(raw);
+                        field.onChange(cents / 100);
+                      }}
+                    />
+                  </FormControl>
                   <FormMessage />
                 </FormItem>
               )}/>
+
               <FormField control={form.control} name="type" render={({ field }) => (
                 <FormItem>
                   <FormLabel className="text-xs font-bold uppercase tracking-wider text-slate-500">Tipo</FormLabel>
@@ -156,6 +181,7 @@ export default function TransactionForm({ onTransactionAdded }: { onTransactionA
                 </FormItem>
               )}/>
             </div>
+
             <FormField control={form.control} name="date" render={({ field }) => (
               <FormItem className="flex flex-col">
                 <FormLabel className="text-xs font-bold uppercase tracking-wider text-slate-500">Data</FormLabel>
@@ -175,9 +201,11 @@ export default function TransactionForm({ onTransactionAdded }: { onTransactionA
                 <FormMessage />
               </FormItem>
             )}/>
+
             <Button type="submit" disabled={isLoading} className="w-full h-11 rounded-xl font-bold shadow-lg shadow-primary/20 mt-2">
               {isLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : "Adicionar Transação"}
             </Button>
+
           </form>
         </Form>
       </CardContent>
