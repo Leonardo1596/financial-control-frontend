@@ -20,6 +20,7 @@ export function NotificationBell() {
   const { token } = useAuth();
   const [notifications, setNotifications] = useState<AccountPayable[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
+  const [open, setOpen] = useState(false);
 
   useEffect(() => {
     async function fetchAlerts() {
@@ -30,17 +31,18 @@ export function NotificationBell() {
         });
         if (response.ok) {
           const data: AccountPayable[] = await response.json();
-          // Filtra contas atrasadas ou pendentes nos próximos 3 dias
+
           const alerts = data.filter((acc) => {
             if (acc.status === "paga") return false;
             if (acc.status === "atrasada") return true;
-            
+
             const dueDate = parseISO(acc.dueDate);
             const diff = dueDate.getTime() - new Date().getTime();
             const daysToDue = diff / (1000 * 60 * 60 * 24);
-            return daysToDue <= 3;
+
+            return daysToDue <= 10;
           });
-          
+
           setNotifications(alerts.slice(0, 5));
           setUnreadCount(alerts.length);
         }
@@ -50,12 +52,19 @@ export function NotificationBell() {
     }
 
     fetchAlerts();
-    const interval = setInterval(fetchAlerts, 60000 * 5); // Atualiza a cada 5 min
+    const interval = setInterval(fetchAlerts, 60000 * 5);
     return () => clearInterval(interval);
   }, [token]);
 
+  // 👇 limpa quando abre
+  useEffect(() => {
+    if (open) {
+      setUnreadCount(0);
+    }
+  }, [open]);
+
   return (
-    <Popover>
+    <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
         <Button
           variant="ghost"
@@ -70,41 +79,64 @@ export function NotificationBell() {
           )}
         </Button>
       </PopoverTrigger>
-      <PopoverContent className="w-80 p-0 rounded-2xl border-none shadow-2xl" align="end">
+
+      <PopoverContent
+        className="w-80 p-0 rounded-2xl border-none shadow-2xl"
+        align="end"
+      >
         <div className="p-4 border-b border-slate-50">
           <h3 className="font-bold text-slate-900">Alertas Financeiros</h3>
-          <p className="text-xs text-slate-500">Acompanhe seus vencimentos</p>
+          <p className="text-xs text-slate-500">
+            Acompanhe seus vencimentos
+          </p>
         </div>
+
         <div className="max-h-[350px] overflow-y-auto">
           {notifications.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-8 px-4 text-center">
               <CheckCircle2 className="h-8 w-8 text-emerald-500 mb-2 opacity-20" />
-              <p className="text-sm font-medium text-slate-400">Tudo em dia por aqui!</p>
+              <p className="text-sm font-medium text-slate-400">
+                Tudo em dia por aqui!
+              </p>
             </div>
           ) : (
             <div className="divide-y divide-slate-50">
               {notifications.map((notif) => {
                 const date = parseISO(notif.dueDate);
                 const isAtrasada = notif.status === "atrasada";
-                
+
                 return (
                   <Link
                     key={notif._id}
                     href="/accounts-payable"
                     className="flex items-start gap-3 p-4 hover:bg-slate-50 transition-colors"
                   >
-                    <div className={cn(
-                      "p-2 rounded-lg shrink-0",
-                      isAtrasada ? "bg-rose-50 text-rose-500" : "bg-amber-50 text-amber-500"
-                    )}>
-                      {isAtrasada ? <AlertCircle className="h-4 w-4" /> : <Calendar className="h-4 w-4" />}
+                    <div
+                      className={cn(
+                        "p-2 rounded-lg shrink-0",
+                        isAtrasada
+                          ? "bg-rose-50 text-rose-500"
+                          : "bg-amber-50 text-amber-500"
+                      )}
+                    >
+                      {isAtrasada ? (
+                        <AlertCircle className="h-4 w-4" />
+                      ) : (
+                        <Calendar className="h-4 w-4" />
+                      )}
                     </div>
+
                     <div className="flex flex-col min-w-0">
                       <span className="text-sm font-bold text-slate-800 truncate">
                         {notif.description}
                       </span>
+
                       <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
-                        Vence em {format(date, "dd/MM", { locale: ptBR })} • R$ {notif.amount.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
+                        Vence em{" "}
+                        {format(date, "dd/MM", { locale: ptBR })} • R${" "}
+                        {notif.amount.toLocaleString("pt-BR", {
+                          minimumFractionDigits: 2,
+                        })}
                       </span>
                     </div>
                   </Link>
@@ -113,9 +145,13 @@ export function NotificationBell() {
             </div>
           )}
         </div>
+
         <div className="p-3 border-t border-slate-50 bg-slate-50/50">
           <Link href="/accounts-payable">
-            <Button variant="ghost" className="w-full h-9 text-xs font-bold text-primary hover:text-primary hover:bg-white rounded-lg">
+            <Button
+              variant="ghost"
+              className="w-full h-9 text-xs font-bold text-primary hover:text-primary hover:bg-white rounded-lg"
+            >
               Ver Todas as Contas
             </Button>
           </Link>

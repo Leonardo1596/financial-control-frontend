@@ -54,32 +54,29 @@ export default function TransactionClient() {
     fetchData();
   }, [fetchData]);
 
-  // 🔥 USEEFFECT QUE VOCÊ PEDIU
+  // Efeito para detectar o ID pendente vindo do Android
   useEffect(() => {
     function checkPending() {
       const id = localStorage.getItem("pendingTransactionId");
 
       if (!id) return;
 
-      console.log("Pending encontrado:", id);
+      console.log("TransactionClient: Processando ID pendente:", id);
 
-      if (window.location.pathname !== "/transactions") {
-        window.location.href = "/transactions";
-        return;
-      }
-
+      // Limpa imediatamente para evitar loops ou re-aberturas acidentais
       localStorage.removeItem("pendingTransactionId");
+      
       setPendingId(id);
       setIsModalOpen(true);
     }
 
-    // roda ao montar
-    checkPending();
+    // Pequeno delay para garantir que o componente e o roteador estejam estáveis
+    const timeoutId = setTimeout(checkPending, 100);
 
-    // 🔥 roda quando app volta (ESSENCIAL)
     document.addEventListener("resume", checkPending);
 
     return () => {
+      clearTimeout(timeoutId);
       document.removeEventListener("resume", checkPending);
     };
   }, []);
@@ -98,14 +95,13 @@ export default function TransactionClient() {
         toast({
           variant: "destructive",
           title: "Erro",
-          description: "Erro ao carregar pending"
+          description: "Erro ao carregar transação detectada"
         });
       });
   }, [pendingId, token, toast]);
 
   return (
     <div className="flex flex-col space-y-6">
-
       <div className="flex justify-end">
         <Button onClick={() => setIsModalOpen(true)}>
           <PlusCircle className="mr-2 h-5 w-5" />
@@ -117,6 +113,11 @@ export default function TransactionClient() {
         transactions={transactions}
         accounts={accounts}
         loading={loading}
+        onDelete={(id) => {
+          // Implementação simples de delete aqui se necessário, 
+          // ou passar para o componente pai
+          fetchData();
+        }}
       />
 
       <TransactionForm
