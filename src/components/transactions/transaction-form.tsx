@@ -190,7 +190,8 @@ export default function TransactionForm({ onTransactionAdded, isOpen, onClose, p
                       <FormControl>
                         <Input
                           placeholder="R$ 0,00"
-                          className="bg-white rounded-xl border-slate-100 h-11"
+                          className="bg-white rounded-xl border-slate-100 h-11 caret-transparent"
+                          inputMode="numeric"
                           value={formatCurrencyFromCents((field.value || 0) * 100)}
                           onChange={(e) => {
                             const raw = e.target.value.replace(/\D/g, '');
