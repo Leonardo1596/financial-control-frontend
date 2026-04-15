@@ -8,75 +8,55 @@ import type { Transaction, UserAccount } from '@/lib/types';
 import TransactionList from './transaction-list';
 import TransactionForm from './transaction-form';
 import FileUpload from './file-upload';
-import { Button } from '@/components/ui/button';
-import { 
-  Plus, 
-  Search, 
-  Loader2, 
-  LayoutGrid, 
-  Filter, 
-  ChevronDown, 
-  Trash2, 
-  FileUp, 
-  X,
-  Landmark
-} from 'lucide-react';
-import { API_BASE_URL } from '@/lib/api';
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
+import { Button, buttonVariants } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Loader2, Trash2, LayoutGrid, Plus, Filter, Landmark, Search, FileUp, ChevronDown } from 'lucide-react';
+import { cn } from '@/lib/utils';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { 
-  Select, 
-  SelectContent, 
-  SelectItem, 
-  SelectTrigger, 
-  SelectValue 
-} from '@/components/ui/select';
-import { 
-  Collapsible, 
-  CollapsibleContent, 
-  CollapsibleTrigger 
-} from '@/components/ui/collapsible';
+  AlertDialog as AD, 
+  AlertDialogAction as ADA, 
+  AlertDialogCancel as ADC, 
+  AlertDialogContent as ADContent, 
+  AlertDialogDescription as ADDescription, 
+  AlertDialogFooter as ADFooter, 
+  AlertDialogHeader as ADHeader, 
+  AlertDialogTitle as ADTitle, 
+  AlertDialogTrigger as ADTrigger 
+} from '@/components/ui/alert-dialog';
+import { API_BASE_URL } from '@/lib/api';
 
 export default function TransactionClient() {
   const { token } = useAuth();
   const { toast } = useToast();
-
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [accounts, setAccounts] = useState<UserAccount[]>([]);
   const [loading, setLoading] = useState(true);
-  
-  // Filtros
-  const [searchTerm, setSearchTerm] = useState('');
-  const [selectedAccountId, setSelectedAccountId] = useState('todas');
-  const [month, setMonth] = useState((new Date().getMonth() + 1).toString());
-  const [year, setYear] = useState(new Date().getFullYear().toString());
+  const [isDeletingAll, setIsDeletingAll] = useState(false);
   
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isImportOpen, setIsImportOpen] = useState(false);
-  const [pendingId, setPendingId] = useState<string | null>(null);
-  const [pendingData, setPendingData] = useState<any>(null);
 
-  const fetchData = useCallback(async (name?: string) => {
+  const [year, setYear] = useState(new Date().getFullYear().toString());
+  const [month, setMonth] = useState((new Date().getMonth() + 1).toString());
+  const [selectedAccountId, setSelectedAccountId] = useState('todas');
+  const [searchTerm, setSearchTerm] = useState('');
+
+  const fetchData = useCallback(async () => {
     if (!token) return;
     setLoading(true);
     try {
-      // Adiciona month e year na query string para o backend filtrar
-      const queryParams = new URLSearchParams();
-      queryParams.append('month', month);
-      queryParams.append('year', year);
-      if (name) queryParams.append('name', name);
-
-      const url = name 
-        ? `${API_BASE_URL}/filter-transactions-by-name?${queryParams.toString()}`
-        : `${API_BASE_URL}/list-transaction?${queryParams.toString()}`;
+      const endpoint = searchTerm 
+        ? `${API_BASE_URL}/filter-transactions-by-name?name=${encodeURIComponent(searchTerm)}`
+        : `${API_BASE_URL}/list-transaction`;
 
       const [transResponse, accountsResponse] = await Promise.all([
-        fetch(url, { headers: { Authorization: `Bearer ${token}` } }),
-        fetch(`${API_BASE_URL}/list-accounts?month=${month}&year=${year}`, {
-          headers: { Authorization: `Bearer ${token}` }
-        })
+        fetch(endpoint, { headers: { Authorization: `Bearer ${token}` } }),
+        fetch(`${API_BASE_URL}/list-accounts?month=${month}&year=${year}`, { headers: { Authorization: `Bearer ${token}` } })
       ]);
 
-      if (!transResponse.ok || !accountsResponse.ok) throw new Error('Erro na resposta do servidor');
+      if (!transResponse.ok || !accountsResponse.ok) throw new Error('Falha ao buscar dados');
 
       const transData = await transResponse.json();
       const accountsData = await accountsResponse.json();
@@ -84,86 +64,78 @@ export default function TransactionClient() {
       setTransactions(Array.isArray(transData) ? transData : []);
       setAccounts(Array.isArray(accountsData) ? accountsData : []);
     } catch (error) {
-      toast({ variant: 'destructive', title: 'Erro', description: 'Erro ao buscar dados' });
+      toast({ variant: 'destructive', title: 'Erro', description: (error as Error).message });
+      setTransactions([]);
     } finally {
       setLoading(false);
     }
-  }, [token, toast, month, year]);
+  }, [token, toast, month, year, searchTerm]);
 
   useEffect(() => {
-    const timer = setTimeout(() => {
-      fetchData(searchTerm);
-    }, 400);
-    return () => clearTimeout(timer);
-  }, [searchTerm, fetchData]);
+    const delayDebounceFn = setTimeout(() => {
+      fetchData();
+    }, searchTerm ? 500 : 0);
 
-  useEffect(() => {
-    function checkPending() {
-      const id = localStorage.getItem("pendingTransactionId");
-      if (!id) return;
-      localStorage.removeItem("pendingTransactionId");
-      setPendingId(id);
-      setIsModalOpen(true);
-    }
-    const timeoutId = setTimeout(checkPending, 100);
-    document.addEventListener("resume", checkPending);
-    return () => {
-      clearTimeout(timeoutId);
-      document.removeEventListener("resume", checkPending);
-    };
-  }, []);
+    return () => clearTimeout(delayDebounceFn);
+  }, [fetchData]);
 
-  useEffect(() => {
-    if (!pendingId || !token) return;
-    fetch(`${API_BASE_URL}/pending-transactions/${pendingId}`, {
-      headers: { Authorization: `Bearer ${token}` }
-    })
-      .then(res => res.json())
-      .then(data => setPendingData(data))
-      .catch(() => toast({ variant: "destructive", title: "Erro", description: "Erro ao carregar transação detectada" }));
-  }, [pendingId, token, toast]);
-
-  const handleDelete = async (id: string) => {
-    if (!token) return;
+  const handleDelete = async (transactionId: string) => {
     try {
-      const response = await fetch(`${API_BASE_URL}/delete-transaction/${id}`, {
+      const response = await fetch(`${API_BASE_URL}/delete-transaction/${transactionId}`, {
         method: 'DELETE',
-        headers: { 'Authorization': `Bearer ${token}` }
+        headers: { Authorization: `Bearer ${token}` }
       });
       if (!response.ok) throw new Error('Falha ao deletar transação');
-      toast({ title: 'Sucesso', description: 'Transação excluída com sucesso.' });
-      fetchData(searchTerm);
+      toast({ title: 'Sucesso', description: 'Transação deletada.' });
+      fetchData();
     } catch (error) {
       toast({ variant: 'destructive', title: 'Erro', description: (error as Error).message });
     }
   };
 
-  const clearFilters = () => {
-    setSearchTerm('');
-    setSelectedAccountId('todas');
-    setMonth((new Date().getMonth() + 1).toString());
-    setYear(new Date().getFullYear().toString());
+  const handleDeleteAll = async () => {
+    setIsDeletingAll(true);
+    try {
+      const response = await fetch(`${API_BASE_URL}/delete-all-transactions`, {
+        method: 'DELETE',
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (!response.ok) throw new Error('Falha ao deletar transações');
+      toast({ title: 'Sucesso', description: 'Histórico limpo com sucesso.' });
+      fetchData();
+    } catch (error) {
+      toast({ variant: 'destructive', title: 'Erro', description: (error as Error).message });
+    } finally {
+      setIsDeletingAll(false);
+    }
   };
 
   const filteredTransactions = useMemo(() => {
-    return transactions.filter(t => {
-      const accountMatch = selectedAccountId === 'todas' || t.accountId === selectedAccountId;
-      return accountMatch;
-    });
-  }, [transactions, selectedAccountId]);
+    return transactions
+      .filter(transaction => {
+        // 🔥 CORREÇÃO: Usando split para ignorar fuso horário local e garantir match exato de mês/ano
+        const parts = transaction.date.split('-'); // "2023-05-15" -> ["2023", "05", "15"]
+        const transYear = parts[0];
+        const transMonth = parseInt(parts[1], 10).toString();
 
-  const years = Array.from({ length: 5 }, (_, i) => (new Date().getFullYear() - i).toString());
-  const months = [
-    { v: '1', l: 'Janeiro' }, { v: '2', l: 'Fevereiro' }, { v: '3', l: 'Março' },
-    { v: '4', l: 'Abril' }, { v: '5', l: 'Maio' }, { v: '6', l: 'Junho' },
-    { v: '7', l: 'Julho' }, { v: '8', l: 'Agosto' }, { v: '9', l: 'Setembro' },
-    { v: '10', l: 'Outubro' }, { v: '11', l: 'Novembro' }, { v: '12', l: 'Dezembro' }
-  ];
+        const monthMatch = month === 'todas' || transMonth === month;
+        const yearMatch = year === 'todas' || transYear === year;
+        const accountMatch = selectedAccountId === 'todas' || transaction.accountId === selectedAccountId;
+
+        return monthMatch && yearMatch && accountMatch;
+      })
+      .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+  }, [transactions, month, year, selectedAccountId]);
+
+  const years = Array.from({ length: 10 }, (_, i) => (new Date().getFullYear() - i).toString());
+  const months = Array.from({ length: 12 }, (_, i) => ({
+    value: (i + 1).toString(),
+    label: new Date(2000, i, 1).toLocaleString('pt-BR', { month: 'long' }).replace(/^\w/, c => c.toUpperCase()),
+  }));
 
   return (
-    <div className="flex flex-col space-y-8 max-w-full overflow-x-hidden">
+    <div className="flex flex-col w-full max-w-full space-y-8 overflow-hidden">
       
-      {/* Botão Nova Transação */}
       <div className="space-y-4">
         <Button 
           onClick={() => setIsModalOpen(true)}
@@ -178,129 +150,130 @@ export default function TransactionClient() {
           <ChevronDown className="h-6 w-6 text-slate-300" />
         </Button>
 
-        <Collapsible open={isImportOpen} onOpenChange={setIsImportOpen} className="w-full">
-          <CollapsibleTrigger asChild>
-            <Button variant="ghost" className="text-slate-400 hover:text-primary gap-2 text-xs font-bold uppercase tracking-widest px-8">
-              <FileUp className="h-4 w-4" />
-              Importar CSV
-            </Button>
-          </CollapsibleTrigger>
-          <CollapsibleContent className="pt-4 px-2">
-            <div className="bg-white p-6 rounded-[2rem] border border-slate-100 shadow-sm">
-              <FileUpload onUploadSuccess={() => { fetchData(); setIsImportOpen(false); }} />
-            </div>
-          </CollapsibleContent>
-        </Collapsible>
+        <Accordion type="single" collapsible className="w-full">
+          <AccordionItem value="item-import" className="border-none">
+            <AccordionTrigger className="hover:no-underline py-0">
+               <div className="flex items-center gap-2 text-slate-400 hover:text-primary text-xs font-bold uppercase tracking-widest px-8">
+                  <FileUp className="h-4 w-4" />
+                  Importar CSV
+               </div>
+            </AccordionTrigger>
+            <AccordionContent className="pt-4 px-2">
+              <div className="bg-white p-6 rounded-[2rem] border border-slate-100 shadow-sm">
+                <FileUpload onUploadSuccess={() => { fetchData(); }} />
+              </div>
+            </AccordionContent>
+          </AccordionItem>
+        </Accordion>
       </div>
 
-      {/* Card de Filtros (Histórico) */}
-      <div className="bg-white p-8 rounded-[2.5rem] border border-slate-100 shadow-sm space-y-6 w-full">
+      <div className="bg-white p-4 sm:p-6 rounded-3xl shadow-sm border border-slate-100 flex flex-col lg:flex-row justify-between items-center gap-4 sm:gap-6 w-full">
+        <div className='flex items-center gap-3 sm:gap-4 w-full lg:w-auto'>
+          <div className="p-2.5 sm:p-3 bg-slate-50 rounded-xl">
+            <LayoutGrid className="h-5 w-5 sm:h-6 sm:w-6 text-slate-400" />
+          </div>
+          <div className="flex-1 lg:flex-none">
+            <h3 className="text-base sm:text-lg font-bold">Histórico</h3>
+            <p className="text-xs sm:text-sm text-muted-foreground">Suas movimentações.</p>
+          </div>
+        </div>
         
-        {/* Cabeçalho do Filtro */}
-        <div className="flex items-center gap-4 px-1">
-          <div className="p-3 bg-slate-50 rounded-2xl border border-slate-100">
-            <LayoutGrid className="h-6 w-6 text-slate-300" />
+        <div className='flex items-center gap-2 sm:gap-3 flex-wrap justify-start sm:justify-center w-full lg:w-auto'>
+          <div className="relative w-full lg:w-64">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+            <Input 
+              placeholder="Pesquisar por nome..." 
+              className="pl-9 h-10 sm:h-11 bg-slate-50 border-none rounded-xl text-xs sm:text-sm"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
           </div>
-          <div>
-            <h3 className="font-bold text-xl text-slate-900 leading-tight">Histórico</h3>
-            <p className="text-xs text-slate-400 font-medium">Suas movimentações.</p>
+
+          <div className="flex items-center gap-2 text-slate-400 mr-2 hidden md:flex">
+            <Filter className="h-4 w-4" />
+            <span className="text-[10px] font-bold uppercase tracking-widest">Filtros</span>
           </div>
-        </div>
 
-        {/* Campo de Pesquisa */}
-        <div className="relative w-full">
-          <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-300" />
-          <Input 
-            placeholder="Pesquisar por nome..." 
-            className="pl-12 h-14 bg-slate-50 border-none rounded-2xl focus:ring-primary/20 text-slate-600 font-medium"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-          />
-        </div>
-
-        {/* Seletor de Contas */}
-        <div className="w-full">
           <Select value={selectedAccountId} onValueChange={setSelectedAccountId}>
-            <SelectTrigger className="w-full h-14 bg-slate-50 border-none rounded-2xl font-bold text-slate-600 px-4">
-              <div className="flex items-center gap-3">
-                <Landmark className="h-5 w-5 text-slate-300" />
-                <SelectValue placeholder="Todas as contas" />
+            <SelectTrigger className="w-full sm:w-[160px] bg-slate-50 border-none rounded-xl h-10 sm:h-11 font-medium text-xs sm:text-sm">
+              <div className="flex items-center gap-2 truncate">
+                <Landmark className="h-3.5 w-3.5 text-slate-400 shrink-0" />
+                <SelectValue placeholder="Contas" />
               </div>
             </SelectTrigger>
-            <SelectContent className="rounded-2xl">
+            <SelectContent className="rounded-xl">
               <SelectItem value="todas">Todas as contas</SelectItem>
               {accounts.map(acc => (
                 <SelectItem key={acc._id} value={acc._id}>{acc.name}</SelectItem>
               ))}
             </SelectContent>
           </Select>
-        </div>
 
-        {/* Seletores de Mês e Ano */}
-        <div className="grid grid-cols-2 gap-4">
-          <Select value={month} onValueChange={setMonth}>
-            <SelectTrigger className="h-14 bg-slate-50 border-none rounded-2xl font-bold text-slate-600 px-4">
-              <SelectValue placeholder="Mês" />
-            </SelectTrigger>
-            <SelectContent className="rounded-2xl">
-              {months.map(m => (
-                <SelectItem key={m.v} value={m.v}>{m.l}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <div className="flex gap-2 w-full sm:w-auto">
+            <Select value={month} onValueChange={setMonth}>
+              <SelectTrigger className="flex-1 sm:w-[130px] bg-slate-50 border-none rounded-xl h-10 sm:h-11 font-medium text-xs sm:text-sm">
+                <SelectValue placeholder="Mês" />
+              </SelectTrigger>
+              <SelectContent className="rounded-xl">
+                <SelectItem value="todas">Todos</SelectItem>
+                {months.map(m => <SelectItem key={m.value} value={m.value}>{m.label}</SelectItem>)}
+              </SelectContent>
+            </Select>
 
-          <Select value={year} onValueChange={setYear}>
-            <SelectTrigger className="h-14 bg-slate-50 border-none rounded-2xl font-bold text-slate-600 px-4">
-              <SelectValue placeholder="Ano" />
-            </SelectTrigger>
-            <SelectContent className="rounded-2xl">
-              {years.map(y => (
-                <SelectItem key={y} value={y}>{y}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
+            <Select value={year} onValueChange={setYear}>
+              <SelectTrigger className="flex-1 sm:w-[100px] bg-slate-50 border-none rounded-xl h-10 sm:h-11 font-medium text-xs sm:text-sm">
+                <SelectValue placeholder="Ano" />
+              </SelectTrigger>
+              <SelectContent className="rounded-xl">
+                <SelectItem value="todas">Todos</SelectItem>
+                {years.map(y => <SelectItem key={y} value={y}>{y}</SelectItem>)}
+              </SelectContent>
+            </Select>
+          </div>
 
-        {/* Botão Limpar */}
-        <div className="flex justify-center pt-2">
-          <Button 
-            variant="ghost" 
-            onClick={clearFilters}
-            className="h-10 px-6 rounded-2xl text-rose-500 hover:text-rose-600 hover:bg-rose-50 font-bold flex items-center gap-2"
-          >
-            <Trash2 className="h-5 w-5" />
-            Limpar
-          </Button>
+          <AD>
+            <ADTrigger asChild>
+              <Button variant="ghost" disabled={filteredTransactions.length === 0 || loading} className="text-rose-500 hover:text-rose-600 hover:bg-rose-50 h-10 sm:h-11 rounded-xl w-full sm:w-auto text-xs font-bold">
+                <Trash2 className="mr-2 h-4 w-4" />
+                Limpar
+              </Button>
+            </ADTrigger>
+            <ADContent className="rounded-2xl border-none shadow-2xl max-w-[90vw]">
+              <ADHeader>
+                <ADTitle className="text-xl">Limpar histórico?</ADTitle>
+                <ADDescription>
+                  Esta ação excluirá permanentemente TODAS as suas transações filtradas atualmente.
+                </ADDescription>
+              </ADHeader>
+              <ADFooter className="mt-4 gap-2">
+                <ADC className="rounded-xl border-none bg-slate-100 hover:bg-slate-200">Cancelar</ADC>
+                <ADA
+                  disabled={isDeletingAll}
+                  className={cn(buttonVariants({variant: "destructive"}), "rounded-xl shadow-lg shadow-rose-500/20")}
+                  onClick={handleDeleteAll}
+                >
+                  {isDeletingAll ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+                  Sim, excluir tudo
+                </ADA>
+              </ADFooter>
+            </ADContent>
+          </AD>
         </div>
       </div>
 
-      {loading ? (
-        <div className="flex justify-center py-12">
-          <Loader2 className="h-10 w-10 animate-spin text-primary" />
-        </div>
-      ) : (
-        <TransactionList
-          transactions={filteredTransactions}
+      <div className="w-full max-w-full overflow-hidden">
+        <TransactionList 
+          transactions={filteredTransactions} 
           accounts={accounts}
-          loading={loading}
-          onDelete={handleDelete}
+          onDelete={handleDelete} 
+          loading={loading} 
         />
-      )}
+      </div>
 
-      <TransactionForm
-        isOpen={isModalOpen}
-        onClose={() => {
-          setIsModalOpen(false);
-          setPendingId(null);
-          setPendingData(null);
-        }}
-        onTransactionAdded={() => {
-          fetchData(searchTerm);
-          setIsModalOpen(false);
-          setPendingId(null);
-          setPendingData(null);
-        }}
-        pendingData={pendingData}
+      <TransactionForm 
+        isOpen={isModalOpen} 
+        onClose={() => setIsModalOpen(false)} 
+        onTransactionAdded={fetchData} 
       />
     </div>
   );
