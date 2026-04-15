@@ -3,7 +3,7 @@
 
 import { useState, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
-import { Landmark, ChevronRight, Trash2, Info, Clock, Wallet } from 'lucide-react';
+import { Landmark, ChevronRight, Trash2, Wallet, Clock } from 'lucide-react';
 import type { Transaction, UserAccount } from '@/lib/types';
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
@@ -70,7 +70,7 @@ export default function TransactionList({ transactions, accounts = [], onDelete,
       <div className="space-y-8 w-full">
         {Array.from({ length: 2 }).map((_, i) => (
           <div key={i} className="space-y-4">
-            <Skeleton className="h-5 w-32 rounded-lg" />
+            <Skeleton className="h-5 w-32 rounded-lg ml-4" />
             <div className="space-y-3">
               <Skeleton className="h-20 w-full rounded-[2rem]" />
               <Skeleton className="h-20 w-full rounded-[2rem]" />
@@ -94,46 +94,44 @@ export default function TransactionList({ transactions, accounts = [], onDelete,
     <div className="w-full space-y-10 max-w-full">
       {Object.entries(groupedTransactions).map(([date, items]) => (
         <div key={date} className="space-y-5 w-full">
-          <div className="flex items-center gap-3 px-1">
-            <div className="h-2 w-2 rounded-full bg-primary" />
-            <h4 className="text-xs font-bold text-slate-400 uppercase tracking-widest">{date}</h4>
+          <div className="flex items-center gap-2 px-4">
+            <span className="text-primary text-xl leading-none">•</span>
+            <h4 className="text-base font-bold text-slate-400 tracking-wide">{date}</h4>
           </div>
           
-          <div className="grid gap-3 w-full">
+          <div className="grid gap-4 w-full px-2 sm:px-0">
             {items.map((transaction) => (
               <Dialog key={transaction._id}>
                 <DialogTrigger asChild>
-                  <div className="group flex items-center justify-between p-5 sm:p-6 bg-white rounded-[2rem] border border-slate-50 shadow-sm hover:shadow-md hover:border-primary/20 transition-all cursor-pointer w-full overflow-hidden">
-                    <div className="flex items-center gap-5 min-w-0 flex-1">
+                  <div className="group flex items-center justify-between p-4 sm:p-5 bg-white rounded-[1.5rem] border border-slate-50 shadow-sm hover:shadow-md transition-all cursor-pointer w-full overflow-hidden">
+                    <div className="flex items-center gap-4 min-w-0 flex-1">
                       <div className={cn(
-                        "p-4 rounded-2xl shrink-0 transition-all",
+                        "p-3 rounded-2xl shrink-0 transition-all",
                         transaction.type === 'income' ? "bg-emerald-50 text-emerald-600" : "bg-rose-50 text-rose-600"
                       )}>
                         <Landmark className="h-5 w-5" />
                       </div>
                       <div className="flex flex-col min-w-0">
-                        <span className="font-bold text-slate-800 text-base sm:text-lg truncate group-hover:text-primary transition-colors">
+                        <span className="font-bold text-slate-800 text-sm sm:text-base truncate leading-tight">
                           {transaction.description}
                         </span>
-                        <div className="flex items-center gap-1.5 mt-1">
+                        <div className="flex items-center gap-1 mt-0.5">
                           <Landmark className="h-3 w-3 text-slate-300" />
-                          <span className="text-xs font-bold text-slate-300 uppercase tracking-wider truncate">
+                          <span className="text-[10px] font-bold text-slate-300 uppercase tracking-wider truncate">
                             {getAccountName(transaction.accountId)}
                           </span>
                         </div>
                       </div>
                     </div>
                     
-                    <div className="flex items-center gap-3 sm:gap-6 shrink-0 ml-4">
-                      <div className="text-right">
-                        <span className={cn(
-                          "font-mono font-bold text-lg sm:text-xl block",
-                          transaction.type === 'income' ? "text-emerald-500" : "text-rose-500"
-                        )}>
-                          {transaction.type === 'income' ? '+' : '-'}{formatCurrency(transaction.amount)}
-                        </span>
-                      </div>
-                      <ChevronRight className="h-5 w-5 text-slate-200 group-hover:text-primary transition-colors" />
+                    <div className="flex items-center gap-2 shrink-0 ml-4">
+                      <span className={cn(
+                        "font-bold text-sm sm:text-lg block",
+                        transaction.type === 'income' ? "text-emerald-500" : "text-rose-500"
+                      )}>
+                        {transaction.type === 'income' ? '+' : '-'}{formatCurrency(transaction.amount)}
+                      </span>
+                      <ChevronRight className="h-4 w-4 text-slate-200 group-hover:text-primary transition-colors" />
                     </div>
                   </div>
                 </DialogTrigger>
@@ -222,7 +220,7 @@ export default function TransactionList({ transactions, accounts = [], onDelete,
       ))}
       
       {totalPages > 1 && (
-        <div className="flex items-center justify-between p-6 bg-white rounded-[2rem] border border-slate-50 shadow-sm w-full">
+        <div className="flex items-center justify-between p-6 bg-white rounded-[2rem] border border-slate-50 shadow-sm w-full mx-2 sm:mx-0">
           <div className="text-[10px] font-bold uppercase tracking-widest text-slate-400">
             Página {currentPage} de {totalPages}
           </div>
