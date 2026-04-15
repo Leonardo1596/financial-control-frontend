@@ -27,7 +27,6 @@ export function SummaryCard({ title, value, icon: Icon, color }: SummaryCardProp
           <h3 className="text-2xl font-bold tracking-tight">
             {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value)}
           </h3>
-          <p className="text-xs text-muted-foreground">Comparado ao mês anterior</p>
         </div>
       </CardContent>
       <div className={cn("absolute bottom-0 left-0 h-1 w-full", color?.replace('text-', 'bg-'))} />

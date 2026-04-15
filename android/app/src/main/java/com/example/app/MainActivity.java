@@ -1,6 +1,8 @@
 package com.example.app;
 
 import android.Manifest;
+import android.app.NotificationChannel;
+import android.app.NotificationManager;
 import android.content.ComponentName;
 import android.content.Intent;
 import android.content.pm.PackageManager;
@@ -10,43 +12,33 @@ import android.provider.Settings;
 import android.text.TextUtils;
 import android.util.Log;
 
-import androidx.annotation.NonNull;
-import androidx.biometric.BiometricManager;
-import androidx.biometric.BiometricPrompt;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 
 import com.getcapacitor.BridgeActivity;
 
-import java.util.concurrent.Executor;
-
 public class MainActivity extends BridgeActivity {
 
     private static final int REQUEST_NOTIFICATION_PERMISSION = 1001;
-
-    private BiometricPrompt biometricPrompt;
-    private BiometricPrompt.PromptInfo promptInfo;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        // 🔥 Permissão de notificação (Android 13+)
         requestNotificationPermission();
 
-        // 🔥 Inicia o Foreground Service
         Intent serviceIntent = new Intent(this, MyForegroundService.class);
         ContextCompat.startForegroundService(this, serviceIntent);
 
-        // 🔔 Verifica NotificationListener
         if (!isNotificationServiceEnabled()) {
             startActivity(new Intent(Settings.ACTION_NOTIFICATION_LISTENER_SETTINGS));
         }
+
+        createNotificationChannel();
+
+        handlePendingIntent(getIntent());
     }
 
-    // =========================
-    // 🔔 PERMISSÃO NOTIFICAÇÃO
-    // =========================
     private void requestNotificationPermission() {
         if (Build.VERSION.SDK_INT >= 33) {
             if (ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS)
@@ -61,9 +53,6 @@ public class MainActivity extends BridgeActivity {
         }
     }
 
-    // =========================
-    // 🔔 NOTIFICATION LISTENER
-    // =========================
     private boolean isNotificationServiceEnabled() {
         String pkgName = getPackageName();
         final String flat = Settings.Secure.getString(getContentResolver(), "enabled_notification_listeners");
@@ -79,4 +68,48 @@ public class MainActivity extends BridgeActivity {
         }
         return false;
     }
+
+    private void createNotificationChannel() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            NotificationChannel channel = new NotificationChannel(
+                    "transactions_channel",
+                    "Transações",
+                    NotificationManager.IMPORTANCE_HIGH
+            );
+
+            NotificationManager manager = getSystemService(NotificationManager.class);
+            if (manager != null) {
+                manager.createNotificationChannel(channel);
+            }
+        }
+    }
+
+    @Override
+    protected void onNewIntent(Intent intent) {
+        super.onNewIntent(intent);
+        setIntent(intent);
+        handlePendingIntent(intent);
+    }
+
+    private void handlePendingIntent(Intent intent) {
+    if (intent == null) return;
+
+    String pendingId = intent.getStringExtra("pendingId");
+
+    if (pendingId != null) {
+        Log.d("MAIN_ACTIVITY", "Pending recebido: " + pendingId);
+
+        if (bridge != null && bridge.getWebView() != null) {
+
+            bridge.getWebView().post(() -> {
+                bridge.eval(
+                    "localStorage.setItem('pendingTransactionId', '" + pendingId + "');",
+                    null
+                );
+            });
+        }
+
+        intent.removeExtra("pendingId");
+    }
+}
 }
