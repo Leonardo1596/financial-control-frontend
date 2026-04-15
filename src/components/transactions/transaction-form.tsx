@@ -16,13 +16,14 @@ import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { CalendarIcon, Loader2, MousePointer2, Landmark } from 'lucide-react';
+import { CalendarIcon, Loader2, MousePointer2, Landmark, Tag } from 'lucide-react';
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from '@/components/ui/card';
 import type { UserAccount } from '@/lib/types';
 import { API_BASE_URL } from '@/lib/api';
 
 const formSchema = z.object({
   description: z.string().min(1, { message: 'A descrição é obrigatória' }),
+  category: z.string().min(1, { message: 'A categoria é obrigatória' }),
   amount: z.coerce.number().positive({ message: 'O valor deve ser positivo' }),
   type: z.enum(['income', 'expense']),
   date: z.date({ required_error: 'A data é obrigatória.' }),
@@ -53,20 +54,25 @@ export default function TransactionForm({ onTransactionAdded, isOpen, onClose, p
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
-    defaultValues: { description: '', amount: 0, type: 'expense', date: new Date(), accountId: '' },
+    defaultValues: { 
+      description: '', 
+      category: '',
+      amount: 0, 
+      type: 'expense', 
+      date: new Date(), 
+      accountId: '' 
+    },
   });
 
   useEffect(() => {
     if (!pendingData) return;
 
-    console.log("Preenchendo formulário com:", pendingData);
-    console.log(pendingData.type);
-
     form.reset({
       description: pendingData.description || '',
+      category: pendingData.category || '',
       amount: pendingData.amount || 0,
       type: pendingData.type || 'expense',
-      date: new Date(), // ou pendingData.date se tiver
+      date: new Date(),
       accountId: pendingData.accountId || ''
     });
   }, [pendingData]);
@@ -116,7 +122,7 @@ export default function TransactionForm({ onTransactionAdded, isOpen, onClose, p
 
       toast({ title: 'Sucesso', description: 'Transação adicionada.' });
 
-      form.reset({ ...form.getValues(), description: '', amount: 0 });
+      form.reset({ ...form.getValues(), description: '', category: '', amount: 0 });
 
       onTransactionAdded();
       onClose();
@@ -129,26 +135,35 @@ export default function TransactionForm({ onTransactionAdded, isOpen, onClose, p
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="rounded-3xl max-w-[500px]">
-
-        <Card className="border-none bg-slate-50/50 shadow-none">
-          <CardHeader className="px-0 pt-0">
-            <CardTitle className="text-base flex items-center gap-2">
-              <MousePointer2 className="h-4 w-4 text-primary" />
-              Nova Transação
-            </CardTitle>
-            <CardDescription>Insira uma transação rapidamente.</CardDescription>
+      <DialogContent className="rounded-[2rem] max-w-[500px] border-none shadow-2xl p-6 sm:p-8">
+        <Card className="border-none bg-transparent shadow-none">
+          <CardHeader className="px-0 pt-0 pb-6 text-center">
+            <div className="mx-auto bg-primary/10 p-3 rounded-2xl w-fit mb-4">
+              <MousePointer2 className="h-6 w-6 text-primary" />
+            </div>
+            <CardTitle className="text-xl font-bold tracking-tight">Nova Transação</CardTitle>
+            <CardDescription>Insira uma movimentação rapidamente.</CardDescription>
           </CardHeader>
 
           <CardContent className="px-0 pb-0">
             <Form {...form}>
-              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5">
 
                 <FormField control={form.control} name="description" render={({ field }) => (
                   <FormItem>
                     <FormLabel className="text-xs font-bold uppercase tracking-wider text-slate-500">Descrição</FormLabel>
                     <FormControl>
-                      <Input placeholder="ex: Compras de mercado" className="bg-white rounded-xl border-slate-100 h-11" {...field} />
+                      <Input placeholder="ex: Compras de mercado" className="bg-slate-50 rounded-xl border-none h-12" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )} />
+
+                <FormField control={form.control} name="category" render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-xs font-bold uppercase tracking-wider text-slate-500">Categoria</FormLabel>
+                    <FormControl>
+                      <Input placeholder="ex: Alimentação, Lazer, Saúde..." className="bg-slate-50 rounded-xl border-none h-12" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -159,7 +174,7 @@ export default function TransactionForm({ onTransactionAdded, isOpen, onClose, p
                     <FormLabel className="text-xs font-bold uppercase tracking-wider text-slate-500">Conta Bancária</FormLabel>
                     <Select onValueChange={field.onChange} defaultValue={field.value} value={field.value}>
                       <FormControl>
-                        <SelectTrigger className="bg-white rounded-xl border-slate-100 h-11">
+                        <SelectTrigger className="bg-slate-50 rounded-xl border-none h-12">
                           <div className="flex items-center gap-2">
                             <Landmark className="h-4 w-4 text-slate-400" />
                             <SelectValue placeholder="Selecione a conta" />
@@ -183,14 +198,13 @@ export default function TransactionForm({ onTransactionAdded, isOpen, onClose, p
                 )} />
 
                 <div className="grid grid-cols-2 gap-4">
-
                   <FormField control={form.control} name="amount" render={({ field }) => (
                     <FormItem>
                       <FormLabel className="text-xs font-bold uppercase tracking-wider text-slate-500">Valor</FormLabel>
                       <FormControl>
                         <Input
                           placeholder="R$ 0,00"
-                          className="bg-white rounded-xl border-slate-100 h-11 caret-transparent"
+                          className="bg-slate-50 rounded-xl border-none h-12 caret-transparent"
                           inputMode="numeric"
                           value={formatCurrencyFromCents((field.value || 0) * 100)}
                           onChange={(e) => {
@@ -209,7 +223,7 @@ export default function TransactionForm({ onTransactionAdded, isOpen, onClose, p
                       <FormLabel className="text-xs font-bold uppercase tracking-wider text-slate-500">Tipo</FormLabel>
                       <Select onValueChange={field.onChange} value={field.value}>
                         <FormControl>
-                          <SelectTrigger className="bg-white rounded-xl border-slate-100 h-11">
+                          <SelectTrigger className="bg-slate-50 rounded-xl border-none h-12">
                             <SelectValue placeholder="Selecione" />
                           </SelectTrigger>
                         </FormControl>
@@ -221,7 +235,6 @@ export default function TransactionForm({ onTransactionAdded, isOpen, onClose, p
                       <FormMessage />
                     </FormItem>
                   )} />
-
                 </div>
 
                 <FormField control={form.control} name="date" render={({ field }) => (
@@ -230,9 +243,9 @@ export default function TransactionForm({ onTransactionAdded, isOpen, onClose, p
                     <Popover>
                       <PopoverTrigger asChild>
                         <FormControl>
-                          <Button variant={"outline"} className={cn("bg-white rounded-xl border-slate-100 h-11 text-left font-normal", !field.value && "text-muted-foreground")}>
+                          <Button variant={"outline"} className={cn("bg-slate-50 rounded-xl border-none h-12 text-left font-normal", !field.value && "text-muted-foreground")}>
                             <CalendarIcon className="mr-2 h-4 w-4 text-slate-400" />
-                            {field.value ? format(field.value, 'PPP', { locale: ptBR }) : <span>Escolha uma data</span>}
+                            {field.value ? format(field.value, 'dd/MM/yyyy', { locale: ptBR }) : <span>Escolha uma data</span>}
                           </Button>
                         </FormControl>
                       </PopoverTrigger>
@@ -244,15 +257,14 @@ export default function TransactionForm({ onTransactionAdded, isOpen, onClose, p
                   </FormItem>
                 )} />
 
-                <Button type="submit" disabled={isLoading} className="w-full h-11 rounded-xl font-bold shadow-lg shadow-primary/20 mt-2">
-                  {isLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : "Adicionar Transação"}
+                <Button type="submit" disabled={isLoading} className="w-full h-12 rounded-xl font-bold shadow-lg shadow-primary/20 mt-4 transition-all hover:scale-[1.01]">
+                  {isLoading ? <Loader2 className="mr-2 h-5 w-5 animate-spin" /> : "Adicionar Transação"}
                 </Button>
 
               </form>
             </Form>
           </CardContent>
         </Card>
-
       </DialogContent>
     </Dialog>
   );
