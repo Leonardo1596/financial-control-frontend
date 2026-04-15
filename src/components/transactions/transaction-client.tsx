@@ -59,9 +59,15 @@ export default function TransactionClient() {
     if (!token) return;
     setLoading(true);
     try {
+      // Adiciona month e year na query string para o backend filtrar
+      const queryParams = new URLSearchParams();
+      queryParams.append('month', month);
+      queryParams.append('year', year);
+      if (name) queryParams.append('name', name);
+
       const url = name 
-        ? `${API_BASE_URL}/filter-transactions-by-name?name=${encodeURIComponent(name)}`
-        : `${API_BASE_URL}/list-transaction`;
+        ? `${API_BASE_URL}/filter-transactions-by-name?${queryParams.toString()}`
+        : `${API_BASE_URL}/list-transaction?${queryParams.toString()}`;
 
       const [transResponse, accountsResponse] = await Promise.all([
         fetch(url, { headers: { Authorization: `Bearer ${token}` } }),
@@ -69,6 +75,8 @@ export default function TransactionClient() {
           headers: { Authorization: `Bearer ${token}` }
         })
       ]);
+
+      if (!transResponse.ok || !accountsResponse.ok) throw new Error('Erro na resposta do servidor');
 
       const transData = await transResponse.json();
       const accountsData = await accountsResponse.json();
