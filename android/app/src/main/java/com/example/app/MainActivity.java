@@ -100,12 +100,12 @@ public class MainActivity extends BridgeActivity {
         Log.d("MAIN_ACTIVITY", "Pending recebido: " + pendingId);
 
         if (bridge != null && bridge.getWebView() != null) {
-
             bridge.getWebView().post(() -> {
                 bridge.eval(
-                    "localStorage.setItem('pendingTransactionId', '" + pendingId + "');",
-                    null
-                );
+    "localStorage.setItem('pendingTransactionId', '" + pendingId + "');" +
+    "window.dispatchEvent(new Event('pendingTransactionReady'));",
+    null
+);
             });
         }
 

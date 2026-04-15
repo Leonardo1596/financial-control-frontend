@@ -27,6 +27,7 @@ export default function TransactionClient() {
 
   const fetchData = useCallback(async () => {
     if (!token) return;
+    console.log("token: " + token);
     setLoading(true);
     try {
       const [transResponse, accountsResponse] = await Promise.all([
@@ -65,7 +66,7 @@ export default function TransactionClient() {
 
       // Limpa imediatamente para evitar loops ou re-aberturas acidentais
       localStorage.removeItem("pendingTransactionId");
-      
+      console.log("Id: " + id);
       setPendingId(id);
       setIsModalOpen(true);
     }
@@ -87,11 +88,21 @@ export default function TransactionClient() {
     fetch(`${API_BASE_URL}/pending-transactions/${pendingId}`, {
       headers: { Authorization: `Bearer ${token}` }
     })
-      .then(res => res.json())
+      .then(async (res) => {
+        console.log(res);
+        if (!res.ok) {
+          const text = await res.text();
+          console.error("Erro bruto da API:", text);
+          throw new Error("Resposta inválida do servidor");
+        }
+
+        return res.json();
+      })
       .then(data => {
         setPendingData(data);
       })
-      .catch(() => {
+      .catch((err) => {
+        console.error("Erro ao carregar transação detectada:", err);
         toast({
           variant: "destructive",
           title: "Erro",

@@ -40,9 +40,10 @@ interface Props {
   onTransactionAdded: () => void;
   isOpen: boolean;
   onClose: () => void;
+  pendingData?: any;
 }
 
-export default function TransactionForm({ onTransactionAdded, isOpen, onClose }: Props) {
+export default function TransactionForm({ onTransactionAdded, isOpen, onClose, pendingData }: Props) {
   const { token, user } = useAuth();
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
@@ -56,28 +57,43 @@ export default function TransactionForm({ onTransactionAdded, isOpen, onClose }:
   });
 
   useEffect(() => {
-  async function fetchAccounts() {
-    try {
-      const response = await fetch(`${API_BASE_URL}/list-accounts?month=${month}&year=${year}`, {
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
-      if (response.ok) {
-        const data = await response.json();
+    if (!pendingData) return;
 
-        if (Array.isArray(data)) {
-          setAccounts(data);
-        } else if (Array.isArray(data.accounts)) {
-          setAccounts(data.accounts);
-        } else {
-          setAccounts([]);
+    console.log("Preenchendo formulário com:", pendingData);
+    console.log(pendingData.type);
+
+    form.reset({
+      description: pendingData.description || '',
+      amount: pendingData.amount || 0,
+      type: pendingData.type || 'expense',
+      date: new Date(), // ou pendingData.date se tiver
+      accountId: pendingData.accountId || ''
+    });
+  }, [pendingData]);
+
+  useEffect(() => {
+    async function fetchAccounts() {
+      try {
+        const response = await fetch(`${API_BASE_URL}/list-accounts?month=${month}&year=${year}`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        if (response.ok) {
+          const data = await response.json();
+
+          if (Array.isArray(data)) {
+            setAccounts(data);
+          } else if (Array.isArray(data.accounts)) {
+            setAccounts(data.accounts);
+          } else {
+            setAccounts([]);
+          }
         }
+      } catch (error) {
+        console.error('Falha ao carregar contas', error);
       }
-    } catch (error) {
-      console.error('Falha ao carregar contas', error);
     }
-  }
-  if (token) fetchAccounts();
-}, [token, month, year]);
+    if (token) fetchAccounts();
+  }, [token, month, year]);
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
     if (!user) {
@@ -136,7 +152,7 @@ export default function TransactionForm({ onTransactionAdded, isOpen, onClose }:
                     </FormControl>
                     <FormMessage />
                   </FormItem>
-                )}/>
+                )} />
 
                 <FormField control={form.control} name="accountId" render={({ field }) => (
                   <FormItem>
@@ -164,7 +180,7 @@ export default function TransactionForm({ onTransactionAdded, isOpen, onClose }:
                     </Select>
                     <FormMessage />
                   </FormItem>
-                )}/>
+                )} />
 
                 <div className="grid grid-cols-2 gap-4">
 
@@ -185,12 +201,12 @@ export default function TransactionForm({ onTransactionAdded, isOpen, onClose }:
                       </FormControl>
                       <FormMessage />
                     </FormItem>
-                  )}/>
+                  )} />
 
                   <FormField control={form.control} name="type" render={({ field }) => (
                     <FormItem>
                       <FormLabel className="text-xs font-bold uppercase tracking-wider text-slate-500">Tipo</FormLabel>
-                      <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <Select onValueChange={field.onChange} value={field.value}>
                         <FormControl>
                           <SelectTrigger className="bg-white rounded-xl border-slate-100 h-11">
                             <SelectValue placeholder="Selecione" />
@@ -203,7 +219,7 @@ export default function TransactionForm({ onTransactionAdded, isOpen, onClose }:
                       </Select>
                       <FormMessage />
                     </FormItem>
-                  )}/>
+                  )} />
 
                 </div>
 
@@ -225,7 +241,7 @@ export default function TransactionForm({ onTransactionAdded, isOpen, onClose }:
                     </Popover>
                     <FormMessage />
                   </FormItem>
-                )}/>
+                )} />
 
                 <Button type="submit" disabled={isLoading} className="w-full h-11 rounded-xl font-bold shadow-lg shadow-primary/20 mt-2">
                   {isLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : "Adicionar Transação"}
