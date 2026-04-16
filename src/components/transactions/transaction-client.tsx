@@ -36,7 +36,7 @@ export default function TransactionClient() {
   const [isDeletingAll, setIsDeletingAll] = useState(false);
   
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [isImportOpen, setIsImportOpen] = useState(false);
+  const [pendingData, setPendingData] = useState<any>(null);
 
   const [year, setYear] = useState(new Date().getFullYear().toString());
   const [month, setMonth] = useState((new Date().getMonth() + 1).toString());
@@ -70,6 +70,29 @@ export default function TransactionClient() {
       setLoading(false);
     }
   }, [token, toast, month, year, searchTerm]);
+
+  // 🔥 Lógica para detectar transação pendente vinda da notificação Android
+  useEffect(() => {
+    async function checkPending() {
+      const pendingId = localStorage.getItem("pendingTransactionId");
+      if (pendingId && token) {
+        try {
+          const response = await fetch(`${API_BASE_URL}/pending-transaction/${pendingId}`, {
+            headers: { Authorization: `Bearer ${token}` }
+          });
+          if (response.ok) {
+            const data = await response.json();
+            setPendingData(data);
+            setIsModalOpen(true);
+            localStorage.removeItem("pendingTransactionId");
+          }
+        } catch (error) {
+          console.error("Erro ao buscar transação pendente:", error);
+        }
+      }
+    }
+    checkPending();
+  }, [token]);
 
   useEffect(() => {
     const delayDebounceFn = setTimeout(() => {
@@ -113,8 +136,7 @@ export default function TransactionClient() {
   const filteredTransactions = useMemo(() => {
     return transactions
       .filter(transaction => {
-        // 🔥 CORREÇÃO: Usando split para ignorar fuso horário local e garantir match exato de mês/ano
-        const parts = transaction.date.split('-'); // "2023-05-15" -> ["2023", "05", "15"]
+        const parts = transaction.date.split('-'); 
         const transYear = parts[0];
         const transMonth = parseInt(parts[1], 10).toString();
 
@@ -138,7 +160,7 @@ export default function TransactionClient() {
       
       <div className="space-y-4">
         <Button 
-          onClick={() => setIsModalOpen(true)}
+          onClick={() => { setPendingData(null); setIsModalOpen(true); }}
           className="w-full h-20 bg-white hover:bg-slate-50 text-slate-900 border border-slate-100 shadow-sm rounded-[2.5rem] flex items-center justify-between px-8 transition-all group"
         >
           <div className="flex items-center gap-4">
@@ -274,6 +296,7 @@ export default function TransactionClient() {
         isOpen={isModalOpen} 
         onClose={() => setIsModalOpen(false)} 
         onTransactionAdded={fetchData} 
+        pendingData={pendingData}
       />
     </div>
   );

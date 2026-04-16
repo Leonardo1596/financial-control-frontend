@@ -67,6 +67,7 @@ export default function TransactionForm({ onTransactionAdded, isOpen, onClose, p
     },
   });
 
+  // Preenchimento automático quando vem de uma notificação
   useEffect(() => {
     if (!pendingData) return;
 
@@ -78,7 +79,7 @@ export default function TransactionForm({ onTransactionAdded, isOpen, onClose, p
       date: new Date(),
       accountId: pendingData.accountId || ''
     });
-  }, [pendingData, form]);
+  }, [pendingData, form, isOpen]);
 
   useEffect(() => {
     async function fetchData() {
