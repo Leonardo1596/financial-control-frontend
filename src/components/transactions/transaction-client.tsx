@@ -42,12 +42,6 @@ export default function TransactionClient() {
   const [selectedAccountId, setSelectedAccountId] = useState('todas');
   const [searchTerm, setSearchTerm] = useState('');
 
-  // =========================
-  // 🔥 ADICIONADO: pending flow
-  // =========================
-  const [pendingId, setPendingId] = useState<string | null>(null);
-  const [pendingData, setPendingData] = useState<any>(null);
-
   const fetchData = useCallback(async () => {
     if (!token) return;
     setLoading(true);
@@ -76,13 +70,13 @@ export default function TransactionClient() {
     }
   }, [token, toast, month, year, searchTerm]);
 
-  // 🔥 Lógica para detectar transação pendente vinda da notificação Android
+  // Lógica para detectar transação pendente vinda da notificação Android
   useEffect(() => {
     async function checkPending() {
       const pendingId = localStorage.getItem("pendingTransactionId");
       if (pendingId && token) {
         try {
-          const response = await fetch(`${API_BASE_URL}/pending-transaction/${pendingId}`, {
+          const response = await fetch(`${API_BASE_URL}/pending-transactions/${pendingId}`, {
             headers: { Authorization: `Bearer ${token}` }
           });
           if (response.ok) {
@@ -153,32 +147,6 @@ export default function TransactionClient() {
       })
       .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
   }, [transactions, month, year, selectedAccountId]);
-
-  // =========================
-  // 🔥 PENDING LOGIC
-  // =========================
-
-  useEffect(() => {
-    const id = localStorage.getItem("pendingTransactionId");
-
-    if (!id) return;
-
-    localStorage.removeItem("pendingTransactionId");
-
-    setPendingId(id);
-    setIsModalOpen(true);
-  }, []);
-
-  useEffect(() => {
-    if (!pendingId || !token) return;
-
-    fetch(`${API_BASE_URL}/pending-transactions/${pendingId}`, {
-      headers: { Authorization: `Bearer ${token}` }
-    })
-      .then(res => res.json())
-      .then(data => setPendingData(data))
-      .catch(console.error);
-  }, [pendingId, token]);
 
   const years = Array.from({ length: 10 }, (_, i) => (new Date().getFullYear() - i).toString());
   const months = Array.from({ length: 12 }, (_, i) => ({
