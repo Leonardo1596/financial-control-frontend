@@ -16,6 +16,7 @@ export interface Category {
 }
 
 export interface Transaction {
+  createdAt: string | number | Date;
   _id: string;
   userId: string;
   accountId?: string;

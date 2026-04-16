@@ -57,33 +57,41 @@ export default function TransactionForm({ onTransactionAdded, isOpen, onClose, p
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
-    defaultValues: { 
-      description: '', 
+    defaultValues: {
+      description: '',
       categoryId: '',
-      amount: 0, 
-      type: 'expense', 
-      date: new Date(), 
-      accountId: '' 
+      amount: 0,
+      type: 'expense',
+      date: new Date(),
+      accountId: ''
     },
   });
 
   // Preenchimento automático quando vem de uma notificação
   useEffect(() => {
-    if (!pendingData || accounts.length === 0) return;
+    if (
+      !pendingData ||
+      accounts.length === 0 ||
+      categories.length === 0
+    ) return;
 
     const accountExists = accounts.some(
       acc => acc._id === pendingData.accountId
     );
 
+    const categoryExists = categories.some(
+      cat => cat._id === pendingData.categoryId
+    );
+
     form.reset({
       description: pendingData.description || '',
-      categoryId: pendingData.categoryId || '',
+      categoryId: categoryExists ? pendingData.categoryId : '',
       amount: pendingData.amount || 0,
       type: pendingData.type || 'expense',
       date: new Date(),
       accountId: accountExists ? pendingData.accountId : ''
     });
-  }, [pendingData, form, isOpen]);
+  }, [pendingData, accounts, categories, form, isOpen]);
 
   useEffect(() => {
     async function fetchData() {
@@ -115,16 +123,19 @@ export default function TransactionForm({ onTransactionAdded, isOpen, onClose, p
   }, [token, isOpen]);
 
   const filteredCategories = useMemo(() => {
-    return categories.filter(cat => 
+    return categories.filter(cat =>
       cat.name.toLowerCase().includes(categorySearch.toLowerCase())
     );
   }, [categories, categorySearch]);
 
   const selectedCategoryName = useMemo(() => {
     const selectedId = form.getValues('categoryId');
-    return categories.find(c => c._id === selectedId)?.name || "Selecione a categoria";
-  }, [categories, form.watch('categoryId')]);
+    const name = categories.find(c => c._id === selectedId)?.name;
 
+    if (!name) return "Selecione a categoria";
+
+    return name.charAt(0).toUpperCase() + name.slice(1);
+  }, [categories, form.watch('categoryId')]);
   async function onSubmit(values: z.infer<typeof formSchema>) {
     if (!user) {
       toast({ variant: 'destructive', title: 'Erro', description: 'Você precisa estar logado.' });
@@ -137,12 +148,12 @@ export default function TransactionForm({ onTransactionAdded, isOpen, onClose, p
         user: user.id,
         date: format(values.date, 'yyyy-MM-dd'),
       };
-      
+
       const response = await fetch(`${API_BASE_URL}/create-transaction`, {
         method: 'POST',
-        headers: { 
-          'Content-Type': 'application/json', 
-          'Authorization': `Bearer ${token}` 
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
         },
         body: JSON.stringify(payload),
       });
@@ -154,9 +165,9 @@ export default function TransactionForm({ onTransactionAdded, isOpen, onClose, p
 
       toast({ title: 'Sucesso', description: 'Transação adicionada.' });
 
-      form.reset({ 
-        description: '', 
-        categoryId: '', 
+      form.reset({
+        description: '',
+        categoryId: '',
         amount: 0,
         type: form.getValues('type'),
         date: new Date(),
