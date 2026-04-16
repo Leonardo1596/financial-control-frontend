@@ -54,18 +54,22 @@ export default function TransactionForm({ onTransactionAdded, isOpen, onClose, p
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
-    defaultValues: { 
-      description: '', 
+    defaultValues: {
+      description: '',
       category: '',
-      amount: 0, 
-      type: 'expense', 
-      date: new Date(), 
-      accountId: '' 
+      amount: 0,
+      type: 'expense',
+      date: new Date(),
+      accountId: ''
     },
   });
 
   useEffect(() => {
-    if (!pendingData) return;
+    if (!pendingData || accounts.length === 0) return;
+
+    const accountExists = accounts.some(
+      acc => acc._id === pendingData.accountId
+    );
 
     form.reset({
       description: pendingData.description || '',
@@ -73,9 +77,10 @@ export default function TransactionForm({ onTransactionAdded, isOpen, onClose, p
       amount: pendingData.amount || 0,
       type: pendingData.type || 'expense',
       date: new Date(),
-      accountId: pendingData.accountId || ''
+      accountId: accountExists ? pendingData.accountId : ''
     });
-  }, [pendingData]);
+
+  }, [pendingData, accounts]);
 
   useEffect(() => {
     async function fetchAccounts() {
