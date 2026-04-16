@@ -135,22 +135,27 @@ export default function TransactionClient() {
   };
 
   const filteredTransactions = useMemo(() => {
-    return transactions
-      .filter(transaction => {
-        const parts = transaction.date.split('-');
-        const transYear = parts[0];
-        const transMonth = parseInt(parts[1], 10).toString();
+  return transactions
+    .filter((transaction) => {
+      const parts = transaction.date.split('-');
+      const transYear = parts[0];
+      const transMonth = parseInt(parts[1], 10).toString();
 
-        const monthMatch = month === 'todas' || transMonth === month;
-        const yearMatch = year === 'todas' || transYear === year;
-        const accountMatch = selectedAccountId === 'todas' || transaction.accountId === selectedAccountId;
+      const monthMatch = month === 'todas' || transMonth === month;
+      const yearMatch = year === 'todas' || transYear === year;
+      const accountMatch =
+        selectedAccountId === 'todas' ||
+        transaction.accountId === selectedAccountId;
 
-        return monthMatch && yearMatch && accountMatch;
-      })
-      .sort((a, b) =>
-        new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+      return monthMatch && yearMatch && accountMatch;
+    })
+    .sort((a, b) => {
+      return (
+        new Date(b.date).getTime() -
+        new Date(a.date).getTime()
       );
-  }, [transactions, month, year, selectedAccountId]);
+    });
+}, [transactions, month, year, selectedAccountId]);
 
   const years = Array.from({ length: 10 }, (_, i) => (new Date().getFullYear() - i).toString());
   const months = Array.from({ length: 12 }, (_, i) => ({
