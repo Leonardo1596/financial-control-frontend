@@ -52,57 +52,71 @@ function LoginPageContent() {
     defaultValues: { email: "", password: "" },
   });
 
-  async function onSubmit(values: z.infer<typeof formSchema>) {
-    setIsLoading(true);
-    try {
-      const data = await loginUser(values);
+async function onSubmit(values: z.infer<typeof formSchema>) {
+  setIsLoading(true);
+  try {
+    const data = await loginUser(values);
 
-      // Busca contas
-      const accountsResponse = await fetch(`${API_BASE_URL}/list-accounts?month=${month}&year=${year}`, {
+    // Busca contas
+    const accountsResponse = await fetch(
+      `${API_BASE_URL}/list-accounts?month=${month}&year=${year}`,
+      {
         method: "GET",
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${data.token}`,
         },
-      });
-
-      let accountsData: any[] = [];
-      try {
-        accountsData = await accountsResponse.json();
-      } catch {
-        accountsData = [];
       }
+    );
 
-      // Só lança erro se não vier nada
-      if (!accountsResponse.ok && accountsData.length === 0) {
-        throw new Error("Falha ao buscar contas");
-      }
-
-      // Salva token e id no Preferences
-      await Preferences.set({ key: 'userToken', value: data.token });
-      await Preferences.set({ key: 'userId', value: data.user.id });
-
-      // Salva contas no Preferences
-      if (Array.isArray(accountsData)) {
-        for (const acc of accountsData) {
-          const key = `account_${acc.name.toLowerCase()}`;
-          await Preferences.set({ key: key, value: acc._id });
-        }
-      }
-
-      login(data);
-      toast({ title: "Login bem-sucedido", description: `Bem-vindo de volta, ${data.user.name}!` });
-      router.replace("/");
-    } catch (error) {
-      toast({
-        variant: "destructive",
-        title: "Erro",
-        description: error instanceof Error ? error.message : "Erro desconhecido.",
-      });
-    } finally {
-      setIsLoading(false);
+    let accountsData: any[] = [];
+    try {
+      accountsData = await accountsResponse.json();
+      console.log('Contas recebidas:', accountsData);
+    } catch {
+      accountsData = [];
     }
+
+    if (!accountsResponse.ok && accountsData.length === 0) {
+      throw new Error("Falha ao buscar contas");
+    }
+
+    // Salva auth
+    await Preferences.set({ key: "userToken", value: data.token });
+    await Preferences.set({ key: "userId", value: data.user.id });
+
+    // Salva contas (PADRÃO QUE O ANDROID PRECISA USAR IGUAL)
+    if (Array.isArray(accountsData)) {
+      for (const acc of accountsData) {
+        const key = `account_${data.user.id}_${acc.name
+          .toLowerCase()
+          .trim()}`;
+
+        await Preferences.set({
+          key,
+          value: acc._id,
+        });
+      }
+    }
+    login(data);
+
+    toast({
+      title: "Login bem-sucedido",
+      description: `Bem-vindo de volta, ${data.user.name}!`,
+    });
+
+    router.replace("/");
+  } catch (error) {
+    toast({
+      variant: "destructive",
+      title: "Erro",
+      description:
+        error instanceof Error ? error.message : "Erro desconhecido.",
+    });
+  } finally {
+    setIsLoading(false);
   }
+}
 
   if (loading || user) {
     return (

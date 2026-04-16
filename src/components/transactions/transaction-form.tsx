@@ -69,7 +69,11 @@ export default function TransactionForm({ onTransactionAdded, isOpen, onClose, p
 
   // Preenchimento automático quando vem de uma notificação
   useEffect(() => {
-    if (!pendingData) return;
+    if (!pendingData || accounts.length === 0) return;
+
+    const accountExists = accounts.some(
+      acc => acc._id === pendingData.accountId
+    );
 
     form.reset({
       description: pendingData.description || '',
@@ -77,7 +81,7 @@ export default function TransactionForm({ onTransactionAdded, isOpen, onClose, p
       amount: pendingData.amount || 0,
       type: pendingData.type || 'expense',
       date: new Date(),
-      accountId: pendingData.accountId || ''
+      accountId: accountExists ? pendingData.accountId : ''
     });
   }, [pendingData, form, isOpen]);
 

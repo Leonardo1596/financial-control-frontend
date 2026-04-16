@@ -7,6 +7,7 @@ import android.content.SharedPreferences;
 import android.service.notification.NotificationListenerService;
 import android.service.notification.StatusBarNotification;
 import android.util.Log;
+import java.util.Map;
 
 import androidx.core.app.NotificationCompat;
 import androidx.core.app.NotificationManagerCompat;
@@ -61,14 +62,14 @@ public class NotificationListener extends NotificationListenerService {
         Log.d(TAG, "Text: " + text);
 
         // =========================
-        // 🟣 NUBANK
+        // NUBANK
         // =========================
         if (packageName.equals("com.nu.production")) {
             parseNubank(sbn);
         }
 
         // =========================
-        // 🟡 RICO
+        // RICO
         // =========================
         else if (packageName.equals("br.com.rico.mobile")) {
             parsePixReceivedRico(sbn);
@@ -76,7 +77,7 @@ public class NotificationListener extends NotificationListenerService {
         }
 
         // =========================
-        // 🧪 APP FAKE (TESTE)
+        // APP FAKE (TESTE)
         // =========================
         else if (packageName.equals("com.argonremote.notificationgenerator")) {
 
@@ -110,13 +111,13 @@ public class NotificationListener extends NotificationListenerService {
         CharSequence titleCs = sbn.getNotification().extras.getCharSequence("android.title");
         String title = titleCs != null ? titleCs.toString().toLowerCase() : "";
 
-        double amount = parseAmount(extractValue(fullMessage));
+        double amount = extractAmount(fullMessage);
         if (amount <= 0) return;
 
-        if (title.contains("transferência recebida")) {
+        if (fullMessage.contains("transferência recebida")) {
             sendPendingTransaction(amount, fullMessage, "income", "nubank");
         } 
-        else if (title.contains("compra no débito")) {
+        else if (fullMessage.contains("compra no débito")) {
             sendPendingTransaction(amount, fullMessage, "expense", "nubank");
         }
     }
@@ -126,6 +127,7 @@ public class NotificationListener extends NotificationListenerService {
 
         if (message.contains("recebeu um Pix")) {
             double amount = parseAmount(extractValue(message));
+            
             sendPendingTransaction(amount, message, "income", "rico");
         }
     }
@@ -165,60 +167,83 @@ public class NotificationListener extends NotificationListenerService {
     // =========================
     private void sendPendingTransaction(double amount, String description, String type, String source) {
 
-        SharedPreferences prefs = getSharedPreferences("CapacitorStorage", Context.MODE_PRIVATE);
+    SharedPreferences prefs = getSharedPreferences("CapacitorStorage", Context.MODE_PRIVATE);
 
-        String userId = prefs.getString("_cap_userId", prefs.getString("userId", null));
-        String bearerToken = prefs.getString("_cap_userToken", prefs.getString("userToken", null));
-        String accountKey = "account_" + source.toLowerCase();
-        String accountId = prefs.getString("_cap_" + accountKey, prefs.getString(accountKey, null));
+    String userId = prefs.getString("_cap_userId",
+            prefs.getString("userId", null));
 
-        if (userId == null || bearerToken == null || accountId == null) return;
+    String bearerToken = prefs.getString("_cap_userToken",
+            prefs.getString("userToken", null));
 
-        String json = "{"
-                + "\"user\":\"" + userId + "\","
-                + "\"type\":\"" + type + "\","
-                + "\"description\":\"" + description.replace("\"", "\\\"") + "\","
-                + "\"amount\":" + amount + ","
-                + "\"accountId\":\"" + accountId + "\","
-                + "\"source\":\"" + source + "\""
-                + "}";
+    String accountKey = "account_" + userId + "_" + source.toLowerCase().trim();
 
-        RequestBody body = RequestBody.create(json, MediaType.get("application/json"));
+    String accountId = prefs.getString(accountKey, null);
 
-        Request request = new Request.Builder()
-                .url(PENDING_URL)
-                .addHeader("Authorization", "Bearer " + bearerToken)
-                .post(body)
-                .build();
+    Map<String, ?> all = prefs.getAll();
+    for (Map.Entry<String, ?> e : all.entrySet()) {
+        Log.d(TAG, "PREF => " + e.getKey() + " = " + e.getValue());
+    }
 
-        client.newCall(request).enqueue(new Callback() {
-            @Override
-            public void onFailure(Call call, IOException e) {
-                Log.e(TAG, "Erro pending: " + e.getMessage());
-            }
+    if (userId == null || bearerToken == null || accountId == null) {
+        Log.e(TAG, "Missing required data -> aborting request");
+        return;
+    }
 
-            @Override
-            public void onResponse(Call call, Response response) throws IOException {
-                String res = response.body().string();
+    String json = "{"
+            + "\"user\":\"" + userId + "\","
+            + "\"type\":\"" + type + "\","
+            + "\"description\":\"" + description.replace("\"", "\\\"") + "\","
+            + "\"amount\":" + amount + ","
+            + "\"accountId\":\"" + accountId + "\","
+            + "\"source\":\"" + source + "\""
+            + "}";
 
-                try {
-                    JSONObject obj = new JSONObject(res);
-                    String pendingId = obj.getString("_id");
-                    Log.d(TAG, "Pending criado com ID: " + pendingId);
-                    Log.d(TAG, "teste");
-                    Log.d(TAG, "RESPOSTA BACKEND: " + res);
+    RequestBody body = RequestBody.create(
+            json,
+            MediaType.get("application/json")
+    );
 
-                    showNotification(pendingId, amount, description);
+    Request request = new Request.Builder()
+            .url(PENDING_URL)
+            .addHeader("Authorization", "Bearer " + bearerToken)
+            .post(body)
+            .build();
 
-                } catch (Exception e) {
-                    Log.e(TAG, "Erro parse pendingId: " + e.getMessage());
-    Log.e(TAG, "RESPOSTA BRUTA: " + res);Log.e(TAG, "Erro parse pendingId");
+    client.newCall(request).enqueue(new Callback() {
+        @Override
+        public void onFailure(Call call, IOException e) {
+            Log.e(TAG, "Erro pending: " + e.getMessage());
+        }
+
+        @Override
+        public void onResponse(Call call, Response response) throws IOException {
+
+            String res = response.body() != null ? response.body().string() : "";
+
+            Log.d(TAG, "HTTP CODE: " + response.code());
+            Log.d(TAG, "RESPOSTA BRUTA: " + res);
+
+            try {
+                JSONObject obj = new JSONObject(res);
+                String pendingId = obj.optString("_id", null);
+
+                if (pendingId == null) {
+                    Log.e(TAG, "PendingId não encontrado na resposta");
+                    return;
                 }
 
-                response.close();
+                Log.d(TAG, "Pending criado com ID: " + pendingId);
+
+                showNotification(pendingId, amount, description);
+
+            } catch (Exception e) {
+                Log.e(TAG, "Erro parse pendingId: " + e.getMessage());
             }
-        });
-    }
+
+            response.close();
+        }
+    });
+}
 
     // =========================
     // 🔔 NOTIFICAÇÃO LOCAL
@@ -270,4 +295,22 @@ public class NotificationListener extends NotificationListenerService {
             return 0;
         }
     }
+
+    private double extractAmount(String text) {
+    try {
+        Pattern pattern = Pattern.compile("r\\$\\s*([0-9\\.]+,[0-9]{2})");
+        Matcher matcher = pattern.matcher(text);
+
+        if (matcher.find()) {
+            String value = matcher.group(1)
+                    .replace(".", "")
+                    .replace(",", ".");
+            return Double.parseDouble(value);
+        }
+    } catch (Exception e) {
+        e.printStackTrace();
+    }
+
+    return 0;
+}
 }
