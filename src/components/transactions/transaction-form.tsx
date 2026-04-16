@@ -126,25 +126,42 @@ export default function TransactionForm({ onTransactionAdded, isOpen, onClose, p
     }
     setIsLoading(true);
     try {
+      // Ajustado de userId para user para bater com o esperado pelo backend
       const payload = {
         ...values,
-        userId: user.id,
+        user: user.id,
         date: format(values.date, 'yyyy-MM-dd'),
       };
+      
       const response = await fetch(`${API_BASE_URL}/create-transaction`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+        headers: { 
+          'Content-Type': 'application/json', 
+          'Authorization': `Bearer ${token}` 
+        },
         body: JSON.stringify(payload),
       });
-      if (!response.ok) throw new Error('Falha ao criar transação');
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.message || 'Falha ao criar transação');
+      }
 
       toast({ title: 'Sucesso', description: 'Transação adicionada.' });
 
-      form.reset({ ...form.getValues(), description: '', category: '', amount: 0 });
+      form.reset({ 
+        description: '', 
+        category: '', 
+        amount: 0,
+        type: form.getValues('type'),
+        date: new Date(),
+        accountId: form.getValues('accountId')
+      });
 
       onTransactionAdded();
       onClose();
     } catch (error) {
+      console.error('Erro ao criar transação:', error);
       toast({ variant: 'destructive', title: 'Erro', description: (error as Error).message });
     } finally {
       setIsLoading(false);
@@ -276,7 +293,7 @@ export default function TransactionForm({ onTransactionAdded, isOpen, onClose, p
                         <Input
                           placeholder="R$ 0,00"
                           className="bg-slate-50 rounded-xl border-none h-12 caret-transparent"
-                          inputMode="numeric"
+                          inputMode="decimal"
                           value={formatCurrencyFromCents((field.value || 0) * 100)}
                           onChange={(e) => {
                             const raw = e.target.value.replace(/\D/g, '');
