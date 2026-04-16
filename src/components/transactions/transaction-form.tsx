@@ -114,6 +114,11 @@ export default function TransactionForm({ onTransactionAdded, isOpen, onClose, p
     );
   }, [categories, categorySearch]);
 
+  const selectedCategoryName = useMemo(() => {
+    const selectedId = form.getValues('category');
+    return categories.find(c => c._id === selectedId)?.name || "Selecione a categoria";
+  }, [categories, form.watch('category')]);
+
   async function onSubmit(values: z.infer<typeof formSchema>) {
     if (!user) {
       toast({ variant: 'destructive', title: 'Erro', description: 'Você precisa estar logado.' });
@@ -188,7 +193,7 @@ export default function TransactionForm({ onTransactionAdded, isOpen, onClose, p
                           >
                             <div className="flex items-center gap-2 truncate">
                               <Tag className="h-4 w-4 text-slate-400 shrink-0" />
-                              {field.value || "Selecione a categoria"}
+                              {selectedCategoryName}
                             </div>
                           </Button>
                         </FormControl>
@@ -214,16 +219,16 @@ export default function TransactionForm({ onTransactionAdded, isOpen, onClose, p
                                   type="button"
                                   className={cn(
                                     "flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm hover:bg-slate-100 transition-colors",
-                                    field.value === cat.name && "bg-primary/10 text-primary font-bold"
+                                    field.value === cat._id && "bg-primary/10 text-primary font-bold"
                                   )}
                                   onClick={() => {
-                                    field.onChange(cat.name);
+                                    field.onChange(cat._id);
                                     setIsCategoryPopoverOpen(false);
                                     setCategorySearch('');
                                   }}
                                 >
                                   <div className="flex-1 text-left">{cat.name}</div>
-                                  {field.value === cat.name && <Check className="h-4 w-4" />}
+                                  {field.value === cat._id && <Check className="h-4 w-4" />}
                                 </button>
                               ))
                             )}
