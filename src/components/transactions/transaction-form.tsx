@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect, useMemo } from 'react';
@@ -24,7 +25,7 @@ import { API_BASE_URL } from '@/lib/api';
 
 const formSchema = z.object({
   description: z.string().min(1, { message: 'A descrição é obrigatória' }),
-  category: z.string().min(1, { message: 'A categoria é obrigatória' }),
+  categoryId: z.string().min(1, { message: 'A categoria é obrigatória' }),
   amount: z.coerce.number().positive({ message: 'O valor deve ser positivo' }),
   type: z.enum(['income', 'expense']),
   date: z.date({ required_error: 'A data é obrigatória.' }),
@@ -58,7 +59,7 @@ export default function TransactionForm({ onTransactionAdded, isOpen, onClose, p
     resolver: zodResolver(formSchema),
     defaultValues: { 
       description: '', 
-      category: '',
+      categoryId: '',
       amount: 0, 
       type: 'expense', 
       date: new Date(), 
@@ -71,7 +72,7 @@ export default function TransactionForm({ onTransactionAdded, isOpen, onClose, p
 
     form.reset({
       description: pendingData.description || '',
-      category: pendingData.category || '',
+      categoryId: pendingData.categoryId || '',
       amount: pendingData.amount || 0,
       type: pendingData.type || 'expense',
       date: new Date(),
@@ -115,9 +116,9 @@ export default function TransactionForm({ onTransactionAdded, isOpen, onClose, p
   }, [categories, categorySearch]);
 
   const selectedCategoryName = useMemo(() => {
-    const selectedId = form.getValues('category');
+    const selectedId = form.getValues('categoryId');
     return categories.find(c => c._id === selectedId)?.name || "Selecione a categoria";
-  }, [categories, form.watch('category')]);
+  }, [categories, form.watch('categoryId')]);
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
     if (!user) {
@@ -126,7 +127,6 @@ export default function TransactionForm({ onTransactionAdded, isOpen, onClose, p
     }
     setIsLoading(true);
     try {
-      // Ajustado de userId para user para bater com o esperado pelo backend
       const payload = {
         ...values,
         user: user.id,
@@ -151,7 +151,7 @@ export default function TransactionForm({ onTransactionAdded, isOpen, onClose, p
 
       form.reset({ 
         description: '', 
-        category: '', 
+        categoryId: '', 
         amount: 0,
         type: form.getValues('type'),
         date: new Date(),
@@ -194,7 +194,7 @@ export default function TransactionForm({ onTransactionAdded, isOpen, onClose, p
                   </FormItem>
                 )} />
 
-                <FormField control={form.control} name="category" render={({ field }) => (
+                <FormField control={form.control} name="categoryId" render={({ field }) => (
                   <FormItem className="flex flex-col">
                     <FormLabel className="text-xs font-bold uppercase tracking-wider text-slate-500">Categoria</FormLabel>
                     <Popover open={isCategoryPopoverOpen} onOpenChange={setIsCategoryPopoverOpen}>
