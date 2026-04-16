@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -13,12 +13,13 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar } from '@/components/ui/calendar';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
+import { ScrollArea } from '@/components/ui/scroll-area';
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { CalendarIcon, Loader2, MousePointer2, Landmark, Tag } from 'lucide-react';
+import { CalendarIcon, Loader2, MousePointer2, Landmark, Tag, Check, Search } from 'lucide-react';
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from '@/components/ui/card';
-import type { UserAccount } from '@/lib/types';
+import type { UserAccount, Category } from '@/lib/types';
 import { API_BASE_URL } from '@/lib/api';
 
 const formSchema = z.object({
@@ -49,8 +50,9 @@ export default function TransactionForm({ onTransactionAdded, isOpen, onClose, p
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
   const [accounts, setAccounts] = useState<UserAccount[]>([]);
-  const [year, setYear] = useState(new Date().getFullYear().toString());
-  const [month, setMonth] = useState((new Date().getMonth() + 1).toString());
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [categorySearch, setCategorySearch] = useState('');
+  const [isCategoryPopoverOpen, setIsCategoryPopoverOpen] = useState(false);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -75,31 +77,42 @@ export default function TransactionForm({ onTransactionAdded, isOpen, onClose, p
       date: new Date(),
       accountId: pendingData.accountId || ''
     });
-  }, [pendingData]);
+  }, [pendingData, form]);
 
   useEffect(() => {
-    async function fetchAccounts() {
+    async function fetchData() {
+      if (!token) return;
       try {
-        const response = await fetch(`${API_BASE_URL}/list-accounts?month=${month}&year=${year}`, {
-          headers: { 'Authorization': `Bearer ${token}` }
-        });
-        if (response.ok) {
-          const data = await response.json();
+        const [accRes, catRes] = await Promise.all([
+          fetch(`${API_BASE_URL}/list-accounts?month=${new Date().getMonth() + 1}&year=${new Date().getFullYear()}`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+          }),
+          fetch(`${API_BASE_URL}/categories`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+          })
+        ]);
 
-          if (Array.isArray(data)) {
-            setAccounts(data);
-          } else if (Array.isArray(data.accounts)) {
-            setAccounts(data.accounts);
-          } else {
-            setAccounts([]);
-          }
+        if (accRes.ok) {
+          const data = await accRes.json();
+          setAccounts(Array.isArray(data) ? data : (data.accounts || []));
+        }
+
+        if (catRes.ok) {
+          const data = await catRes.json();
+          setCategories(Array.isArray(data) ? data : []);
         }
       } catch (error) {
-        console.error('Falha ao carregar contas', error);
+        console.error('Falha ao carregar dados do formulário', error);
       }
     }
-    if (token) fetchAccounts();
-  }, [token, month, year]);
+    if (isOpen) fetchData();
+  }, [token, isOpen]);
+
+  const filteredCategories = useMemo(() => {
+    return categories.filter(cat => 
+      cat.name.toLowerCase().includes(categorySearch.toLowerCase())
+    );
+  }, [categories, categorySearch]);
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
     if (!user) {
@@ -160,11 +173,64 @@ export default function TransactionForm({ onTransactionAdded, isOpen, onClose, p
                 )} />
 
                 <FormField control={form.control} name="category" render={({ field }) => (
-                  <FormItem>
+                  <FormItem className="flex flex-col">
                     <FormLabel className="text-xs font-bold uppercase tracking-wider text-slate-500">Categoria</FormLabel>
-                    <FormControl>
-                      <Input placeholder="ex: Alimentação, Lazer, Saúde..." className="bg-slate-50 rounded-xl border-none h-12" {...field} />
-                    </FormControl>
+                    <Popover open={isCategoryPopoverOpen} onOpenChange={setIsCategoryPopoverOpen}>
+                      <PopoverTrigger asChild>
+                        <FormControl>
+                          <Button
+                            variant="outline"
+                            role="combobox"
+                            className={cn(
+                              "bg-slate-50 rounded-xl border-none h-12 justify-between text-left font-normal",
+                              !field.value && "text-muted-foreground"
+                            )}
+                          >
+                            <div className="flex items-center gap-2 truncate">
+                              <Tag className="h-4 w-4 text-slate-400 shrink-0" />
+                              {field.value || "Selecione a categoria"}
+                            </div>
+                          </Button>
+                        </FormControl>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0 rounded-2xl border-none shadow-2xl">
+                        <div className="flex items-center border-b px-3 bg-slate-50/50">
+                          <Search className="mr-2 h-4 w-4 shrink-0 opacity-50" />
+                          <input
+                            className="flex h-11 w-full rounded-md bg-transparent py-3 text-sm outline-none placeholder:text-muted-foreground disabled:cursor-not-allowed disabled:opacity-50"
+                            placeholder="Pesquisar categoria..."
+                            value={categorySearch}
+                            onChange={(e) => setCategorySearch(e.target.value)}
+                          />
+                        </div>
+                        <ScrollArea className="h-60">
+                          <div className="p-1">
+                            {filteredCategories.length === 0 ? (
+                              <div className="p-4 text-sm text-center text-muted-foreground">Nenhuma categoria encontrada.</div>
+                            ) : (
+                              filteredCategories.map((cat) => (
+                                <button
+                                  key={cat._id}
+                                  type="button"
+                                  className={cn(
+                                    "flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm hover:bg-slate-100 transition-colors",
+                                    field.value === cat.name && "bg-primary/10 text-primary font-bold"
+                                  )}
+                                  onClick={() => {
+                                    field.onChange(cat.name);
+                                    setIsCategoryPopoverOpen(false);
+                                    setCategorySearch('');
+                                  }}
+                                >
+                                  <div className="flex-1 text-left">{cat.name}</div>
+                                  {field.value === cat.name && <Check className="h-4 w-4" />}
+                                </button>
+                              ))
+                            )}
+                          </div>
+                        </ScrollArea>
+                      </PopoverContent>
+                    </Popover>
                     <FormMessage />
                   </FormItem>
                 )} />

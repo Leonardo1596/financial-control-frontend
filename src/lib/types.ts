@@ -9,6 +9,12 @@ export interface AuthResponse {
   token: string;
 }
 
+export interface Category {
+  _id: string;
+  name: string;
+  userId?: string;
+}
+
 export interface Transaction {
   _id: string;
   userId: string;
