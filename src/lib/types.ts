@@ -13,6 +13,7 @@ export interface Category {
   _id: string;
   name: string;
   userId?: string;
+  type?: 'income' | 'expense';
 }
 
 export interface Transaction {

@@ -67,7 +67,8 @@ export default function TransactionForm({ onTransactionAdded, isOpen, onClose, p
     },
   });
 
-  // Preenchimento automático quando vem de uma notificação
+  const currentType = form.watch('type');
+
   useEffect(() => {
     if (!pendingData || accounts.length === 0) return;
 
@@ -83,7 +84,7 @@ export default function TransactionForm({ onTransactionAdded, isOpen, onClose, p
       date: new Date(),
       accountId: accountExists ? pendingData.accountId : ''
     });
-  }, [pendingData, form, isOpen]);
+  }, [pendingData, accounts, form, isOpen]);
 
   useEffect(() => {
     async function fetchData() {
@@ -115,10 +116,12 @@ export default function TransactionForm({ onTransactionAdded, isOpen, onClose, p
   }, [token, isOpen]);
 
   const filteredCategories = useMemo(() => {
-    return categories.filter(cat => 
-      cat.name.toLowerCase().includes(categorySearch.toLowerCase())
-    );
-  }, [categories, categorySearch]);
+    return categories.filter(cat => {
+      const nameMatch = cat.name.toLowerCase().includes(categorySearch.toLowerCase());
+      const typeMatch = !cat.type || cat.type === currentType;
+      return nameMatch && typeMatch;
+    });
+  }, [categories, categorySearch, currentType]);
 
   const selectedCategoryName = useMemo(() => {
     const selectedId = form.getValues('categoryId');
@@ -199,68 +202,94 @@ export default function TransactionForm({ onTransactionAdded, isOpen, onClose, p
                   </FormItem>
                 )} />
 
-                <FormField control={form.control} name="categoryId" render={({ field }) => (
-                  <FormItem className="flex flex-col">
-                    <FormLabel className="text-xs font-bold uppercase tracking-wider text-slate-500">Categoria</FormLabel>
-                    <Popover open={isCategoryPopoverOpen} onOpenChange={setIsCategoryPopoverOpen}>
-                      <PopoverTrigger asChild>
+                <div className="grid grid-cols-2 gap-4">
+                  <FormField control={form.control} name="type" render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-xs font-bold uppercase tracking-wider text-slate-500">Tipo</FormLabel>
+                      <Select 
+                        onValueChange={(val) => {
+                          field.onChange(val);
+                          form.setValue('categoryId', ''); // Reseta categoria ao mudar tipo
+                        }} 
+                        value={field.value}
+                      >
                         <FormControl>
-                          <Button
-                            variant="outline"
-                            role="combobox"
-                            className={cn(
-                              "bg-slate-50 rounded-xl border-none h-12 justify-between text-left font-normal",
-                              !field.value && "text-muted-foreground"
-                            )}
-                          >
-                            <div className="flex items-center gap-2 truncate">
-                              <Tag className="h-4 w-4 text-slate-400 shrink-0" />
-                              {selectedCategoryName}
-                            </div>
-                          </Button>
+                          <SelectTrigger className="bg-slate-50 rounded-xl border-none h-12">
+                            <SelectValue placeholder="Selecione" />
+                          </SelectTrigger>
                         </FormControl>
-                      </PopoverTrigger>
-                      <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0 rounded-2xl border-none shadow-2xl">
-                        <div className="flex items-center border-b px-3 bg-slate-50/50">
-                          <Search className="mr-2 h-4 w-4 shrink-0 opacity-50" />
-                          <input
-                            className="flex h-11 w-full rounded-md bg-transparent py-3 text-sm outline-none placeholder:text-muted-foreground disabled:cursor-not-allowed disabled:opacity-50"
-                            placeholder="Pesquisar categoria..."
-                            value={categorySearch}
-                            onChange={(e) => setCategorySearch(e.target.value)}
-                          />
-                        </div>
-                        <ScrollArea className="h-60">
-                          <div className="p-1">
-                            {filteredCategories.length === 0 ? (
-                              <div className="p-4 text-sm text-center text-muted-foreground">Nenhuma categoria encontrada.</div>
-                            ) : (
-                              filteredCategories.map((cat) => (
-                                <button
-                                  key={cat._id}
-                                  type="button"
-                                  className={cn(
-                                    "flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm hover:bg-slate-100 transition-colors",
-                                    field.value === cat._id && "bg-primary/10 text-primary font-bold"
-                                  )}
-                                  onClick={() => {
-                                    field.onChange(cat._id);
-                                    setIsCategoryPopoverOpen(false);
-                                    setCategorySearch('');
-                                  }}
-                                >
-                                  <div className="flex-1 text-left">{cat.name}</div>
-                                  {field.value === cat._id && <Check className="h-4 w-4" />}
-                                </button>
-                              ))
-                            )}
+                        <SelectContent className="rounded-xl">
+                          <SelectItem value="income">Receita</SelectItem>
+                          <SelectItem value="expense">Despesa</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )} />
+
+                  <FormField control={form.control} name="categoryId" render={({ field }) => (
+                    <FormItem className="flex flex-col">
+                      <FormLabel className="text-xs font-bold uppercase tracking-wider text-slate-500">Categoria</FormLabel>
+                      <Popover open={isCategoryPopoverOpen} onOpenChange={setIsCategoryPopoverOpen}>
+                        <PopoverTrigger asChild>
+                          <FormControl>
+                            <Button
+                              variant="outline"
+                              role="combobox"
+                              className={cn(
+                                "bg-slate-50 rounded-xl border-none h-12 justify-between text-left font-normal",
+                                !field.value && "text-muted-foreground"
+                              )}
+                            >
+                              <div className="flex items-center gap-2 truncate text-xs sm:text-sm">
+                                <Tag className="h-4 w-4 text-slate-400 shrink-0" />
+                                {selectedCategoryName}
+                              </div>
+                            </Button>
+                          </FormControl>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0 rounded-2xl border-none shadow-2xl">
+                          <div className="flex items-center border-b px-3 bg-slate-50/50">
+                            <Search className="mr-2 h-4 w-4 shrink-0 opacity-50" />
+                            <input
+                              className="flex h-11 w-full rounded-md bg-transparent py-3 text-sm outline-none placeholder:text-muted-foreground disabled:cursor-not-allowed disabled:opacity-50"
+                              placeholder="Pesquisar categoria..."
+                              value={categorySearch}
+                              onChange={(e) => setCategorySearch(e.target.value)}
+                            />
                           </div>
-                        </ScrollArea>
-                      </PopoverContent>
-                    </Popover>
-                    <FormMessage />
-                  </FormItem>
-                )} />
+                          <ScrollArea className="h-60">
+                            <div className="p-1">
+                              {filteredCategories.length === 0 ? (
+                                <div className="p-4 text-sm text-center text-muted-foreground">Nenhuma categoria encontrada para este tipo.</div>
+                              ) : (
+                                filteredCategories.map((cat) => (
+                                  <button
+                                    key={cat._id}
+                                    type="button"
+                                    className={cn(
+                                      "flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm hover:bg-slate-100 transition-colors",
+                                      field.value === cat._id && "bg-primary/10 text-primary font-bold"
+                                    )}
+                                    onClick={() => {
+                                      field.onChange(cat._id);
+                                      setIsCategoryPopoverOpen(false);
+                                      setCategorySearch('');
+                                    }}
+                                  >
+                                    <div className="flex-1 text-left">{cat.name}</div>
+                                    {field.value === cat._id && <Check className="h-4 w-4" />}
+                                  </button>
+                                ))
+                              )}
+                            </div>
+                          </ScrollArea>
+                        </PopoverContent>
+                      </Popover>
+                      <FormMessage />
+                    </FormItem>
+                  )} />
+                </div>
 
                 <FormField control={form.control} name="accountId" render={({ field }) => (
                   <FormItem>
@@ -311,44 +340,26 @@ export default function TransactionForm({ onTransactionAdded, isOpen, onClose, p
                     </FormItem>
                   )} />
 
-                  <FormField control={form.control} name="type" render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="text-xs font-bold uppercase tracking-wider text-slate-500">Tipo</FormLabel>
-                      <Select onValueChange={field.onChange} value={field.value}>
-                        <FormControl>
-                          <SelectTrigger className="bg-slate-50 rounded-xl border-none h-12">
-                            <SelectValue placeholder="Selecione" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent className="rounded-xl">
-                          <SelectItem value="income">Receita</SelectItem>
-                          <SelectItem value="expense">Despesa</SelectItem>
-                        </SelectContent>
-                      </Select>
+                  <FormField control={form.control} name="date" render={({ field }) => (
+                    <FormItem className="flex flex-col">
+                      <FormLabel className="text-xs font-bold uppercase tracking-wider text-slate-500">Data</FormLabel>
+                      <Popover>
+                        <PopoverTrigger asChild>
+                          <FormControl>
+                            <Button variant={"outline"} className={cn("bg-slate-50 rounded-xl border-none h-12 text-left font-normal", !field.value && "text-muted-foreground")}>
+                              <CalendarIcon className="mr-2 h-4 w-4 text-slate-400" />
+                              {field.value ? format(field.value, 'dd/MM/yyyy', { locale: ptBR }) : <span>Escolha uma data</span>}
+                            </Button>
+                          </FormControl>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-auto p-0 rounded-2xl" align="start">
+                          <Calendar mode="single" selected={field.value} onSelect={field.onChange} initialFocus className="rounded-2xl" />
+                        </PopoverContent>
+                      </Popover>
                       <FormMessage />
                     </FormItem>
                   )} />
                 </div>
-
-                <FormField control={form.control} name="date" render={({ field }) => (
-                  <FormItem className="flex flex-col">
-                    <FormLabel className="text-xs font-bold uppercase tracking-wider text-slate-500">Data</FormLabel>
-                    <Popover>
-                      <PopoverTrigger asChild>
-                        <FormControl>
-                          <Button variant={"outline"} className={cn("bg-slate-50 rounded-xl border-none h-12 text-left font-normal", !field.value && "text-muted-foreground")}>
-                            <CalendarIcon className="mr-2 h-4 w-4 text-slate-400" />
-                            {field.value ? format(field.value, 'dd/MM/yyyy', { locale: ptBR }) : <span>Escolha uma data</span>}
-                          </Button>
-                        </FormControl>
-                      </PopoverTrigger>
-                      <PopoverContent className="w-auto p-0 rounded-2xl" align="start">
-                        <Calendar mode="single" selected={field.value} onSelect={field.onChange} initialFocus className="rounded-2xl" />
-                      </PopoverContent>
-                    </Popover>
-                    <FormMessage />
-                  </FormItem>
-                )} />
 
                 <Button type="submit" disabled={isLoading} className="w-full h-12 rounded-xl font-bold shadow-lg shadow-primary/20 mt-4 transition-all hover:scale-[1.01]">
                   {isLoading ? <Loader2 className="mr-2 h-5 w-5 animate-spin" /> : "Adicionar Transação"}
