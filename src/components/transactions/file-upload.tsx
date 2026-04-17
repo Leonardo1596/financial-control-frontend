@@ -98,6 +98,7 @@ export default function FileUpload({ onUploadSuccess }: { onUploadSuccess: () =>
         fileInputRef.current.value = '';
       }
     } catch (error) {
+      console.error('Erro ao fazer upload do arquivo', error);
       toast({ variant: 'destructive', title: 'Erro', description: (error as Error).message });
     } finally {
       setIsLoading(false);

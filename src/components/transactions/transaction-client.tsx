@@ -13,16 +13,16 @@ import { Input } from '@/components/ui/input';
 import { Loader2, Trash2, LayoutGrid, Plus, Filter, Landmark, Search, FileUp, ChevronDown } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { 
-  AlertDialog as AD, 
-  AlertDialogAction as ADA, 
-  AlertDialogCancel as ADC, 
-  AlertDialogContent as ADContent, 
-  AlertDialogDescription as ADDescription, 
-  AlertDialogFooter as ADFooter, 
-  AlertDialogHeader as ADHeader, 
-  AlertDialogTitle as ADTitle, 
-  AlertDialogTrigger as ADTrigger 
+import {
+  AlertDialog as AD,
+  AlertDialogAction as ADA,
+  AlertDialogCancel as ADC,
+  AlertDialogContent as ADContent,
+  AlertDialogDescription as ADDescription,
+  AlertDialogFooter as ADFooter,
+  AlertDialogHeader as ADHeader,
+  AlertDialogTitle as ADTitle,
+  AlertDialogTrigger as ADTrigger
 } from '@/components/ui/alert-dialog';
 import { API_BASE_URL } from '@/lib/api';
 
@@ -46,7 +46,7 @@ export default function TransactionClient() {
     if (!token) return;
     setLoading(true);
     try {
-      const endpoint = searchTerm 
+      const endpoint = searchTerm
         ? `${API_BASE_URL}/filter-transactions-by-name?name=${encodeURIComponent(searchTerm)}`
         : `${API_BASE_URL}/list-transaction`;
 
@@ -59,6 +59,8 @@ export default function TransactionClient() {
 
       const transData = await transResponse.json();
       const accountsData = await accountsResponse.json();
+
+      console.log(transData);
 
       setTransactions(Array.isArray(transData) ? transData : []);
       setAccounts(Array.isArray(accountsData) ? accountsData : []);
@@ -133,20 +135,27 @@ export default function TransactionClient() {
   };
 
   const filteredTransactions = useMemo(() => {
-    return transactions
-      .filter(transaction => {
-        const parts = transaction.date.split('-'); 
-        const transYear = parts[0];
-        const transMonth = parseInt(parts[1], 10).toString();
+  return transactions
+    .filter((transaction) => {
+      const parts = transaction.date.split('-');
+      const transYear = parts[0];
+      const transMonth = parseInt(parts[1], 10).toString();
 
-        const monthMatch = month === 'todas' || transMonth === month;
-        const yearMatch = year === 'todas' || transYear === year;
-        const accountMatch = selectedAccountId === 'todas' || transaction.accountId === selectedAccountId;
+      const monthMatch = month === 'todas' || transMonth === month;
+      const yearMatch = year === 'todas' || transYear === year;
+      const accountMatch =
+        selectedAccountId === 'todas' ||
+        transaction.accountId === selectedAccountId;
 
-        return monthMatch && yearMatch && accountMatch;
-      })
-      .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
-  }, [transactions, month, year, selectedAccountId]);
+      return monthMatch && yearMatch && accountMatch;
+    })
+    .sort((a, b) => {
+      return (
+        new Date(b.date).getTime() -
+        new Date(a.date).getTime()
+      );
+    });
+}, [transactions, month, year, selectedAccountId]);
 
   const years = Array.from({ length: 10 }, (_, i) => (new Date().getFullYear() - i).toString());
   const months = Array.from({ length: 12 }, (_, i) => ({
@@ -158,7 +167,7 @@ export default function TransactionClient() {
     <div className="flex flex-col w-full max-w-full space-y-8 overflow-hidden">
 
       <div className="space-y-4">
-        <Button 
+        <Button
           onClick={() => { setPendingData(null); setIsModalOpen(true); }}
           className="w-full h-20 bg-white hover:bg-slate-50 text-slate-900 border border-slate-100 shadow-sm rounded-[2.5rem] flex items-center justify-between px-8 transition-all group"
         >
@@ -202,8 +211,8 @@ export default function TransactionClient() {
         <div className='flex items-center gap-2 sm:gap-3 flex-wrap justify-start sm:justify-center w-full lg:w-auto'>
           <div className="relative w-full lg:w-64">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
-            <Input 
-              placeholder="Pesquisar por nome..." 
+            <Input
+              placeholder="Pesquisar por nome..."
               className="pl-9 h-10 sm:h-11 bg-slate-50 border-none rounded-xl text-xs sm:text-sm"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
@@ -270,7 +279,7 @@ export default function TransactionClient() {
                 <ADC className="rounded-xl border-none bg-slate-100 hover:bg-slate-200">Cancelar</ADC>
                 <ADA
                   disabled={isDeletingAll}
-                  className={cn(buttonVariants({variant: "destructive"}), "rounded-xl shadow-lg shadow-rose-500/20")}
+                  className={cn(buttonVariants({ variant: "destructive" }), "rounded-xl shadow-lg shadow-rose-500/20")}
                   onClick={handleDeleteAll}
                 >
                   {isDeletingAll ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
@@ -283,18 +292,18 @@ export default function TransactionClient() {
       </div>
 
       <div className="w-full max-w-full overflow-hidden">
-        <TransactionList 
-          transactions={filteredTransactions} 
+        <TransactionList
+          transactions={filteredTransactions}
           accounts={accounts}
-          onDelete={handleDelete} 
-          loading={loading} 
+          onDelete={handleDelete}
+          loading={loading}
         />
       </div>
 
-      <TransactionForm 
-        isOpen={isModalOpen} 
-        onClose={() => setIsModalOpen(false)} 
-        onTransactionAdded={fetchData} 
+      <TransactionForm
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        onTransactionAdded={fetchData}
         pendingData={pendingData}
       />
     </div>
