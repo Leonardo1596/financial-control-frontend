@@ -209,7 +209,7 @@ export default function TransactionForm({ onTransactionAdded, isOpen, onClose, p
                       <Select 
                         onValueChange={(val) => {
                           field.onChange(val);
-                          form.setValue('categoryId', ''); // Reseta categoria ao mudar tipo
+                          form.setValue('categoryId', '');
                         }} 
                         value={field.value}
                       >
@@ -228,7 +228,7 @@ export default function TransactionForm({ onTransactionAdded, isOpen, onClose, p
                   )} />
 
                   <FormField control={form.control} name="categoryId" render={({ field }) => (
-                    <FormItem className="flex flex-col">
+                    <FormItem>
                       <FormLabel className="text-xs font-bold uppercase tracking-wider text-slate-500">Categoria</FormLabel>
                       <Popover open={isCategoryPopoverOpen} onOpenChange={setIsCategoryPopoverOpen}>
                         <PopoverTrigger asChild>
@@ -237,7 +237,7 @@ export default function TransactionForm({ onTransactionAdded, isOpen, onClose, p
                               variant="outline"
                               role="combobox"
                               className={cn(
-                                "bg-slate-50 rounded-xl border-none h-12 justify-between text-left font-normal",
+                                "w-full bg-slate-50 rounded-xl border-none h-12 justify-between text-left font-normal",
                                 !field.value && "text-muted-foreground"
                               )}
                             >
@@ -341,12 +341,12 @@ export default function TransactionForm({ onTransactionAdded, isOpen, onClose, p
                   )} />
 
                   <FormField control={form.control} name="date" render={({ field }) => (
-                    <FormItem className="flex flex-col">
+                    <FormItem>
                       <FormLabel className="text-xs font-bold uppercase tracking-wider text-slate-500">Data</FormLabel>
                       <Popover>
                         <PopoverTrigger asChild>
                           <FormControl>
-                            <Button variant={"outline"} className={cn("bg-slate-50 rounded-xl border-none h-12 text-left font-normal", !field.value && "text-muted-foreground")}>
+                            <Button variant={"outline"} className={cn("w-full bg-slate-50 rounded-xl border-none h-12 text-left font-normal", !field.value && "text-muted-foreground")}>
                               <CalendarIcon className="mr-2 h-4 w-4 text-slate-400" />
                               {field.value ? format(field.value, 'dd/MM/yyyy', { locale: ptBR }) : <span>Escolha uma data</span>}
                             </Button>
