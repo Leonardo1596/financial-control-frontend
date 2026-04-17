@@ -125,7 +125,10 @@ export default function TransactionForm({ onTransactionAdded, isOpen, onClose, p
 
   const selectedCategoryName = useMemo(() => {
     const selectedId = form.getValues('categoryId');
-    return categories.find(c => c._id === selectedId)?.name || "Selecione a categoria";
+    const category = categories.find(c => c._id === selectedId);
+    if (!category) return "Selecione a categoria";
+    const name = category.name;
+    return name.charAt(0).toUpperCase() + name.slice(1);
   }, [categories, form.watch('categoryId')]);
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
@@ -277,7 +280,7 @@ export default function TransactionForm({ onTransactionAdded, isOpen, onClose, p
                                       setCategorySearch('');
                                     }}
                                   >
-                                    <div className="flex-1 text-left">{cat.name}</div>
+                                    <div className="flex-1 text-left capitalize">{cat.name}</div>
                                     {field.value === cat._id && <Check className="h-4 w-4" />}
                                   </button>
                                 ))
