@@ -70,19 +70,10 @@ export default function TransactionForm({ onTransactionAdded, isOpen, onClose, p
   const currentType = form.watch('type');
 
   useEffect(() => {
-    if (
-      !pendingData ||
-      accounts.length === 0 ||
-      categories.length === 0
-    ) return;
+    if (!pendingData || accounts.length === 0 || categories.length === 0) return;
 
-    const accountExists = accounts.some(
-      acc => acc._id === pendingData.accountId
-    );
-
-    const categoryExists = categories.some(
-      cat => cat._id === pendingData.categoryId
-    );
+    const accountExists = accounts.some(acc => acc._id === pendingData.accountId);
+    const categoryExists = categories.some(cat => cat._id === pendingData.categoryId);
 
     form.reset({
       description: pendingData.description || '',
@@ -109,7 +100,7 @@ export default function TransactionForm({ onTransactionAdded, isOpen, onClose, p
 
         if (accRes.ok) {
           const data = await accRes.json();
-          setAccounts(Array.isArray(data) ? data : (data.accounts || []));
+          setAccounts(Array.isArray(data) ? data : []);
         }
 
         if (catRes.ok) {
@@ -124,19 +115,20 @@ export default function TransactionForm({ onTransactionAdded, isOpen, onClose, p
   }, [token, isOpen]);
 
   const filteredCategories = useMemo(() => {
-    return categories.filter(cat =>
-      cat.name.toLowerCase().includes(categorySearch.toLowerCase())
-    );
-  }, [categories, categorySearch]);
+    return categories.filter(cat => {
+      const typeMatch = cat.type === currentType;
+      const searchMatch = cat.name.toLowerCase().includes(categorySearch.toLowerCase());
+      return typeMatch && searchMatch;
+    });
+  }, [categories, categorySearch, currentType]);
 
   const selectedCategoryName = useMemo(() => {
     const selectedId = form.getValues('categoryId');
     const name = categories.find(c => c._id === selectedId)?.name;
-
     if (!name) return "Selecione a categoria";
-
     return name.charAt(0).toUpperCase() + name.slice(1);
   }, [categories, form.watch('categoryId')]);
+
   async function onSubmit(values: z.infer<typeof formSchema>) {
     if (!user) {
       toast({ variant: 'destructive', title: 'Erro', description: 'Você precisa estar logado.' });
@@ -165,20 +157,9 @@ export default function TransactionForm({ onTransactionAdded, isOpen, onClose, p
       }
 
       toast({ title: 'Sucesso', description: 'Transação adicionada.' });
-
-      form.reset({
-        description: '',
-        categoryId: '',
-        amount: 0,
-        type: form.getValues('type'),
-        date: new Date(),
-        accountId: form.getValues('accountId')
-      });
-
       onTransactionAdded();
       onClose();
     } catch (error) {
-      console.error('Erro ao criar transação:', error);
       toast({ variant: 'destructive', title: 'Erro', description: (error as Error).message });
     } finally {
       setIsLoading(false);
