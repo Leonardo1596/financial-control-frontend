@@ -87,6 +87,7 @@ export default function FileUpload({ onUploadSuccess }: { onUploadSuccess: () =>
         headers: { 'Authorization': `Bearer ${token}` },
         body: formData,
       });
+      console.log(response.body);
       if (!response.ok) throw new Error('Falha no upload do arquivo');
       toast({ title: 'Sucesso', description: 'Transações importadas com sucesso.' });
       onUploadSuccess();

@@ -42,13 +42,14 @@ export default function TransactionClient() {
   const [selectedAccountId, setSelectedAccountId] = useState('todas');
   const [searchTerm, setSearchTerm] = useState('');
 
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+
   const fetchData = useCallback(async () => {
     if (!token) return;
     setLoading(true);
     try {
-      const endpoint = searchTerm
-        ? `${API_BASE_URL}/filter-transactions-by-name?name=${encodeURIComponent(searchTerm)}`
-        : `${API_BASE_URL}/list-transaction`;
+      const endpoint = `${API_BASE_URL}/list-transaction?page=${page}&limit=10&search=${searchTerm}&month=${month}&year=${year}&accountId=${selectedAccountId}`;
 
       const [transResponse, accountsResponse] = await Promise.all([
         fetch(endpoint, { headers: { Authorization: `Bearer ${token}` } }),
@@ -62,7 +63,9 @@ export default function TransactionClient() {
 
       console.log(transData);
 
-      setTransactions(Array.isArray(transData) ? transData : []);
+      setTransactions(Array.isArray(transData.data) ? transData.data : []);
+      setTotalPages(transData.totalPages || 1);
+
       setAccounts(Array.isArray(accountsData) ? accountsData : []);
     } catch (error) {
       toast({ variant: 'destructive', title: 'Erro', description: (error as Error).message });
@@ -70,9 +73,20 @@ export default function TransactionClient() {
     } finally {
       setLoading(false);
     }
-  }, [token, toast, month, year, searchTerm]);
+  }, [token, toast, month, year, searchTerm, page, selectedAccountId]);
 
-  // Lógica para detectar transação pendente vinda da notificação Android
+  useEffect(() => {
+    const delayDebounceFn = setTimeout(() => {
+      fetchData();
+    }, searchTerm ? 500 : 0);
+
+    return () => clearTimeout(delayDebounceFn);
+  }, [fetchData]);
+
+  useEffect(() => {
+    setPage(1);
+  }, [searchTerm, month, year, selectedAccountId]);
+
   useEffect(() => {
     async function checkPending() {
       const pendingId = localStorage.getItem("pendingTransactionId");
@@ -94,14 +108,6 @@ export default function TransactionClient() {
     }
     checkPending();
   }, [token]);
-
-  useEffect(() => {
-    const delayDebounceFn = setTimeout(() => {
-      fetchData();
-    }, searchTerm ? 500 : 0);
-
-    return () => clearTimeout(delayDebounceFn);
-  }, [fetchData]);
 
   const handleDelete = async (transactionId: string) => {
     try {
@@ -135,27 +141,27 @@ export default function TransactionClient() {
   };
 
   const filteredTransactions = useMemo(() => {
-  return transactions
-    .filter((transaction) => {
-      const parts = transaction.date.split('-');
-      const transYear = parts[0];
-      const transMonth = parseInt(parts[1], 10).toString();
+    return transactions
+      .filter((transaction) => {
+        const parts = transaction.date.split('-');
+        const transYear = parts[0];
+        const transMonth = parseInt(parts[1], 10).toString();
 
-      const monthMatch = month === 'todas' || transMonth === month;
-      const yearMatch = year === 'todas' || transYear === year;
-      const accountMatch =
-        selectedAccountId === 'todas' ||
-        transaction.accountId === selectedAccountId;
+        const monthMatch = month === 'todas' || transMonth === month;
+        const yearMatch = year === 'todas' || transYear === year;
+        const accountMatch =
+          selectedAccountId === 'todas' ||
+          transaction.accountId === selectedAccountId;
 
-      return monthMatch && yearMatch && accountMatch;
-    })
-    .sort((a, b) => {
-      return (
-        new Date(b.date).getTime() -
-        new Date(a.date).getTime()
-      );
-    });
-}, [transactions, month, year, selectedAccountId]);
+        return monthMatch && yearMatch && accountMatch;
+      })
+      .sort((a, b) => {
+        return (
+          new Date(b.date).getTime() -
+          new Date(a.date).getTime()
+        );
+      });
+  }, [transactions, month, year, selectedAccountId]);
 
   const years = Array.from({ length: 10 }, (_, i) => (new Date().getFullYear() - i).toString());
   const months = Array.from({ length: 12 }, (_, i) => ({
@@ -246,7 +252,9 @@ export default function TransactionClient() {
               </SelectTrigger>
               <SelectContent className="rounded-xl">
                 <SelectItem value="todas">Todos</SelectItem>
-                {months.map(m => <SelectItem key={m.value} value={m.value}>{m.label}</SelectItem>)}
+                {months.map(m => (
+                  <SelectItem key={m.value} value={m.value}>{m.label}</SelectItem>
+                ))}
               </SelectContent>
             </Select>
 
@@ -256,18 +264,25 @@ export default function TransactionClient() {
               </SelectTrigger>
               <SelectContent className="rounded-xl">
                 <SelectItem value="todas">Todos</SelectItem>
-                {years.map(y => <SelectItem key={y} value={y}>{y}</SelectItem>)}
+                {years.map(y => (
+                  <SelectItem key={y} value={y}>{y}</SelectItem>
+                ))}
               </SelectContent>
             </Select>
           </div>
 
           <AD>
             <ADTrigger asChild>
-              <Button variant="ghost" disabled={filteredTransactions.length === 0 || loading} className="text-rose-500 hover:text-rose-600 hover:bg-rose-50 h-10 sm:h-11 rounded-xl w-full sm:w-auto text-xs font-bold">
+              <Button
+                variant="ghost"
+                disabled={filteredTransactions.length === 0 || loading}
+                className="text-rose-500 hover:text-rose-600 hover:bg-rose-50 h-10 sm:h-11 rounded-xl w-full sm:w-auto text-xs font-bold"
+              >
                 <Trash2 className="mr-2 h-4 w-4" />
                 Limpar
               </Button>
             </ADTrigger>
+
             <ADContent className="rounded-2xl border-none shadow-2xl max-w-[90vw]">
               <ADHeader>
                 <ADTitle className="text-xl">Limpar histórico?</ADTitle>
@@ -275,14 +290,21 @@ export default function TransactionClient() {
                   Esta ação excluirá permanentemente TODAS as suas transações filtradas atualmente.
                 </ADDescription>
               </ADHeader>
+
               <ADFooter className="mt-4 gap-2">
-                <ADC className="rounded-xl border-none bg-slate-100 hover:bg-slate-200">Cancelar</ADC>
+                <ADC className="rounded-xl border-none bg-slate-100 hover:bg-slate-200">
+                  Cancelar
+                </ADC>
+
                 <ADA
                   disabled={isDeletingAll}
-                  className={cn(buttonVariants({ variant: "destructive" }), "rounded-xl shadow-lg shadow-rose-500/20")}
+                  className={cn(
+                    buttonVariants({ variant: "destructive" }),
+                    "rounded-xl shadow-lg shadow-rose-500/20"
+                  )}
                   onClick={handleDeleteAll}
                 >
-                  {isDeletingAll ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+                  {isDeletingAll && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                   Sim, excluir tudo
                 </ADA>
               </ADFooter>
@@ -298,6 +320,16 @@ export default function TransactionClient() {
           onDelete={handleDelete}
           loading={loading}
         />
+      </div>
+
+      <div className="flex justify-center gap-4">
+        <Button disabled={page === 1} onClick={() => setPage(prev => prev - 1)}>
+          Anterior
+        </Button>
+        <span className="text-sm">Página {page} de {totalPages}</span>
+        <Button disabled={page === totalPages} onClick={() => setPage(prev => prev + 1)}>
+          Próxima
+        </Button>
       </div>
 
       <TransactionForm
