@@ -53,3 +53,13 @@ export interface UserAccount {
   balance: number;
   createdAt?: string;
 }
+
+export interface Goal {
+  _id: string;
+  userId: string;
+  name: string;
+  targetAmount: number;
+  currentAmount: number;
+  deadline?: string;
+  createdAt?: string;
+}

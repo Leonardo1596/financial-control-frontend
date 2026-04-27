@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
-import { Menu, Landmark, LogOut, LayoutDashboard, ArrowLeftRight, ReceiptText, Wallet } from "lucide-react";
+import { Menu, Landmark, LogOut, LayoutDashboard, ArrowLeftRight, ReceiptText, Wallet, Target } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useAuth } from "@/hooks/use-auth";
@@ -24,6 +24,7 @@ export function MobileHeader() {
     { href: '/', icon: LayoutDashboard, label: 'Painel' },
     { href: '/transactions', icon: ArrowLeftRight, label: 'Transações' },
     { href: '/accounts-payable', icon: ReceiptText, label: 'Contas a Pagar' },
+    { href: '/goals', icon: Target, label: 'Objetivos' },
     { href: '/accounts', icon: Wallet, label: 'Contas Bancárias' },
   ];
 
