@@ -10,12 +10,12 @@ import { Button } from '@/components/ui/button';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
-import { Loader2, TrendingUp, Landmark } from 'lucide-react';
+import { Loader2, TrendingUp } from 'lucide-react';
 import { API_BASE_URL } from '@/lib/api';
 import type { Goal } from '@/lib/types';
 
 const formSchema = z.object({
-  contribution: z.coerce.number().positive('O valor deve ser maior que zero'),
+  amount: z.coerce.number().positive('O valor deve ser maior que zero'),
 });
 
 type FormValues = z.infer<typeof formSchema>;
@@ -42,7 +42,7 @@ export default function ContributionForm({ isOpen, onClose, onSuccess, goal }: C
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      contribution: 0,
+      amount: 0,
     },
   });
 
@@ -50,15 +50,13 @@ export default function ContributionForm({ isOpen, onClose, onSuccess, goal }: C
     if (!goal) return;
     setIsLoading(true);
     try {
-      // Usando a rota de atualização conforme definido: PATCH /goal/:id
-      // No backend, essa rota deve aceitar um campo como 'contribution' ou processar a atualização do currentAmount
       const response = await fetch(`${API_BASE_URL}/goal/${goal._id}`, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`
         },
-        body: JSON.stringify({ contribution: values.contribution }),
+        body: JSON.stringify({ amount: values.amount }),
       });
 
       if (!response.ok) throw new Error('Falha ao adicionar valor ao objetivo');
@@ -93,7 +91,7 @@ export default function ContributionForm({ isOpen, onClose, onSuccess, goal }: C
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6 pt-4">
             <FormField
               control={form.control}
-              name="contribution"
+              name="amount"
               render={({ field }) => (
                 <FormItem>
                   <FormLabel className="text-xs font-bold uppercase tracking-wider text-slate-500 text-center block">Quanto você quer guardar hoje?</FormLabel>

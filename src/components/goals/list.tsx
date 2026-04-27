@@ -5,7 +5,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Target, Calendar, Edit, Trash2, Plus, TrendingUp } from 'lucide-react';
+import { Target, Calendar, Edit, Trash2, TrendingUp } from 'lucide-react';
 import { format, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 
@@ -42,7 +42,8 @@ export default function GoalsList({ goals, loading, onEdit, onDelete, onAddValue
   return (
     <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
       {goals.map((goal) => {
-        const progress = Math.min(100, Math.round((goal.currentAmount / goal.targetAmount) * 100));
+        const currentAmount = goal.accumulated?.total || 0;
+        const progress = Math.min(100, Math.round((currentAmount / goal.targetAmount) * 100));
         const deadlineDate = goal.deadline ? parseISO(goal.deadline) : null;
         const adjustedDeadline = deadlineDate ? new Date(deadlineDate.getTime() + deadlineDate.getTimezoneOffset() * 60000) : null;
 
@@ -80,7 +81,7 @@ export default function GoalsList({ goals, loading, onEdit, onDelete, onAddValue
                   <div className="flex justify-between items-end">
                     <div className="flex flex-col">
                       <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Valor Atual</span>
-                      <span className="text-2xl font-bold text-primary">{formatCurrency(goal.currentAmount)}</span>
+                      <span className="text-2xl font-bold text-primary">{formatCurrency(currentAmount)}</span>
                     </div>
                     <div className="text-right">
                       <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Meta</span>

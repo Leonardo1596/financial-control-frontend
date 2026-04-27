@@ -59,7 +59,9 @@ export interface Goal {
   userId: string;
   name: string;
   targetAmount: number;
-  currentAmount: number;
+  accumulated: {
+    total: number;
+  };
   deadline?: string;
   createdAt?: string;
 }
