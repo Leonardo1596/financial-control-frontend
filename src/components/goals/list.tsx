@@ -5,7 +5,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Target, Calendar, Edit, Trash2, TrendingUp } from 'lucide-react';
+import { Target, Calendar, Edit, Trash2, TrendingUp, TrendingDown } from 'lucide-react';
 import { format, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 
@@ -15,11 +15,12 @@ interface GoalsListProps {
   onEdit: (goal: Goal) => void;
   onDelete: (id: string) => void;
   onAddValue: (goal: Goal) => void;
+  onRemoveValue: (goal: Goal) => void;
 }
 
 const formatCurrency = (value: number) => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value);
 
-export default function GoalsList({ goals, loading, onEdit, onDelete, onAddValue }: GoalsListProps) {
+export default function GoalsList({ goals, loading, onEdit, onDelete, onAddValue, onRemoveValue }: GoalsListProps) {
   if (loading) {
     return (
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
@@ -97,13 +98,23 @@ export default function GoalsList({ goals, loading, onEdit, onDelete, onAddValue
                   </div>
                 </div>
 
-                <Button 
-                  onClick={() => onAddValue(goal)}
-                  className="w-full h-11 mt-4 rounded-xl font-bold bg-slate-900 hover:bg-slate-800 text-white shadow-md shadow-slate-200"
-                >
-                  <TrendingUp className="mr-2 h-4 w-4" />
-                  Guardar Dinheiro
-                </Button>
+                <div className="grid grid-cols-2 gap-3 mt-4">
+                  <Button 
+                    onClick={() => onAddValue(goal)}
+                    className="h-11 rounded-xl font-bold bg-slate-900 hover:bg-slate-800 text-white shadow-md shadow-slate-200"
+                  >
+                    <TrendingUp className="mr-2 h-4 w-4" />
+                    Guardar
+                  </Button>
+                  <Button 
+                    variant="outline"
+                    onClick={() => onRemoveValue(goal)}
+                    className="h-11 rounded-xl font-bold border-rose-100 text-rose-600 hover:bg-rose-50 hover:text-rose-700"
+                  >
+                    <TrendingDown className="mr-2 h-4 w-4" />
+                    Retirar
+                  </Button>
+                </div>
               </div>
             </CardContent>
           </Card>

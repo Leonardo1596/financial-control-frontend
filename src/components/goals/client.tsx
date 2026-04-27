@@ -7,6 +7,7 @@ import type { Goal } from '@/lib/types';
 import GoalsList from './list';
 import GoalsForm from './form';
 import ContributionForm from './contribution-form';
+import WithdrawalForm from './withdrawal-form';
 import { Button } from '@/components/ui/button';
 import { PlusCircle, Target } from 'lucide-react';
 import { API_BASE_URL } from '@/lib/api';
@@ -21,6 +22,7 @@ export default function GoalsClient() {
   const [editingGoal, setEditingGoal] = useState<Goal | null>(null);
   
   const [isContributionOpen, setIsContributionOpen] = useState(false);
+  const [isWithdrawOpen, setIsWithdrawOpen] = useState(false);
   const [selectedGoal, setSelectedGoal] = useState<Goal | null>(null);
 
   const fetchGoals = useCallback(async () => {
@@ -52,6 +54,11 @@ export default function GoalsClient() {
   const handleOpenContribution = (goal: Goal) => {
     setSelectedGoal(goal);
     setIsContributionOpen(true);
+  };
+
+  const handleOpenWithdraw = (goal: Goal) => {
+    setSelectedGoal(goal);
+    setIsWithdrawOpen(true);
   };
 
   const handleDelete = async (id: string) => {
@@ -97,6 +104,7 @@ export default function GoalsClient() {
         onEdit={handleOpenForm}
         onDelete={handleDelete}
         onAddValue={handleOpenContribution}
+        onRemoveValue={handleOpenWithdraw}
       />
 
       <GoalsForm
@@ -109,6 +117,13 @@ export default function GoalsClient() {
       <ContributionForm
         isOpen={isContributionOpen}
         onClose={() => setIsContributionOpen(false)}
+        onSuccess={fetchGoals}
+        goal={selectedGoal}
+      />
+
+      <WithdrawalForm
+        isOpen={isWithdrawOpen}
+        onClose={() => setIsWithdrawOpen(false)}
         onSuccess={fetchGoals}
         goal={selectedGoal}
       />
