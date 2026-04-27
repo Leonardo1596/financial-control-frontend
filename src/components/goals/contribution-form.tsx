@@ -50,7 +50,8 @@ export default function ContributionForm({ isOpen, onClose, onSuccess, goal }: C
     if (!goal) return;
     setIsLoading(true);
     try {
-      const response = await fetch(`${API_BASE_URL}/goal/${goal._id}`, {
+      // Rota atualizada conforme solicitado pelo usuário
+      const response = await fetch(`${API_BASE_URL}/goal/${goal._id}/add-value`, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
@@ -59,14 +60,25 @@ export default function ContributionForm({ isOpen, onClose, onSuccess, goal }: C
         body: JSON.stringify({ amount: values.amount }),
       });
 
-      if (!response.ok) throw new Error('Falha ao adicionar valor ao objetivo');
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.message || 'Falha ao adicionar valor ao objetivo');
+      }
 
-      toast({ title: 'Boa!', description: 'Valor guardado com sucesso. Você está mais perto do seu sonho!' });
+      toast({ 
+        title: 'Boa!', 
+        description: 'Valor guardado com sucesso. Você está mais perto do seu sonho!' 
+      });
+      
       form.reset();
       onSuccess();
       onClose();
     } catch (error) {
-      toast({ variant: 'destructive', title: 'Erro', description: (error as Error).message });
+      toast({ 
+        variant: 'destructive', 
+        title: 'Erro', 
+        description: (error as Error).message 
+      });
     } finally {
       setIsLoading(false);
     }
